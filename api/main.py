@@ -172,9 +172,11 @@ if _os.path.isdir(str(STATIC_DIR)):
 @app.get("/dashboard", response_class=HTMLResponse, include_in_schema=False)
 async def dashboard(request: Request):
     """IncuBrix Distribution Dashboard."""
+    dashboard_template = TEMPLATES_DIR / "dashboard.html"
+    if dashboard_template.is_file():
+        return HTMLResponse(content=dashboard_template.read_text(encoding="utf-8"))
     from connectors.registry import list_connectors
     connectors = list_connectors()
-    # Simple inline HTML dashboard — no template file needed
     html = _build_dashboard_html(connectors)
     return HTMLResponse(content=html)
 
