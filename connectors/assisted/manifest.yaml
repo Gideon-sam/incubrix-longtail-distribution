@@ -1,0 +1,13 @@
+key: assisted
+version: 1.0.0
+tier: assisted        # L1 — a person posts; automation not allowed
+auth: none
+surfaces:
+  - key: manual_post
+    content_types: [text, image, video_link]
+    spec:
+      title_max_chars: 500
+      body_max_chars: 100000
+      links_allowed: true
+capabilities: [build_assist_pack]
+instance_param: submit_url    # URL where the human submits the post

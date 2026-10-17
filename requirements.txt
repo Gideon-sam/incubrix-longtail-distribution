@@ -1,0 +1,61 @@
+# IncuBrix Long-Tail Distribution Service — Python 3.12
+# All licenses: MIT, BSD, Apache 2.0 — commercially usable
+
+# ── Core Framework ───────────────────────────────────────────
+fastapi==0.115.6                # MIT  — async web framework with OpenAPI 3.1
+uvicorn[standard]==0.34.0       # BSD  — ASGI server
+pydantic==2.10.4                # MIT  — data validation
+pydantic-settings==2.7.1        # MIT  — settings from env vars
+
+# ── Database ─────────────────────────────────────────────────
+sqlalchemy[asyncio]==2.0.36     # MIT  — async ORM
+asyncpg==0.30.0                 # Apache 2.0 — PostgreSQL driver
+alembic==1.14.1                 # MIT  — database migrations
+
+# ── Redis ────────────────────────────────────────────────────
+redis[hiredis]==5.2.1           # MIT  — Redis client with C parser
+
+# ── HTTP Client ──────────────────────────────────────────────
+httpx==0.28.1                   # BSD  — async HTTP client for connector calls
+
+# ── S3 Storage ───────────────────────────────────────────────
+minio==7.2.12                   # Apache 2.0 — S3-compatible client
+
+# ── Logging ──────────────────────────────────────────────────
+structlog==24.4.0               # MIT/Apache — structured JSON logging
+
+# ── YAML (manifest parsing) ─────────────────────────────────
+pyyaml==6.0.2                   # MIT  — YAML parser
+
+# ── CSV / Data Processing ───────────────────────────────────
+pandas==2.2.3                   # BSD  — CSV/dataframe processing
+
+# ── Retry Logic ──────────────────────────────────────────────
+tenacity==9.0.0                 # Apache 2.0 — retry with backoff
+
+# ── AI Provider (optional, behind adapter) ───────────────────
+google-genai==1.14.0            # Apache 2.0 — Gemini SDK (unified, current)
+
+# ── Rate Limiting ────────────────────────────────────────────
+slowapi==0.1.9                  # MIT  — rate limiting for FastAPI
+
+# ── File Uploads ─────────────────────────────────────────────
+python-multipart==0.0.19        # Apache 2.0 — form/file uploads
+
+# ── Testing ──────────────────────────────────────────────────
+pytest==8.3.4                   # MIT
+pytest-asyncio==0.24.0          # Apache 2.0
+pytest-cov==6.0.0               # MIT
+httpx                           # (already listed above, used as test client)
+
+# ── JWT (Ghost connector) ────────────────────────────────────
+PyJWT==2.9.0                    # MIT  — JWT encoding for Ghost Admin API
+
+# ── SQLite async (testing only) ──────────────────────────────
+aiosqlite==0.20.0               # MIT  — async SQLite driver for tests
+
+# ── UI Templates ─────────────────────────────────────────────
+jinja2==3.1.4                   # BSD  — HTML template rendering
+
+# ── HMAC / Crypto ────────────────────────────────────────────
+# Built-in: hashlib, hmac, secrets — no extra dependency needed

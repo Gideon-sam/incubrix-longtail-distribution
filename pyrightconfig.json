@@ -1,0 +1,17 @@
+{
+  "include": [
+    "api",
+    "connectors",
+    "tests"
+  ],
+  "exclude": [
+    "**/node_modules",
+    "**/__pycache__",
+    ".venv"
+  ],
+  "reportMissingImports": "none",
+  "reportMissingModuleSource": "none",
+  "reportMissingTypeStubs": "none",
+  "pythonVersion": "3.11",
+  "pythonPlatform": "All"
+}

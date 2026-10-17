@@ -1,0 +1,26 @@
+[
+  {
+    "name": "Health check",
+    "method": "GET",
+    "path": "/health",
+    "expected_status": 200
+  },
+  {
+    "name": "Ready check",
+    "method": "GET",
+    "path": "/ready",
+    "expected_status": 200
+  },
+  {
+    "name": "List connectors",
+    "method": "GET",
+    "path": "/api/v1/connectors",
+    "expected_status": 200
+  },
+  {
+    "name": "List destinations",
+    "method": "GET",
+    "path": "/api/v1/destinations",
+    "expected_status": 200
+  }
+]

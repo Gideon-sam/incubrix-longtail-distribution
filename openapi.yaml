@@ -1,0 +1,795 @@
+openapi: 3.1.0
+info:
+  title: IncuBrix Long-Tail Distribution API
+  description: |
+    Publishing connectors for long-tail destination networks.
+    Implements the IncuBrix connector contract (Appendix A).
+    All routes under /api/v1/ except connector runtime (/connector/v1/).
+  version: 1.0.0
+  contact:
+    name: IncuBrix Engineering
+    url: https://github.com/Gideon-sam/incubrix-longtail-distribution
+
+servers:
+  - url: http://localhost:8000
+    description: Local development / Docker
+
+tags:
+  - name: Health
+    description: Service health and readiness
+  - name: Connector Runtime
+    description: IncuBrix connector contract — all 7 methods
+  - name: Publish
+    description: Async publish with idempotency
+  - name: Jobs
+    description: Background job status polling
+  - name: Destinations
+    description: Destination catalogue CRUD
+  - name: Certify
+    description: Certification harness (full publish→confirm→delete cycle)
+  - name: Catalogue
+    description: CSV import, AI rules capture, rule confirmation
+  - name: Recommender
+    description: Outstanding level — rank destinations by content fit
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Health check
+      operationId: health_check
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: {type: string, example: ok}
+                  version: {type: string, example: 1.0.0}
+                  simulation_mode: {type: boolean}
+                  timestamp: {type: string, format: date-time}
+
+  /ready:
+    get:
+      tags: [Health]
+      summary: Readiness check (DB + storage connected)
+      operationId: ready_check
+      responses:
+        "200":
+          description: Service is ready
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReadyResponse"
+        "503":
+          description: Service not ready
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /connector/v1/{connector_key}/validate:
+    post:
+      tags: [Connector Runtime]
+      summary: Validate content against destination format limits
+      operationId: connector_validate
+      parameters:
+        - name: connector_key
+          in: path
+          required: true
+          schema: {type: string, example: discourse}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ValidateRequest"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidateResponse"
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /connector/v1/{connector_key}/publish:
+    post:
+      tags: [Connector Runtime]
+      summary: Publish content to platform
+      operationId: connector_publish
+      parameters:
+        - name: connector_key
+          in: path
+          required: true
+          schema: {type: string}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PublishRequest"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublishResponse"
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /connector/v1/{connector_key}/get_status:
+    post:
+      tags: [Connector Runtime]
+      summary: Get status of a published post
+      operationId: connector_get_status
+      parameters:
+        - name: connector_key
+          in: path
+          required: true
+          schema: {type: string}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetStatusRequest"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetStatusResponse"
+
+  /connector/v1/{connector_key}/delete:
+    post:
+      tags: [Connector Runtime]
+      summary: Delete a published post
+      operationId: connector_delete
+      parameters:
+        - name: connector_key
+          in: path
+          required: true
+          schema: {type: string}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeleteRequest"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResponse"
+
+  /connector/v1/{connector_key}/fetch_metrics:
+    post:
+      tags: [Connector Runtime]
+      summary: Fetch normalised metrics for a post (optional)
+      operationId: connector_fetch_metrics
+      parameters:
+        - name: connector_key
+          in: path
+          required: true
+          schema: {type: string}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FetchMetricsRequest"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FetchMetricsResponse"
+
+  /connector/v1/{connector_key}/refresh_auth:
+    post:
+      tags: [Connector Runtime]
+      summary: Refresh authentication credentials (optional)
+      operationId: connector_refresh_auth
+      parameters:
+        - name: connector_key
+          in: path
+          required: true
+          schema: {type: string}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshAuthRequest"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RefreshAuthResponse"
+
+  /connector/v1/{connector_key}/build_assist_pack:
+    post:
+      tags: [Connector Runtime]
+      summary: Build a ready-to-post assist pack (assisted tier)
+      operationId: connector_build_assist_pack
+      parameters:
+        - name: connector_key
+          in: path
+          required: true
+          schema: {type: string}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BuildAssistPackRequest"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BuildAssistPackResponse"
+
+  /api/v1/connectors:
+    get:
+      tags: [Connector Runtime]
+      summary: List all registered connectors with manifests
+      operationId: list_connectors
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  connectors: {type: array, items: {type: object}}
+
+  /api/v1/publish:
+    post:
+      tags: [Publish]
+      summary: Publish content to a destination (async, 202)
+      operationId: publish
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: {type: string}
+          description: Unique key to prevent duplicate posts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PublishJobRequest"
+      responses:
+        "202":
+          description: Job accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobResponse"
+        "409":
+          description: Idempotency key collision (same key, different body)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/v1/jobs/{job_id}:
+    get:
+      tags: [Jobs]
+      summary: Get job status and result
+      operationId: get_job
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          schema: {type: string}
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobStatus"
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/v1/destinations:
+    get:
+      tags: [Destinations]
+      summary: List all destinations in catalogue
+      operationId: list_destinations
+      parameters:
+        - name: connector_key
+          in: query
+          schema: {type: string}
+        - name: level
+          in: query
+          schema: {type: string, enum: [L0, L1, L2, L3, L4]}
+        - name: limit
+          in: query
+          schema: {type: integer, default: 50}
+        - name: offset
+          in: query
+          schema: {type: integer, default: 0}
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  destinations: {type: array}
+                  total: {type: integer}
+    post:
+      tags: [Destinations]
+      summary: Create a new destination
+      operationId: create_destination
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DestinationCreate"
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /api/v1/destinations/{destination_id}:
+    get:
+      tags: [Destinations]
+      summary: Get a destination by ID
+      operationId: get_destination
+      parameters:
+        - name: destination_id
+          in: path
+          required: true
+          schema: {type: string}
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      tags: [Destinations]
+      summary: Update a destination
+      operationId: update_destination
+      parameters:
+        - name: destination_id
+          in: path
+          required: true
+          schema: {type: string}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DestinationCreate"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+    delete:
+      tags: [Destinations]
+      summary: Delete a destination
+      operationId: delete_destination
+      parameters:
+        - name: destination_id
+          in: path
+          required: true
+          schema: {type: string}
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /api/v1/certify:
+    post:
+      tags: [Certify]
+      summary: Run full certification cycle (publish→confirm→delete, async 202)
+      operationId: certify
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CertifyRequest"
+      responses:
+        "202":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobResponse"
+
+  /api/v1/catalogue/import:
+    post:
+      tags: [Catalogue]
+      summary: Import destinations from CSV (Advanced — async 202)
+      operationId: import_catalogue
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "202":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobResponse"
+
+  /api/v1/rules/capture:
+    post:
+      tags: [Catalogue]
+      summary: AI reads rules page and proposes posting rules (Advanced)
+      operationId: capture_rules
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [destination_id, rules_url]
+              properties:
+                destination_id: {type: string}
+                rules_url: {type: string}
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  proposed_rules: {type: array}
+                  confirmation_required: {type: boolean}
+
+  /api/v1/rules/{rule_id}/confirm:
+    post:
+      tags: [Catalogue]
+      summary: Human confirms proposed rule (activates it)
+      operationId: confirm_rule
+      parameters:
+        - name: rule_id
+          in: path
+          required: true
+          schema: {type: string}
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rule_id: {type: string}
+                  status: {type: string, example: confirmed}
+
+  /api/v1/recommend:
+    get:
+      tags: [Recommender]
+      summary: Rank destinations by fit for content (Outstanding)
+      operationId: recommend_destinations
+      parameters:
+        - name: title
+          in: query
+          required: true
+          schema: {type: string}
+        - name: body
+          in: query
+          schema: {type: string, default: ""}
+        - name: has_links
+          in: query
+          schema: {type: boolean, default: true}
+        - name: is_promo
+          in: query
+          schema: {type: boolean, default: false}
+        - name: connector_key
+          in: query
+          schema: {type: string}
+        - name: top_n
+          in: query
+          schema: {type: integer, default: 10, minimum: 1, maximum: 50}
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  recommendations: {type: array}
+                  total_candidates: {type: integer}
+
+  /api/v1/admin/recertify:
+    post:
+      tags: [Recommender]
+      summary: Trigger manual recertification cycle (Outstanding)
+      operationId: trigger_recertification
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /api/v1/admin/recert/status:
+    get:
+      tags: [Recommender]
+      summary: Last recertification summary
+      operationId: recert_status
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+
+components:
+  schemas:
+    Rendition:
+      type: object
+      properties:
+        title: {type: string}
+        body: {type: string}
+        media_urls: {type: array, items: {type: string}}
+        tags: {type: array, items: {type: string}}
+        canonical_url: {type: string, nullable: true}
+        is_ai_generated: {type: boolean}
+        format: {type: string, enum: [markdown, html, plain]}
+        metadata: {type: object}
+
+    Connection:
+      type: object
+      properties:
+        api_key: {type: string, nullable: true}
+        api_url: {type: string, nullable: true}
+        username: {type: string, nullable: true}
+        password: {type: string, nullable: true}
+        token: {type: string, nullable: true}
+        extra: {type: object}
+
+    DestinationRef:
+      type: object
+      required: [destination_id, platform_key]
+      properties:
+        destination_id: {type: string}
+        platform_key: {type: string}
+        surface: {type: string, default: topic}
+        instance_config: {type: object}
+        rules: {type: object}
+
+    ValidateRequest:
+      type: object
+      required: [rendition, destination, connection]
+      properties:
+        rendition: {$ref: "#/components/schemas/Rendition"}
+        destination: {$ref: "#/components/schemas/DestinationRef"}
+        connection: {$ref: "#/components/schemas/Connection"}
+
+    ValidateResponse:
+      type: object
+      properties:
+        ok: {type: boolean}
+        violations:
+          type: array
+          items:
+            type: object
+            properties:
+              field: {type: string}
+              message: {type: string}
+              code: {type: string}
+
+    PublishRequest:
+      type: object
+      required: [rendition, destination, connection, idempotency_key]
+      properties:
+        rendition: {$ref: "#/components/schemas/Rendition"}
+        destination: {$ref: "#/components/schemas/DestinationRef"}
+        connection: {$ref: "#/components/schemas/Connection"}
+        idempotency_key: {type: string}
+
+    PublishResponse:
+      type: object
+      properties:
+        platform_post_id: {type: string}
+        live_url: {type: string}
+        status: {type: string, enum: [published, draft, pending]}
+
+    GetStatusRequest:
+      type: object
+      required: [platform_post_id, connection]
+      properties:
+        platform_post_id: {type: string}
+        connection: {$ref: "#/components/schemas/Connection"}
+
+    GetStatusResponse:
+      type: object
+      properties:
+        status: {type: string, enum: [published, deleted, pending, unknown]}
+        live_url: {type: string, nullable: true}
+
+    DeleteRequest:
+      type: object
+      required: [platform_post_id, connection]
+      properties:
+        platform_post_id: {type: string}
+        connection: {$ref: "#/components/schemas/Connection"}
+
+    DeleteResponse:
+      type: object
+      properties:
+        deleted: {type: boolean}
+
+    FetchMetricsRequest:
+      type: object
+      required: [platform_post_id, connection]
+      properties:
+        platform_post_id: {type: string}
+        connection: {$ref: "#/components/schemas/Connection"}
+        since: {type: string, format: date-time, nullable: true}
+
+    FetchMetricsResponse:
+      type: object
+      properties:
+        views: {type: integer}
+        likes: {type: integer}
+        comments: {type: integer}
+        shares: {type: integer}
+        saves: {type: integer}
+        watch_time_s: {type: integer}
+        clicks: {type: integer}
+
+    RefreshAuthRequest:
+      type: object
+      required: [connection]
+      properties:
+        connection: {$ref: "#/components/schemas/Connection"}
+
+    RefreshAuthResponse:
+      type: object
+      properties:
+        expires_at: {type: string, format: date-time, nullable: true}
+
+    BuildAssistPackRequest:
+      type: object
+      required: [rendition, destination]
+      properties:
+        rendition: {$ref: "#/components/schemas/Rendition"}
+        destination: {$ref: "#/components/schemas/DestinationRef"}
+
+    BuildAssistPackResponse:
+      type: object
+      properties:
+        files: {type: array, items: {type: string}}
+        caption: {type: string}
+        deep_link: {type: string}
+        checklist: {type: array, items: {type: string}}
+
+    PublishJobRequest:
+      type: object
+      required: [connector_key, destination_id, rendition]
+      properties:
+        connector_key: {type: string}
+        destination_id: {type: string}
+        rendition: {$ref: "#/components/schemas/Rendition"}
+        callback_url: {type: string, nullable: true}
+
+    CertifyRequest:
+      type: object
+      required: [connector_key, destination_id]
+      properties:
+        connector_key: {type: string}
+        destination_id: {type: string}
+
+    JobResponse:
+      type: object
+      properties:
+        job_id: {type: string}
+
+    JobStatus:
+      type: object
+      properties:
+        job_id: {type: string}
+        type: {type: string}
+        status: {type: string, enum: [queued, running, succeeded, failed]}
+        progress: {type: integer, minimum: 0, maximum: 100}
+        result_url: {type: string, nullable: true}
+        result_data: {type: object, nullable: true}
+        created_at: {type: string, format: date-time}
+        updated_at: {type: string, format: date-time}
+
+    DestinationCreate:
+      type: object
+      required: [name, url, platform_key, connector_key]
+      properties:
+        name: {type: string}
+        url: {type: string}
+        platform_key: {type: string}
+        surface: {type: string, default: topic}
+        category: {type: string}
+        audience_tags: {type: array, items: {type: string}}
+        language: {type: string, default: en}
+        geo: {type: string}
+        est_audience: {type: integer}
+        rules_url: {type: string}
+        frequency_cap: {type: string}
+        self_promo_allowed: {type: boolean, default: true}
+        link_policy: {type: string, enum: [allowed, forbidden, approval_required]}
+        disclosure_required: {type: boolean, default: false}
+        automation_allowed: {type: boolean, default: true}
+        connector_key: {type: string}
+        level: {type: string, enum: [L0, L1, L2, L3, L4], default: L0}
+        instance_config: {type: object}
+
+    ReadyResponse:
+      type: object
+      properties:
+        ready: {type: boolean}
+        checks:
+          type: object
+          properties:
+            database: {type: boolean}
+            storage: {type: boolean}
+            connectors: {type: integer}
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          required: [code, message, retryable]
+          properties:
+            code:
+              type: string
+              enum:
+                - DEST_SPEC_VIOLATION
+                - DEST_RULE_FREQUENCY_CAP
+                - CONNECTION_AUTH_EXPIRED
+                - PLATFORM_RATE_LIMIT
+                - PLATFORM_QUOTA_EXHAUSTED
+                - PLATFORM_CONTENT_REJECTED
+                - PLATFORM_UNAVAILABLE
+                - CONNECTOR_DISABLED
+            message: {type: string}
+            retryable: {type: boolean}
+            details: {type: object}
+
+  securitySchemes:
+    AccessToken:
+      type: apiKey
+      in: header
+      name: X-Access-Token
+      description: Optional access token for public demo protection
+
+security:
+  - AccessToken: []

@@ -1,0 +1,27 @@
+key: devto
+version: 1.0.0
+tier: native          # L3 native API — publish, status, delete
+auth: api_key
+surfaces:
+  - key: article
+    content_types: [text, image]
+    spec:
+      title_max_chars: 250
+      body_max_chars: 50000
+      links_allowed: true
+      tags_max: 4
+rate_limits:
+  per_connection:
+    requests: 30
+    per_seconds: 30
+capabilities: [publish, status]
+# NOTE: Dev.to API does not support deleting articles via API.
+# Workaround: publish as unpublished draft (published: false) during certification.
+# This means the post is never public — safe and rules-compliant.
+delete_note: "Dev.to does not support article deletion via API. Certification uses unpublished drafts only."
+error_map:
+  "429": PLATFORM_RATE_LIMIT
+  "422": PLATFORM_CONTENT_REJECTED
+  "401": CONNECTION_AUTH_EXPIRED
+  "403": CONNECTION_AUTH_EXPIRED
+instance_param: null    # One Dev.to account per API key — no instance config needed

@@ -1,0 +1,13 @@
+key: mrss
+version: 1.0.0
+tier: feed
+auth: none
+surfaces:
+  - key: video_feed
+    content_types: [video_link, text]
+    spec:
+      title_max_chars: 200
+      body_max_chars: 5000
+      links_allowed: true
+capabilities: [publish, status, delete]
+instance_param: feed_url

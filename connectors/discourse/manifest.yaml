@@ -1,0 +1,22 @@
+key: discourse
+version: 1.0.0
+tier: native
+auth: api_key
+surfaces:
+  - key: topic
+    content_types: [text, image, video_link]
+    spec:
+      title_max_chars: 255
+      body_max_chars: 32000
+      links_allowed: true
+rate_limits:
+  per_connection:
+    requests: 60
+    per_seconds: 60
+capabilities: [publish, status, delete, metrics]
+error_map:
+  "429": PLATFORM_RATE_LIMIT
+  "422": PLATFORM_CONTENT_REJECTED
+  "401": CONNECTION_AUTH_EXPIRED
+  "403": CONNECTION_AUTH_EXPIRED
+instance_param: base_url    # One connector, many forums — base_url per destination

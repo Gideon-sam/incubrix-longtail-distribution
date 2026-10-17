@@ -1,0 +1,256 @@
+# =============================================================================
+# IncuBrix Long-Tail Distribution — docker-compose.yml
+# One command: docker compose up --build → everything starts, zero manual steps
+# =============================================================================
+version: "3.9"
+
+services:
+
+  # ── PostgreSQL ─────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: incubrix
+      POSTGRES_PASSWORD: incubrix_pass
+      POSTGRES_DB: incubrix
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U incubrix"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── Redis ──────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ── MinIO (S3-compatible storage) ──────────────────────────
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: incubrix
+      MINIO_ROOT_PASSWORD: incubrix_secret
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Lemmy (real ActivityPub server) ────────────────────────
+  lemmy:
+    image: dessalines/lemmy:0.19.3
+    restart: unless-stopped
+    environment:
+      RUST_LOG: error
+      LEMMY_DATABASE_URL: postgres://incubrix:incubrix_pass@postgres:5432/incubrix
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8536/api/v3/site"]
+      interval: 15s
+      timeout: 5s
+      retries: 12
+
+  # ── Lemmy-UI (needed for Lemmy to work) ────────────────────
+  lemmy-ui:
+    image: dessalines/lemmy-ui:0.19.3
+    restart: unless-stopped
+    environment:
+      LEMMY_UI_LEMMY_INTERNAL_HOST: lemmy:8536
+      LEMMY_UI_LEMMY_EXTERNAL_HOST: localhost:8536
+    depends_on:
+      - lemmy
+
+  # ── Ghost (real blog/CMS) ──────────────────────────────────
+  ghost:
+    image: ghost:5-alpine
+    restart: unless-stopped
+    environment:
+      database__client: sqlite3
+      database__connection__filename: /var/lib/ghost/content/data/ghost.db
+      url: http://ghost:2368
+      NODE_ENV: development
+    volumes:
+      - ghost_data:/var/lib/ghost/content
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:2368/ghost/api/admin/site/"]
+      interval: 15s
+      timeout: 5s
+      retries: 12
+
+  # ── Mock Discourse ─────────────────────────────────────────
+  mock-discourse:
+    build:
+      context: .
+      dockerfile: Dockerfile.mocks
+    command: uvicorn mock_servers.discourse_mock:app --host 0.0.0.0 --port 4100
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4100/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # ── Mock Webhook Receiver ──────────────────────────────────
+  mock-webhook:
+    build:
+      context: .
+      dockerfile: Dockerfile.mocks
+    command: uvicorn mock_servers.webhook_receiver:app --host 0.0.0.0 --port 4200
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4200/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # ── Mock Hashnode ──────────────────────────────────────────
+  mock-hashnode:
+    build:
+      context: .
+      dockerfile: Dockerfile.mocks
+    command: uvicorn mock_servers.hashnode_mock:app --host 0.0.0.0 --port 4300
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4300/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # ── Mock PeerTube ──────────────────────────────────────────
+  mock-peertube:
+    build:
+      context: .
+      dockerfile: Dockerfile.mocks
+    command: uvicorn mock_servers.peertube_mock:app --host 0.0.0.0 --port 4400
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4400/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # ── Bootstrap (runs init scripts, then exits) ──────────────
+  bootstrap:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: >
+      sh -c "
+        pip install httpx -q &&
+        python scripts/lemmy_bootstrap.py &&
+        python scripts/ghost_bootstrap.py
+      "
+    environment:
+      LEMMY_API_URL: http://lemmy:8536
+      LEMMY_USERNAME: incubrix_admin
+      LEMMY_PASSWORD: incubrix_pass
+      GHOST_API_URL: http://ghost:2368
+    depends_on:
+      lemmy:
+        condition: service_healthy
+      ghost:
+        condition: service_healthy
+    restart: "no"
+
+  # ── IncuBrix Main API ──────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://incubrix:incubrix_pass@postgres:5432/incubrix
+      REDIS_URL: redis://redis:6379/0
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: incubrix
+      MINIO_SECRET_KEY: incubrix_secret
+      GHOST_API_URL: http://ghost:2368
+      LEMMY_API_URL: http://lemmy:8536
+      DISCOURSE_API_URL: http://mock-discourse:4100
+      HMAC_WEBHOOK_URL: http://mock-webhook:4200/webhook
+      HASHNODE_API_URL: http://mock-hashnode:4300
+      PEERTUBE_API_URL: http://mock-peertube:4400
+      SIMULATION_MODE: "false"
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      mock-discourse:
+        condition: service_healthy
+      mock-webhook:
+        condition: service_healthy
+      mock-hashnode:
+        condition: service_healthy
+      mock-peertube:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - ./outputs:/app/outputs
+
+  # ── Test runner (profile=test) ──────────────────────────────
+  # Run with: docker compose --profile test up --build --abort-on-container-exit test-runner
+  test-runner:
+    profiles: ["test"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+    working_dir: /app
+    environment:
+      SIMULATION_MODE: "true"
+      LLM_PROVIDER: mock
+      DATABASE_URL: "sqlite+aiosqlite:///./test.db"
+      REDIS_URL: "redis://redis:6379/99"
+      MINIO_ENDPOINT: "minio:9000"
+      MINIO_ACCESS_KEY: "incubrix"
+      MINIO_SECRET_KEY: "incubrix_secret"
+      DISCOURSE_API_URL: "http://mock-discourse:4100"
+      HMAC_WEBHOOK_URL: "http://mock-webhook:4200/webhook"
+      HASHNODE_API_URL: "http://mock-hashnode:4300"
+      PEERTUBE_API_URL: "http://mock-peertube:4400"
+      LEMMY_API_URL: "http://lemmy:8536"
+      GHOST_API_URL: "http://ghost:2368"
+    command: >
+      pytest tests/ -v --tb=short
+        --cov=api --cov=connectors
+        --cov-report=term-missing
+        --cov-report=html:/app/tests/coverage_html
+    depends_on:
+      - redis
+      - minio
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+  ghost_data:

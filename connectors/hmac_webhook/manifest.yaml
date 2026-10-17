@@ -1,0 +1,21 @@
+key: hmac_webhook
+version: 1.0.0
+tier: native
+auth: api_key         # HMAC secret key
+surfaces:
+  - key: webhook
+    content_types: [text, image, video_link]
+    spec:
+      title_max_chars: 500
+      body_max_chars: 50000
+      links_allowed: true
+rate_limits:
+  per_connection:
+    requests: 100
+    per_seconds: 60
+capabilities: [publish, status, delete]
+error_map:
+  "429": PLATFORM_RATE_LIMIT
+  "401": CONNECTION_AUTH_EXPIRED
+  "403": CONNECTION_AUTH_EXPIRED
+instance_param: webhook_url    # One connector, many partner webhook URLs

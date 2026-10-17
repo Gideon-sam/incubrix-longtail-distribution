@@ -1,0 +1,15 @@
+key: peertube
+version: 1.0.0
+tier: native
+auth: api_key
+surfaces:
+  - key: video
+    content_types: [video_link, text]
+    spec:
+      title_max_chars: 120
+      body_max_chars: 10000
+      links_allowed: true
+rate_limits:
+  per_connection: {requests: 60, per_seconds: 60}
+capabilities: [publish, status, delete]
+instance_param: api_url

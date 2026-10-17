@@ -1,0 +1,44 @@
+[
+  {
+    "name": "Discourse validate - valid",
+    "method": "POST",
+    "path": "/connector/v1/discourse/validate",
+    "headers": {"Idempotency-Key": "val-discourse-1"},
+    "body": {
+      "rendition": {"title": "Discussion: IncuBrix long-tail distribution strategy", "body": "Great topic for the community.", "tags": [], "is_ai_generated": false},
+      "destination": {"destination_id": "test-d1", "platform_key": "discourse", "surface": "topic", "instance_config": {"category_id": 1}},
+      "connection": {"api_key": "mock_discourse_key", "username": "incubrix_admin"}
+    },
+    "expected_status": 200
+  },
+  {
+    "name": "Dev.to validate - title too long",
+    "method": "POST",
+    "path": "/connector/v1/devto/validate",
+    "headers": {"Idempotency-Key": "val-devto-1"},
+    "body": {
+      "rendition": {"title": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", "body": "Valid body", "tags": [], "is_ai_generated": false},
+      "destination": {"destination_id": "test-d2", "platform_key": "devto", "surface": "article", "instance_config": {}},
+      "connection": {"api_key": "test"}
+    },
+    "expected_status": 200
+  },
+  {
+    "name": "Unknown connector - 404",
+    "method": "POST",
+    "path": "/connector/v1/nonexistent/validate",
+    "headers": {"Idempotency-Key": "val-none-1"},
+    "body": {
+      "rendition": {"title": "test", "body": "test"},
+      "destination": {"destination_id": "x", "platform_key": "unknown", "surface": "topic"},
+      "connection": {}
+    },
+    "expected_status": 404
+  },
+  {
+    "name": "Job not found",
+    "method": "GET",
+    "path": "/api/v1/jobs/nonexistent-job-id-12345",
+    "expected_status": 404
+  }
+]
