@@ -44,7 +44,7 @@
     <div class="nav-right-meta">
       <div class="badge-live-beacon" id="system-beacon">
         <span class="pulse-dot"></span>
-        <span id="beacon-text">9/9 CONNECTORS LIVE</span>
+        <span id="beacon-text">LOADING...</span>
       </div>
       <a href="/docs" target="_blank" class="api-docs-link">
         <svg class="nav-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> API Docs
@@ -57,8 +57,8 @@
 
   <!-- Hero Presentation Banner -->
   <section class="hero-section">
-    <div class="hero-tag">
-      <span>●</span> Official Distribution Product · Assessment 4 Level 3 Outstanding
+    <div class="hero-tag" id="hero-tag">
+      <span>●</span> IncuBrix Distribution Product · Assessment 4
     </div>
     <h1 class="hero-title">
       Unified Publishing Across <span class="gradient-text">Niche Communities</span>
@@ -91,16 +91,16 @@
           <span>Anti-Spam Safety</span>
           <span style="color:var(--ok)">● Active</span>
         </div>
-        <div class="tele-val">100%</div>
-        <div class="tele-desc">Frequency Cap & Policy Guard</div>
+        <div class="tele-val">Rules</div>
+        <div class="tele-desc">Frequency Cap &amp; Policy Guard</div>
       </div>
       <div class="telemetry-card">
         <div class="tele-label">
           <span>Integration Standard</span>
-          <span style="color:var(--brand-purple)">● Perfect Score</span>
+          <span style="color:var(--brand-purple)" id="int-std-badge">● Loading...</span>
         </div>
-        <div class="tele-val">10 / 10</div>
-        <div class="tele-desc">All Architecture Requirements</div>
+        <div class="tele-val" id="metric-int-std">—</div>
+        <div class="tele-desc">Architecture Requirements</div>
       </div>
     </div>
   </section>
@@ -1241,8 +1241,10 @@ Learn more at https://incubrix.com</textarea>
         formData.append("file", file);
 
         try {
+          const importKey = "import-" + safeUUID();
           const res = await fetch("/api/v1/catalogue/import", {
             method: "POST",
+            headers: { "Idempotency-Key": importKey },
             body: formData
           });
           if (!res.ok) throw new Error("Import failed");
@@ -1286,45 +1288,72 @@ Learn more at https://incubrix.com</textarea>
       setStep(1);
 
       try {
+        // Look up a real destination for this connector
+        const matchDest = allDestinations.find(d => d.connector_key === conn);
+        const destId = matchDest ? matchDest.id : `${conn}-default`;
+        appendCertLog(`[TARGET] Destination: ${matchDest ? matchDest.name : destId}`, "info");
+
+        const certKey = "cert-" + safeUUID();
         const res = await fetch("/api/v1/certify", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "Idempotency-Key": certKey
+          },
           body: JSON.stringify({
-            destination_id: `${conn}-default`,
-            connection: { auth_type: "api_key", credentials: { api_key: "cert-pass" } }
+            destination_id: destId,
+            connection: { auth_type: "api_key", credentials: { api_key: "cert-pass" }, extra: { simulation: true } }
           })
         });
 
-        if (!res.ok) throw new Error("Certification initiation failed");
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error?.message || `HTTP ${res.status}`);
+        }
         const data = await res.json();
         const jobId = data.job_id;
         appendCertLog(`[JOB] Job ${jobId} registered on task runner`, "success");
 
-        // Simulating step telemetry visual progression
-        setTimeout(() => {
-          setStep(2);
-          appendCertLog(`[STAGE 2] Publishing sandbox test payload...`, "info");
-        }, 800);
+        // Visual step progression
+        setTimeout(() => { setStep(2); appendCertLog(`[STAGE 2] Publishing sandbox test payload...`, "info"); }, 800);
+        setTimeout(() => { setStep(3); appendCertLog(`[STAGE 3] Fetching live URL status...`, "info"); }, 1800);
+        setTimeout(() => { setStep(4); appendCertLog(`[STAGE 4] Executing safe teardown delete...`, "info"); }, 2800);
 
-        setTimeout(() => {
-          setStep(3);
-          appendCertLog(`[STAGE 3] Fetching and verifying published live URL status...`, "info");
-        }, 1600);
-
-        setTimeout(() => {
-          setStep(4);
-          appendCertLog(`[STAGE 4] Executing safe teardown delete to leave no trace...`, "info");
-        }, 2400);
-
-        setTimeout(() => {
-          setStep(5);
-          appendCertLog(`[STAGE 5] Uploading SHA-256 signed evidence archive to MinIO...`, "success");
-          statusPill.textContent = "CERTIFIED";
-          statusPill.style.color = "var(--ok)";
-          showToast(`Connector "${conn}" fully CERTIFIED!`, "success");
-          btn.disabled = false;
-          btn.innerHTML = `Run Full Certification Loop`;
-        }, 3200);
+        // Poll actual job status
+        let polls = 0;
+        const certPoll = setInterval(async () => {
+          polls++;
+          if (polls > 40) { clearInterval(certPoll); return; }
+          try {
+            const jr = await fetch(`/api/v1/jobs/${jobId}`);
+            if (!jr.ok) return;
+            const job = await jr.json();
+            if (job.status === "succeeded") {
+              clearInterval(certPoll);
+              setStep(5);
+              const lvl = job.result_data?.level || "L3";
+              const evidUrl = job.result_data?.evidence_url || job.result_url || "";
+              appendCertLog(`[STAGE 5] SHA-256 evidence archived to MinIO. Level: ${lvl}`, "success");
+              if (evidUrl) appendCertLog(`[EVIDENCE] ${evidUrl}`, "info");
+              statusPill.textContent = `CERTIFIED ${lvl}`;
+              statusPill.style.color = "var(--ok)";
+              showToast(`Connector "${conn}" certified at ${lvl}!`, "success");
+              btn.disabled = false;
+              btn.innerHTML = `Run Full Certification Loop`;
+            } else if (job.status === "failed") {
+              clearInterval(certPoll);
+              const errMsg = job.error_message || "Unknown error";
+              appendCertLog(`[ERROR] ${errMsg}`, "error");
+              statusPill.textContent = "FAILED";
+              statusPill.style.color = "var(--danger)";
+              showToast(`Certification failed: ${errMsg}`, "error");
+              btn.disabled = false;
+              btn.innerHTML = `Run Full Certification Loop`;
+            } else {
+              appendCertLog(`[POLL] Job ${job.status} · ${job.progress || 0}% complete...`, "info");
+            }
+          } catch (e) { /* silent */ }
+        }, 750);
 
       } catch (err) {
         appendCertLog(`[ERROR] Certification failed: ${err.message}`, "error");

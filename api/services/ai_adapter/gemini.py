@@ -16,11 +16,15 @@ from api.middleware.logging_mw import get_logger
 
 log = get_logger("services.ai_adapter.gemini")
 
-PREFERRED_MODELS = [
-    "gemini-3.8-flash",
-    "gemini-flash-latest",
-    "gemini-2.5-flash",
-]
+def _get_preferred_models() -> list[str]:
+    """Load model list from GEMINI_MODEL env var, fall back to known-good models."""
+    raw = settings.GEMINI_MODEL or ""
+    models = [m.strip() for m in raw.split(",") if m.strip()]
+    # Always include guaranteed fallback models
+    for fallback in ["gemini-2.5-flash", "gemini-1.5-flash"]:
+        if fallback not in models:
+            models.append(fallback)
+    return models
 
 
 class GeminiAdapter(BaseAIAdapter):
@@ -35,7 +39,7 @@ class GeminiAdapter(BaseAIAdapter):
             raise ValueError("GEMINI_API_KEY is not configured.")
 
         last_error = None
-        for model in PREFERRED_MODELS:
+        for model in _get_preferred_models():
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={self._api_key}"
             payload = {
                 "contents": [{"parts": [{"text": prompt}]}],
