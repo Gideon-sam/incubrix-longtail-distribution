@@ -268,6 +268,7 @@ services:
       retries: 5
     volumes:
       - ./outputs:/app/outputs
+      - ./templates:/app/templates
       - shared_secrets:/run/secrets-shared:ro
     deploy:
       resources:
