@@ -6,7 +6,6 @@ Fields match Appendix A's "Destination record" exactly.
 """
 from __future__ import annotations
 from datetime import datetime, timezone
-from typing import Optional
 import uuid
 
 from sqlalchemy import String, Integer, Text, Boolean, Float, DateTime, JSON
@@ -51,6 +50,9 @@ class Destination(Base):
     )  # allowed | restricted | forbidden
     disclosure_required: Mapped[bool] = mapped_column(Boolean, default=False)
     automation_allowed: Mapped[bool] = mapped_column(Boolean, default=True)
+
+    # Status: active, revoked, paused
+    status: Mapped[str] = mapped_column(String(20), default="active")
 
     # ── Scoring ─────────────────────────────────────────────
     relevance_score: Mapped[float | None] = mapped_column(Float, nullable=True)  # 1-5

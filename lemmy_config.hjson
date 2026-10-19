@@ -1,0 +1,22 @@
+{
+  database: {
+    host: "postgres"
+    port: 5432
+    user: "incubrix"
+    password: "incubrix_pass"
+    database: "lemmy"
+    pool_size: 5
+  }
+  hostname: "localhost:8536"
+  bind: "0.0.0.0"
+  port: 8536
+  tls_enabled: false
+  setup: {
+    admin_username: "incubrix_admin"
+    admin_password: "incubrix_pass"
+    site_name: "IncuBrix Lemmy"
+  }
+  federation: {
+    enabled: false
+  }
+}

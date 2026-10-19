@@ -2,6 +2,7 @@
 Destination schemas — CRUD and catalogue import request/response models.
 """
 from __future__ import annotations
+from datetime import datetime
 from typing import Any, Optional
 from pydantic import BaseModel, Field
 
@@ -25,6 +26,7 @@ class DestinationCreate(BaseModel):
     link_policy: str = "allowed"
     disclosure_required: bool = False
     automation_allowed: bool = True
+    status: str = "active"
     instance_config: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -50,8 +52,11 @@ class DestinationResponse(BaseModel):
     relevance_score: Optional[float] = None
     relevance_reason: Optional[str] = None
     level: str
-    last_certified_at: Optional[str] = None
+    status: Optional[str] = "active"
+    last_certified_at: Optional[datetime] = None
     instance_config: Optional[dict[str, Any]] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
     model_config = {"from_attributes": True}
 
@@ -62,6 +67,7 @@ class DestinationRulesUpdate(BaseModel):
     self_promo_allowed: Optional[bool] = None
     link_policy: Optional[str] = None
     disclosure_required: Optional[bool] = None
+    status: Optional[str] = None
 
 
 class CatalogueImportResponse(BaseModel):

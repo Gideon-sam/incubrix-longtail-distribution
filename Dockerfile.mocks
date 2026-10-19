@@ -1,6 +1,6 @@
 # Mock servers use the same Python base image
 FROM python:3.12-slim
 WORKDIR /app
-RUN pip install --no-cache-dir fastapi uvicorn httpx
+RUN pip install --no-cache-dir fastapi uvicorn httpx pydantic
 COPY mock_servers/ ./mock_servers/
-EXPOSE 4100 4200 4300 4400
+EXPOSE 4100 4101 4200 4300 4400

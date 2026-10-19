@@ -4,18 +4,43 @@ Destination auto-seeder.
 Ensures that fresh environments (docker-compose, local testing, assessment test runner)
 start with a populated catalogue containing core destinations for all 9 connectors
 and the full 150+ real-world destinations from catalogue/real_destinations.csv.
+
+Phase 1.5 compliance:
+- Seeded and imported destinations start at L0 (catalogued), or L1 if automation_allowed=false (assisted).
+- last_certified_at stays NULL until an actual /certify run passes.
 """
 from __future__ import annotations
 import csv
 from pathlib import Path
-from datetime import datetime, timezone
+from urllib.parse import urlparse
 
 from sqlalchemy import select, func
 from api.database import async_session
 from api.models.destination import Destination
 from api.middleware.logging_mw import get_logger
+from api.config import settings
 
 log = get_logger("services.seeder")
+
+# Allowed automated hosts list from env
+ALLOWED_HOSTS = [h.strip().lower() for h in settings.ALLOWED_AUTOMATED_HOSTS.split(",") if h.strip()]
+
+
+def is_host_allowlisted(url: str) -> bool:
+    """Check if URL belongs to allowlisted automated hosts."""
+    try:
+        parsed = urlparse(url)
+        host_with_port = parsed.netloc.lower()
+        full_origin = f"{parsed.scheme}://{host_with_port}".lower()
+        for allowed in ALLOWED_HOSTS:
+            al_parsed = urlparse(allowed)
+            al_origin = f"{al_parsed.scheme}://{al_parsed.netloc}".lower()
+            if full_origin == al_origin or host_with_port == al_parsed.netloc.lower():
+                return True
+        return False
+    except Exception:
+        return False
+
 
 # Default core destinations for each connector
 CORE_DESTINATIONS = [
@@ -36,7 +61,7 @@ CORE_DESTINATIONS = [
         "automation_allowed": True,
         "relevance_score": 5.0,
         "relevance_reason": "Top developer publishing community",
-        "level": "L3",
+        "level": "L0",
         "instance_config": {},
     },
     {
@@ -56,7 +81,7 @@ CORE_DESTINATIONS = [
         "automation_allowed": True,
         "relevance_score": 4.5,
         "relevance_reason": "High-engagement forum community",
-        "level": "L3",
+        "level": "L0",
         "instance_config": {"category_id": 1, "base_url": "http://mock-discourse:4100"},
     },
     {
@@ -76,7 +101,7 @@ CORE_DESTINATIONS = [
         "automation_allowed": True,
         "relevance_score": 4.0,
         "relevance_reason": "Federated community network",
-        "level": "L3",
+        "level": "L0",
         "instance_config": {"api_url": "http://lemmy:8536", "community_id": 1},
     },
     {
@@ -96,7 +121,7 @@ CORE_DESTINATIONS = [
         "automation_allowed": True,
         "relevance_score": 4.5,
         "relevance_reason": "Direct publisher CMS and newsletter",
-        "level": "L3",
+        "level": "L0",
         "instance_config": {"api_url": "http://ghost:2368"},
     },
     {
@@ -116,7 +141,7 @@ CORE_DESTINATIONS = [
         "automation_allowed": True,
         "relevance_score": 4.0,
         "relevance_reason": "Authenticated partner syndication pipeline",
-        "level": "L3",
+        "level": "L0",
         "instance_config": {"webhook_url": "http://mock-webhook:4200/webhook"},
     },
     {
@@ -136,7 +161,7 @@ CORE_DESTINATIONS = [
         "automation_allowed": True,
         "relevance_score": 4.5,
         "relevance_reason": "GraphQL developer publication platform",
-        "level": "L3",
+        "level": "L0",
         "instance_config": {"publication_id": "pub_mock_123"},
     },
     {
@@ -156,7 +181,7 @@ CORE_DESTINATIONS = [
         "automation_allowed": True,
         "relevance_score": 4.0,
         "relevance_reason": "ActivityPub federated video network",
-        "level": "L3",
+        "level": "L0",
         "instance_config": {"channel_id": "1"},
     },
     {
@@ -196,7 +221,7 @@ CORE_DESTINATIONS = [
         "automation_allowed": True,
         "relevance_score": 4.0,
         "relevance_reason": "Standardized media syndication feed",
-        "level": "L2",
+        "level": "L0",
         "instance_config": {"feed_name": "default"},
     },
 ]
@@ -214,6 +239,7 @@ async def seed_initial_destinations():
 
         # 1. Add core destinations for all connectors
         for item in CORE_DESTINATIONS:
+            level = "L1" if not item.get("automation_allowed", True) else "L0"
             dest = Destination(
                 id=item["id"],
                 name=item["name"],
@@ -229,11 +255,12 @@ async def seed_initial_destinations():
                 link_policy=item.get("link_policy", "allowed"),
                 disclosure_required=item.get("disclosure_required", False),
                 automation_allowed=item.get("automation_allowed", True),
+                status="active",
                 relevance_score=item.get("relevance_score", 4.0),
                 relevance_reason=item.get("relevance_reason"),
-                level=item.get("level", "L3"),
+                level=level,
                 instance_config=item.get("instance_config", {}),
-                last_certified_at=datetime.now(timezone.utc),
+                last_certified_at=None,
             )
             db.add(dest)
 
@@ -250,18 +277,43 @@ async def seed_initial_destinations():
                             continue
 
                         # Check if URL already in core destinations
-                        if any(c["url"].rstrip("/") == url for c in CORE_DESTINATIONS):
+                        if any(str(c.get("url", "")).rstrip("/") == url for c in CORE_DESTINATIONS):
                             continue
 
                         tags = [t.strip() for t in row.get("audience_tags", "").split(",") if t.strip()]
                         aud_str = row.get("est_audience", "")
-                        est_aud = int(aud_str) if aud_str.isdigit() else None
+                        est_aud = None
+                        if aud_str:
+                            try:
+                                est_aud = int(float(aud_str))
+                            except (ValueError, TypeError):
+                                est_aud = None
+
+                        auto_allowed = row.get("automation_allowed", "true").lower() == "true"
+                        is_allowlisted = is_host_allowlisted(url)
+
+                        # Real catalogue destinations outside our owned hosts route to assisted
+                        if not auto_allowed or not is_allowlisted:
+                            connector_key = "assisted"
+                            level = "L1" if not auto_allowed else "L0"
+                        else:
+                            connector_key = row.get("connector_key", "assisted").strip()
+                            level = "L0"
+
+                        rel_score = 4.0
+                        if row.get("relevance_score"):
+                            try:
+                                parsed_rel = float(row.get("relevance_score"))
+                                if parsed_rel == parsed_rel:  # not NaN
+                                    rel_score = parsed_rel
+                            except (ValueError, TypeError):
+                                rel_score = 4.0
 
                         dest = Destination(
                             name=name,
                             url=url,
                             platform_key=row.get("platform_key", "assisted").strip(),
-                            connector_key=row.get("connector_key", "assisted").strip(),
+                            connector_key=connector_key,
                             surface=row.get("surface", "topic").strip(),
                             category=row.get("category", "").strip() or None,
                             audience_tags=tags,
@@ -273,10 +325,12 @@ async def seed_initial_destinations():
                             self_promo_allowed=row.get("self_promo_allowed", "true").lower() == "true",
                             link_policy=row.get("link_policy", "allowed").strip(),
                             disclosure_required=row.get("disclosure_required", "false").lower() == "true",
-                            automation_allowed=row.get("automation_allowed", "true").lower() == "true",
-                            relevance_score=float(row.get("relevance_score", 4.0) or 4.0),
+                            automation_allowed=auto_allowed,
+                            status="active",
+                            relevance_score=rel_score,
                             relevance_reason=row.get("relevance_reason", "").strip() or None,
-                            level=row.get("level", "L1").strip(),
+                            level=level,
+                            last_certified_at=None,
                             instance_config={},
                         )
                         db.add(dest)

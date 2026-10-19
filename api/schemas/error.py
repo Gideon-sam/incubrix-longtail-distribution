@@ -2,14 +2,15 @@
 Error schemas — Integration Standard #5.
 
 All errors are JSON: {"error": {"code", "message", "retryable", "details"}}.
-Codes are UPPER_SNAKE_CASE from the 8 shared codes in Appendix A.
+Codes are UPPER_SNAKE_CASE from the 8 shared codes in Appendix A, plus
+generic HTTP codes NOT_FOUND and VALIDATION_ERROR.
 """
 from __future__ import annotations
 from typing import Any, Optional
 from pydantic import BaseModel
 
 
-# The 8 shared error codes from the IncuBrix connector contract
+# The 8 shared error codes from the IncuBrix connector contract (Appendix A)
 SHARED_ERROR_CODES = {
     "DEST_SPEC_VIOLATION",       # Content breaks format limits or rules
     "DEST_RULE_FREQUENCY_CAP",   # Frequency cap reached
@@ -20,6 +21,14 @@ SHARED_ERROR_CODES = {
     "PLATFORM_UNAVAILABLE",      # Retry; stop after 5 consecutive failures
     "CONNECTOR_DISABLED",        # Kill switch is on
 }
+
+# Generic HTTP error codes (separate from the 8 shared codes)
+GENERIC_ERROR_CODES = {
+    "NOT_FOUND",                 # 404 resource or route not found
+    "VALIDATION_ERROR",          # 422 request schema validation error
+}
+
+ALL_ERROR_CODES = SHARED_ERROR_CODES | GENERIC_ERROR_CODES
 
 
 class ErrorDetail(BaseModel):

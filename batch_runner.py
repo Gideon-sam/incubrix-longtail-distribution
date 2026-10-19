@@ -114,10 +114,10 @@ async def run_batch(
     elif input_path.is_dir():
         files = sorted(input_path.glob("*.json"))
     else:
-        print(f"❌ Input path not found: {input_path}")
+        print(f"[ERROR] Input path not found: {input_path}")
         return
 
-    print(f"🚀 Running {len(files)} test file(s) against {base_url}")
+    print(f"[RUN] Running {len(files)} test file(s) against {base_url}")
 
     headers = {}
     if token:
@@ -151,7 +151,7 @@ async def run_batch(
                 file_results.append(result)
                 all_results.append(result)
 
-                status = "✅" if result.get("passed", True) else "❌"
+                status = "[PASS]" if result.get("passed", True) else "[FAIL]"
                 print(f"  {status} [{result.get('status_code', 'ERR')}] {case.get('method','?')} {case.get('path','?')} ({result.get('elapsed_ms', 0)}ms)")
 
                 if result.get("passed", True):
@@ -178,15 +178,15 @@ async def run_batch(
     with open(summary_file, "w") as f:
         json.dump(summary, f, indent=2)
 
-    print(f"\n📊 Results: {passed}/{len(all_results)} passed ({summary['pass_rate']})")
-    print(f"📁 Written to: {output_dir}")
-    print(f"📄 Summary: {summary_file}")
+    print(f"\n[RESULTS] {passed}/{len(all_results)} passed ({summary['pass_rate']})")
+    print(f"[OUTPUT] Written to: {output_dir}")
+    print(f"[SUMMARY] File: {summary_file}")
 
     if failed > 0:
-        print(f"\n❌ {failed} test(s) failed. Check {summary_file} for details.")
+        print(f"\n[FAIL] {failed} test(s) failed. Check {summary_file} for details.")
         return 1
     else:
-        print("✅ All tests passed!")
+        print("[SUCCESS] All tests passed!")
         return 0
 
 

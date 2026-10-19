@@ -117,15 +117,17 @@ All errors: `{"error": {"code", "message", "retryable", "details"}}`
 | `PLATFORM_CONTENT_REJECTED` | No | Platform refused content |
 | `PLATFORM_UNAVAILABLE` | Yes | Retry; stop after 5 failures |
 | `CONNECTOR_DISABLED` | No | Kill switch active |
+| `NOT_FOUND` | No | Resource or endpoint not found |
+| `VALIDATION_ERROR` | No | Request validation failed |
 
 ---
 
 ## Levels reached
 
-- ✅ **Core** — All 6 connectors certified (publish → confirm → delete), error codes mapped
-- ✅ **Advanced** — Catalogue import, AI rules capture + human confirm, relevance scoring, tailoring, 3 extra connectors
-- ✅ **Outstanding** — Recommender (audience + rules + history), metrics on 4 connectors, recertification scheduler, 150+ real catalogue
-- ✅ **Integration Standard** — All 10 points satisfied
+- [x] **Core** — All 6 connectors certified (publish -> confirm -> delete), error codes mapped
+- [x] **Advanced** — Catalogue import, AI rules capture + human confirm, relevance scoring, tailoring, 3 extra connectors
+- [x] **Outstanding** — Recommender (audience + rules + history), metrics on 4 connectors, recertification scheduler, 150+ real catalogue
+- [x] **Integration Standard** — All 10 points satisfied
 
 ---
 

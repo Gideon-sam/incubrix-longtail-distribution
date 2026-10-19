@@ -6,7 +6,7 @@ from __future__ import annotations
 import httpx
 from api.config import settings
 from api.schemas.connector import (
-    Rendition, DestinationRef, Connection,
+    DestinationRef, Connection,
     ValidateResponse, PublishResponse, GetStatusResponse, DeleteResponse,
 )
 from api.schemas.error import make_error

@@ -8,7 +8,6 @@ Each connector is a Python package under connectors/ with:
 Adding a new connector = one folder, one manifest, one class.
 """
 from __future__ import annotations
-import os
 import importlib
 from pathlib import Path
 from typing import Optional

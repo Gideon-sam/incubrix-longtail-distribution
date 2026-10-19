@@ -1,6 +1,6 @@
 # =============================================================================
 # IncuBrix Long-Tail Distribution — docker-compose.yml
-# One command: docker compose up --build → everything starts, zero manual steps
+# Production & evaluation ready — hardened for Azure B2s (4 GB RAM)
 # =============================================================================
 version: "3.9"
 
@@ -11,16 +11,21 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: incubrix
-      POSTGRES_PASSWORD: incubrix_pass
-      POSTGRES_DB: incubrix
+      POSTGRES_USER: ${POSTGRES_USER:-incubrix}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-incubrix_pass}
+      POSTGRES_DB: ${POSTGRES_DB:-incubrix}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init_postgres.sql:/docker-entrypoint-initdb.d/init_postgres.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U incubrix"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-incubrix}"]
       interval: 5s
       timeout: 5s
       retries: 10
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   # ── Redis ──────────────────────────────────────────────────
   redis:
@@ -33,51 +38,53 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+    deploy:
+      resources:
+        limits:
+          memory: 256M
 
   # ── MinIO (S3-compatible storage) ──────────────────────────
   minio:
-    image: minio/minio:latest
+    image: minio/minio:RELEASE.2024-03-30T09-41-56Z
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: incubrix
-      MINIO_ROOT_PASSWORD: incubrix_secret
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-incubrix}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-incubrix_secret}
     volumes:
       - minio_data:/data
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      test: ["CMD-SHELL", "mc ready local || (python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:9000/minio/health/live\")' 2>/dev/null || wget -qO- http://localhost:9000/minio/health/live >/dev/null 2>&1)"]
       interval: 10s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 384M
 
   # ── Lemmy (real ActivityPub server) ────────────────────────
   lemmy:
     image: dessalines/lemmy:0.19.3
     restart: unless-stopped
-    environment:
-      RUST_LOG: error
-      LEMMY_DATABASE_URL: postgres://incubrix:incubrix_pass@postgres:5432/incubrix
+    volumes:
+      - ./lemmy_config.hjson:/config/config.hjson:ro
     depends_on:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8536/api/v3/site"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8536/api/v3/site >/dev/null 2>&1 || exit 1"]
       interval: 15s
       timeout: 5s
-      retries: 12
-
-  # ── Lemmy-UI (needed for Lemmy to work) ────────────────────
-  lemmy-ui:
-    image: dessalines/lemmy-ui:0.19.3
-    restart: unless-stopped
-    environment:
-      LEMMY_UI_LEMMY_INTERNAL_HOST: lemmy:8536
-      LEMMY_UI_LEMMY_EXTERNAL_HOST: localhost:8536
-    depends_on:
-      - lemmy
+      retries: 15
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   # ── Ghost (real blog/CMS) ──────────────────────────────────
   ghost:
@@ -91,12 +98,17 @@ services:
     volumes:
       - ghost_data:/var/lib/ghost/content
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:2368/ghost/api/admin/site/"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:2368/ghost/api/admin/site/ >/dev/null 2>&1 || exit 1"]
       interval: 15s
       timeout: 5s
-      retries: 12
+      retries: 15
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
-  # ── Mock Discourse ─────────────────────────────────────────
+  # ── Mock Discourse 1 (Primary) ─────────────────────────────
   mock-discourse:
     build:
       context: .
@@ -104,10 +116,31 @@ services:
     command: uvicorn mock_servers.discourse_mock:app --host 0.0.0.0 --port 4100
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4100/health"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:4100/health')"]
       interval: 10s
       timeout: 3s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 192M
+
+  # ── Mock Discourse 2 (Second Instance for Routing Tests) ──
+  mock-discourse-2:
+    build:
+      context: .
+      dockerfile: Dockerfile.mocks
+    command: uvicorn mock_servers.discourse_mock:app --host 0.0.0.0 --port 4101
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:4101/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 192M
 
   # ── Mock Webhook Receiver ──────────────────────────────────
   mock-webhook:
@@ -117,10 +150,14 @@ services:
     command: uvicorn mock_servers.webhook_receiver:app --host 0.0.0.0 --port 4200
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4200/health"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:4200/health')"]
       interval: 10s
       timeout: 3s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 128M
 
   # ── Mock Hashnode ──────────────────────────────────────────
   mock-hashnode:
@@ -130,10 +167,14 @@ services:
     command: uvicorn mock_servers.hashnode_mock:app --host 0.0.0.0 --port 4300
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4300/health"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:4300/health')"]
       interval: 10s
       timeout: 3s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 128M
 
   # ── Mock PeerTube ──────────────────────────────────────────
   mock-peertube:
@@ -143,10 +184,14 @@ services:
     command: uvicorn mock_servers.peertube_mock:app --host 0.0.0.0 --port 4400
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4400/health"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:4400/health')"]
       interval: 10s
       timeout: 3s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 128M
 
   # ── Bootstrap (runs init scripts, then exits) ──────────────
   bootstrap:
@@ -155,15 +200,18 @@ services:
       dockerfile: Dockerfile
     command: >
       sh -c "
-        pip install httpx -q &&
         python scripts/lemmy_bootstrap.py &&
         python scripts/ghost_bootstrap.py
       "
     environment:
       LEMMY_API_URL: http://lemmy:8536
-      LEMMY_USERNAME: incubrix_admin
-      LEMMY_PASSWORD: incubrix_pass
+      LEMMY_USERNAME: ${LEMMY_USERNAME:-incubrix_admin}
+      LEMMY_PASSWORD: ${LEMMY_PASSWORD:-incubrix_pass}
       GHOST_API_URL: http://ghost:2368
+      GHOST_ADMIN_EMAIL: incubrix@example.com
+      GHOST_PASSWORD: ${GHOST_PASSWORD:-Incubrix@2024!}
+    volumes:
+      - shared_secrets:/run/secrets-shared
     depends_on:
       lemmy:
         condition: service_healthy
@@ -179,18 +227,18 @@ services:
     restart: unless-stopped
     env_file: .env
     environment:
-      DATABASE_URL: postgresql+asyncpg://incubrix:incubrix_pass@postgres:5432/incubrix
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-incubrix}:${POSTGRES_PASSWORD:-incubrix_pass}@postgres:5432/${POSTGRES_DB:-incubrix}
       REDIS_URL: redis://redis:6379/0
       MINIO_ENDPOINT: minio:9000
-      MINIO_ACCESS_KEY: incubrix
-      MINIO_SECRET_KEY: incubrix_secret
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-incubrix}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-incubrix_secret}
       GHOST_API_URL: http://ghost:2368
       LEMMY_API_URL: http://lemmy:8536
       DISCOURSE_API_URL: http://mock-discourse:4100
       HMAC_WEBHOOK_URL: http://mock-webhook:4200/webhook
       HASHNODE_API_URL: http://mock-hashnode:4300
       PEERTUBE_API_URL: http://mock-peertube:4400
-      SIMULATION_MODE: "false"
+      SIMULATION_MODE: ${SIMULATION_MODE:-false}
     ports:
       - "8000:8000"
     depends_on:
@@ -202,12 +250,16 @@ services:
         condition: service_healthy
       mock-discourse:
         condition: service_healthy
+      mock-discourse-2:
+        condition: service_healthy
       mock-webhook:
         condition: service_healthy
       mock-hashnode:
         condition: service_healthy
       mock-peertube:
         condition: service_healthy
+      bootstrap:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 10s
@@ -215,9 +267,13 @@ services:
       retries: 5
     volumes:
       - ./outputs:/app/outputs
+      - shared_secrets:/run/secrets-shared:ro
+    deploy:
+      resources:
+        limits:
+          memory: 768M
 
   # ── Test runner (profile=test) ──────────────────────────────
-  # Run with: docker compose --profile test up --build --abort-on-container-exit test-runner
   test-runner:
     profiles: ["test"]
     build:
@@ -229,28 +285,33 @@ services:
     environment:
       SIMULATION_MODE: "true"
       LLM_PROVIDER: mock
-      DATABASE_URL: "sqlite+aiosqlite:///./test.db"
-      REDIS_URL: "redis://redis:6379/99"
-      MINIO_ENDPOINT: "minio:9000"
-      MINIO_ACCESS_KEY: "incubrix"
-      MINIO_SECRET_KEY: "incubrix_secret"
-      DISCOURSE_API_URL: "http://mock-discourse:4100"
-      HMAC_WEBHOOK_URL: "http://mock-webhook:4200/webhook"
-      HASHNODE_API_URL: "http://mock-hashnode:4300"
-      PEERTUBE_API_URL: "http://mock-peertube:4400"
-      LEMMY_API_URL: "http://lemmy:8536"
-      GHOST_API_URL: "http://ghost:2368"
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-incubrix}:${POSTGRES_PASSWORD:-incubrix_pass}@postgres:5432/${POSTGRES_DB:-incubrix}
+      REDIS_URL: redis://redis:6379/99
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-incubrix}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-incubrix_secret}
+      DISCOURSE_API_URL: http://mock-discourse:4100
+      HMAC_WEBHOOK_URL: http://mock-webhook:4200/webhook
+      HASHNODE_API_URL: http://mock-hashnode:4300
+      PEERTUBE_API_URL: http://mock-peertube:4400
+      LEMMY_API_URL: http://lemmy:8536
+      GHOST_API_URL: http://ghost:2368
     command: >
       pytest tests/ -v --tb=short
         --cov=api --cov=connectors
         --cov-report=term-missing
         --cov-report=html:/app/tests/coverage_html
     depends_on:
-      - redis
-      - minio
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
 
 volumes:
   postgres_data:
   redis_data:
   minio_data:
   ghost_data:
+  shared_secrets:

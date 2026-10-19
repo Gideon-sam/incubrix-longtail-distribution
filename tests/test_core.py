@@ -122,3 +122,14 @@ async def test_job_not_found(client: AsyncClient):
     """GET /api/v1/jobs/nonexistent returns 404."""
     resp = await client.get("/api/v1/jobs/nonexistent-job-id")
     assert resp.status_code == 404
+
+
+def test_openapi_schema_matches_running_service():
+    """Integration Standard #2: openapi.yaml must match running FastAPI schema paths."""
+    import yaml
+    from api.main import app
+    with open("openapi.yaml", "r", encoding="utf-8") as f:
+        file_spec = yaml.safe_load(f)
+    live_spec = app.openapi()
+    assert set(file_spec.get("paths", {}).keys()) == set(live_spec.get("paths", {}).keys())
+

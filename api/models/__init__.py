@@ -4,6 +4,9 @@ from api.models.destination import Destination
 from api.models.idempotency import IdempotencyRecord
 from api.models.certification import CertificationRecord
 from api.models.rule import DestinationRule, RuleProposal
+from api.models.cleanup import PendingCleanup
+from api.models.alert import Alert
+from api.models.metric import MetricSnapshot
 
 __all__ = [
     "Job",
@@ -12,4 +15,7 @@ __all__ = [
     "CertificationRecord",
     "DestinationRule",
     "RuleProposal",
+    "PendingCleanup",
+    "Alert",
+    "MetricSnapshot",
 ]

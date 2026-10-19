@@ -6,7 +6,7 @@
 # ── Local dev ────────────────────────────────────────────────
 up:
 	docker compose up --build -d
-	@echo "✅ All services started. API at http://localhost:8000/docs"
+	@echo "All services started. API at http://localhost:8000/docs"
 
 down:
 	docker compose down -v
@@ -58,12 +58,12 @@ openapi-check:
 		spec=json.load(sys.stdin); \
 		local=yaml.safe_load(open('openapi.yaml')); \
 		sys.exit(0 if spec.get('info',{}).get('version')==local.get('info',{}).get('version') else 1)" \
-	&& echo "✅ openapi.yaml matches" || echo "❌ openapi.yaml mismatch — regenerate it"
+	&& echo "[PASS] openapi.yaml matches" || echo "[FAIL] openapi.yaml mismatch — regenerate it"
 
 openapi-generate:
 	curl -sf http://localhost:8000/openapi.json | python -m json.tool --json-decoder json > /tmp/openapi.json
 	python -c "import json,yaml; d=json.load(open('/tmp/openapi.json')); yaml.dump(d,open('openapi.yaml','w'),allow_unicode=True)"
-	@echo "✅ openapi.yaml regenerated"
+	@echo "[OK] openapi.yaml regenerated"
 
 # ── Cleanup ──────────────────────────────────────────────────
 clean:

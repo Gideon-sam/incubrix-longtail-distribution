@@ -51,3 +51,8 @@ evidence/runs/
 
 # MinIO data
 minio-data/
+
+# Scratch & prompt logs
+prompt_dump.txt
+prompt_full.txt
+scratch/

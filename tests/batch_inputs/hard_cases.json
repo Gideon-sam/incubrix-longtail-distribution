@@ -1,0 +1,75 @@
+[
+  {
+    "name": "Hard Case 2.4 - Dev.to title > 250 characters validation violation",
+    "method": "POST",
+    "path": "/connector/v1/devto/validate",
+    "headers": {"Content-Type": "application/json"},
+    "body": {
+      "rendition": {
+        "title": "This is a deliberately extremely long title designed to exceed the maximum allowed length of two hundred and fifty characters on the Dev.to publishing platform. The validation subsystem must reject this rendition with a clear field-level DEST_SPEC_VIOLATION error structure.",
+        "body": "Valid body content here.",
+        "tags": ["tech", "guide"]
+      },
+      "destination": {
+        "destination_id": "seed-devto-1",
+        "platform_key": "devto",
+        "surface": "article"
+      },
+      "connection": {"api_key": "dummy"}
+    },
+    "expected_status": 200
+  },
+  {
+    "name": "Hard Case 2.4 - Unknown connector disabled 404",
+    "method": "POST",
+    "path": "/connector/v1/unknown_connector/validate",
+    "headers": {"Content-Type": "application/json"},
+    "body": {
+      "rendition": {"title": "Test", "body": "Content"},
+      "destination": {"destination_id": "x", "platform_key": "unknown", "surface": "topic"},
+      "connection": {}
+    },
+    "expected_status": 404
+  },
+  {
+    "name": "Hard Case 2.1 - Publish without Idempotency-Key rejected with 400",
+    "method": "POST",
+    "path": "/api/v1/publish",
+    "headers": {"Content-Type": "application/json"},
+    "body": {
+      "destination_id": "seed-discourse-1",
+      "rendition": {"title": "Missing Idempotency", "body": "Content"},
+      "connection": {}
+    },
+    "expected_status": 400
+  },
+  {
+    "name": "Phase 4.1 - Content tailoring endpoint",
+    "method": "POST",
+    "path": "/api/v1/tailor",
+    "headers": {"Content-Type": "application/json"},
+    "body": {
+      "destination_id": "seed-devto-1",
+      "rendition": {
+        "title": "A very long title that needs automated tailoring for publication",
+        "body": "Detailed content with technical details.\n\nNon-English excerpt: 这是中文内容，必须完整保留。",
+        "format": "markdown"
+      }
+    },
+    "expected_status": 200
+  },
+  {
+    "name": "Phase 4.6 - Recommendation scoring with filters",
+    "method": "POST",
+    "path": "/api/v1/recommend",
+    "headers": {"Content-Type": "application/json"},
+    "body": {
+      "content_profile": {
+        "topics": ["developer", "python", "fastapi"],
+        "language": "en"
+      },
+      "max_destinations": 5
+    },
+    "expected_status": 200
+  }
+]

@@ -12,7 +12,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import String, Text, DateTime, JSON, UniqueConstraint
+from sqlalchemy import String, DateTime, JSON, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from api.database import Base

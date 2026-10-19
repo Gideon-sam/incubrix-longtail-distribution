@@ -1,13 +1,17 @@
 """
-Mock Discourse server — simulates the Discourse REST API.
+Mock Discourse server — simulates the Discourse REST API with test controls.
 
-Runs in Docker as mock-discourse (port 4100).
-Used for local certification tests and simulation mode.
-All data is stored in memory — resets on restart.
+Supports admin switches for Phase 2 hard cases:
+- /__admin/drop_response (hangs or times out after creating post)
+- /__admin/rate_limit (returns 429 with Retry-After header)
+- /__admin/rename_field (renames fields to simulate schema drift)
+- /__admin/reset (restores normal operation)
 """
-import uuid
+from __future__ import annotations
+import asyncio
 from datetime import datetime, timezone
 from typing import Any
+from pydantic import BaseModel
 
 from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.responses import JSONResponse
@@ -20,6 +24,12 @@ _topics: dict[str, dict] = {}
 _post_counter = 0
 _topic_counter = 0
 
+# Admin testing flags
+_hang_next_create = False
+_rate_limit_next = False
+_rename_field_mode = False
+_consecutive_5xx_count = 0
+
 MOCK_API_KEY = "mock_discourse_key"
 
 
@@ -29,11 +39,62 @@ def _check_auth(request: Request):
         raise HTTPException(status_code=401, detail={"error": "Invalid API key"})
 
 
+@app.post("/__admin/drop_response")
+async def admin_drop_response():
+    global _hang_next_create
+    _hang_next_create = True
+    return {"status": "ok", "action": "will_hang_after_create"}
+
+
+@app.post("/__admin/rate_limit")
+async def admin_rate_limit():
+    global _rate_limit_next
+    _rate_limit_next = True
+    return {"status": "ok", "action": "will_rate_limit_once"}
+
+
+@app.post("/__admin/rename_field")
+async def admin_rename_field():
+    global _rename_field_mode
+    _rename_field_mode = True
+    return {"status": "ok", "action": "rename_field_enabled"}
+
+
+@app.post("/__admin/error_5xx")
+async def admin_error_5xx():
+    global _consecutive_5xx_count
+    _consecutive_5xx_count = 5
+    return {"status": "ok", "action": "will_return_5xx_5_times"}
+
+
+@app.post("/__admin/reset")
+async def admin_reset():
+    global _hang_next_create, _rate_limit_next, _rename_field_mode, _consecutive_5xx_count
+    _hang_next_create = False
+    _rate_limit_next = False
+    _rename_field_mode = False
+    _consecutive_5xx_count = 0
+    return {"status": "ok", "action": "reset"}
+
+
 @app.post("/posts.json")
 async def create_post(request: Request):
     """Create a new topic/post (Discourse POST /posts.json)."""
-    global _post_counter, _topic_counter
+    global _post_counter, _topic_counter, _hang_next_create, _rate_limit_next, _consecutive_5xx_count
     _check_auth(request)
+
+    if _consecutive_5xx_count > 0:
+        _consecutive_5xx_count -= 1
+        raise HTTPException(status_code=503, detail="Discourse internal error")
+
+    if _rate_limit_next:
+        _rate_limit_next = False
+        return JSONResponse(
+            status_code=429,
+            content={"error": "Rate limit exceeded"},
+            headers={"Retry-After": "2", "X-RateLimit-Reset": "2"},
+        )
+
     body = await request.json()
 
     _topic_counter += 1
@@ -60,6 +121,21 @@ async def create_post(request: Request):
     _topics[topic_id] = topic
     _posts[post_id] = post
 
+    if _hang_next_create:
+        _hang_next_create = False
+        # Hang longer than client timeout to trigger timeout
+        await asyncio.sleep(20)
+
+    # Response schema
+    if _rename_field_mode:
+        # Schema drift: id renamed to post_identifier
+        return JSONResponse(status_code=200, content={
+            "post_identifier": int(post_id),
+            "topic_identifier": int(topic_id),
+            "cooked": body.get("raw", ""),
+            "created_at": post["created_at"],
+        })
+
     return JSONResponse(status_code=200, content={
         "id": int(post_id),
         "topic_id": int(topic_id),
@@ -75,6 +151,10 @@ async def get_post(post_id: str, request: Request):
     post = _posts.get(post_id)
     if not post or post.get("deleted"):
         raise HTTPException(status_code=404, detail={"error": "Not found"})
+
+    if _rename_field_mode:
+        return JSONResponse(content={"post_identifier": post["id"], "topic_identifier": post["topic_id"]})
+
     return JSONResponse(content=post)
 
 
@@ -91,7 +171,7 @@ async def delete_post(post_id: str, request: Request):
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "service": "mock-discourse"}
+    return {"status": "ok", "service": "mock-discourse", "posts_count": len(_posts)}
 
 
 if __name__ == "__main__":

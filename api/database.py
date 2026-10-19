@@ -1,10 +1,12 @@
 """
 Async database engine and session factory.
 
-Uses SQLAlchemy 2.0 async API with asyncpg driver.
-All models inherit from the shared Base declared here.
+Uses SQLAlchemy 2.0 async API with asyncpg driver (Postgres) or aiosqlite (tests).
+Supports Postgres advisory locks during schema initialization for concurrent safety.
 """
 from __future__ import annotations
+from typing import AsyncGenerator
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
@@ -14,7 +16,6 @@ from sqlalchemy.orm import DeclarativeBase
 
 from api.config import settings
 
-# Use StaticPool for SQLite (tests) — SQLite doesn't support connection pooling
 _is_sqlite = settings.DATABASE_URL.startswith("sqlite")
 
 if _is_sqlite:
@@ -33,7 +34,6 @@ else:
         max_overflow=10,
     )
 
-# Session factory — each request gets its own session
 async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 
@@ -42,7 +42,7 @@ class Base(DeclarativeBase):
     pass
 
 
-async def get_db() -> AsyncSession:
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """FastAPI dependency — yields a DB session, auto-closes on exit."""
     async with async_session() as session:
         try:
@@ -54,10 +54,14 @@ async def get_db() -> AsyncSession:
 
 
 async def init_db():
-    """Create all tables. Called once at startup."""
-    # Import all models to register them with Base.metadata
+    """Create all tables with Postgres advisory lock for safe concurrent startup."""
     import api.models  # noqa: F401
     async with engine.begin() as conn:
+        if not _is_sqlite and conn.dialect.name == "postgresql":
+            try:
+                await conn.execute(text("SELECT pg_advisory_xact_lock(123456789)"))
+            except Exception:
+                pass
         await conn.run_sync(Base.metadata.create_all)
 
 

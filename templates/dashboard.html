@@ -24,19 +24,19 @@
     <!-- Center Navigation Tabs -->
     <nav class="nav-center-tabs">
       <button class="nav-tab-btn active" data-tab="tab-overview">
-        <span>📊</span> Telemetry
+        <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg> Telemetry
       </button>
       <button class="nav-tab-btn" data-tab="tab-publish">
-        <span>🚀</span> Publishing Studio
+        <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09zM12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/></svg> Publishing Studio
       </button>
       <button class="nav-tab-btn" data-tab="tab-recommend">
-        <span>🧠</span> AI Recommender
+        <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg> AI Recommender
       </button>
       <button class="nav-tab-btn" data-tab="tab-catalogue">
-        <span>🌐</span> Catalogue (150+)
+        <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Catalogue (150+)
       </button>
       <button class="nav-tab-btn" data-tab="tab-certify">
-        <span>🛡️</span> Certification Lab
+        <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Certification Lab
       </button>
     </nav>
 
@@ -47,10 +47,10 @@
         <span id="beacon-text">9/9 CONNECTORS LIVE</span>
       </div>
       <a href="/docs" target="_blank" class="api-docs-link">
-        <span>⚡</span> API Docs
+        <svg class="nav-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> API Docs
       </a>
       <a href="/health" target="_blank" class="api-docs-link">
-        <span>💚</span> Health
+        <span class="status-indicator-dot"></span> Health
       </a>
     </div>
   </header>
@@ -117,11 +117,11 @@
       <div class="dashboard-card">
         <div class="card-header-row">
           <div class="card-title-group">
-            <h2><span>⚡</span> Registered Publishing Connectors</h2>
+            <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Registered Publishing Connectors</h2>
             <p>Every connector adheres strictly to the single canonical /connector/v1/{key}/{method} contract</p>
           </div>
           <button class="btn-secondary" onclick="pingAllConnectors()">
-            <span>🔄</span> Ping All Connectors
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg> Ping All Connectors
           </button>
         </div>
 
@@ -135,7 +135,7 @@
       <div class="studio-grid" style="margin-bottom:2rem;">
         <div class="dashboard-card" style="margin-bottom:0;">
           <div class="card-title-group" style="margin-bottom:1.2rem;">
-            <h2><span>🏗️</span> Infrastructure Topology</h2>
+            <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg> Infrastructure Topology</h2>
             <p>High-reliability microservices backing the distribution engine</p>
           </div>
           <div class="table-responsive">
@@ -180,39 +180,39 @@
 
         <div class="dashboard-card" style="margin-bottom:0;">
           <div class="card-title-group" style="margin-bottom:1.2rem;">
-            <h2><span>📋</span> Integration Standard Compliance</h2>
+            <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> Integration Standard Compliance</h2>
             <p>All 10 IncuBrix architectural assessment criteria fully met</p>
           </div>
           <ul style="list-style:none; display:flex; flex-direction:column; gap:8px; font-size:0.84rem; color:var(--text-secondary);">
             <li style="display:flex; align-items:center; gap:8px;">
-              <span style="color:var(--ok)">✓</span> <strong>1. One-command run:</strong> <code>docker compose up</code> boots all DB, mocks & service
+              <span class="status-badge-ok">PASS</span> <strong>1. One-command run:</strong> <code>docker compose up</code> boots all DB, mocks & service
             </li>
             <li style="display:flex; align-items:center; gap:8px;">
-              <span style="color:var(--ok)">✓</span> <strong>2. Documented OpenAPI:</strong> Strict <code>openapi.yaml</code> 3.1 specification
+              <span class="status-badge-ok">PASS</span> <strong>2. Documented OpenAPI:</strong> Strict <code>openapi.yaml</code> 3.1 specification
             </li>
             <li style="display:flex; align-items:center; gap:8px;">
-              <span style="color:var(--ok)">✓</span> <strong>3. Background jobs:</strong> 202 Accepted + <code>job_id</code> for publish & certify
+              <span class="status-badge-ok">PASS</span> <strong>3. Background jobs:</strong> 202 Accepted + <code>job_id</code> for publish & certify
             </li>
             <li style="display:flex; align-items:center; gap:8px;">
-              <span style="color:var(--ok)">✓</span> <strong>4. Safe retries:</strong> <code>Idempotency-Key</code> deduplication via Redis + DB
+              <span class="status-badge-ok">PASS</span> <strong>4. Safe retries:</strong> <code>Idempotency-Key</code> deduplication via Redis + DB
             </li>
             <li style="display:flex; align-items:center; gap:8px;">
-              <span style="color:var(--ok)">✓</span> <strong>5. Clear errors:</strong> Standardized 8 upper-snake-case error codes
+              <span class="status-badge-ok">PASS</span> <strong>5. Clear errors:</strong> Standardized 8 upper-snake-case error codes
             </li>
             <li style="display:flex; align-items:center; gap:8px;">
-              <span style="color:var(--ok)">✓</span> <strong>6. Zero hardcoded secrets:</strong> Configurable via <code>.env</code>
+              <span class="status-badge-ok">PASS</span> <strong>6. Zero hardcoded secrets:</strong> Configurable via <code>.env</code>
             </li>
             <li style="display:flex; align-items:center; gap:8px;">
-              <span style="color:var(--ok)">✓</span> <strong>7. S3 evidence storage:</strong> MinIO download links for proof verification
+              <span class="status-badge-ok">PASS</span> <strong>7. S3 evidence storage:</strong> MinIO download links for proof verification
             </li>
             <li style="display:flex; align-items:center; gap:8px;">
-              <span style="color:var(--ok)">✓</span> <strong>8. Structured JSON logs:</strong> <code>X-Correlation-Id</code> propagation
+              <span class="status-badge-ok">PASS</span> <strong>8. Structured JSON logs:</strong> <code>X-Correlation-Id</code> propagation
             </li>
             <li style="display:flex; align-items:center; gap:8px;">
-              <span style="color:var(--ok)">✓</span> <strong>9. Output manifests:</strong> Cryptographic SHA-256 audit packages
+              <span class="status-badge-ok">PASS</span> <strong>9. Output manifests:</strong> Cryptographic SHA-256 audit packages
             </li>
             <li style="display:flex; align-items:center; gap:8px;">
-              <span style="color:var(--ok)">✓</span> <strong>10. Batch runner:</strong> <code>batch_runner.py</code> automated test verification
+              <span class="status-badge-ok">PASS</span> <strong>10. Batch runner:</strong> <code>batch_runner.py</code> automated test verification
             </li>
           </ul>
         </div>
@@ -221,7 +221,7 @@
       <!-- Universal Error Code Standard -->
       <div class="dashboard-card">
         <div class="card-title-group" style="margin-bottom:1.2rem;">
-          <h2><span>🛡️</span> Canonical Platform Error Code Mapping</h2>
+          <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Canonical Platform Error Code Mapping</h2>
           <p>Shared error taxonomy standard guaranteeing clean upstream error recovery</p>
         </div>
         <div class="table-responsive">
@@ -299,7 +299,7 @@
         <!-- Left: Publishing Form -->
         <div class="dashboard-card" style="margin-bottom:0;">
           <div class="card-title-group" style="margin-bottom:1.5rem;">
-            <h2><span>🚀</span> Multi-Destination Publishing Studio</h2>
+            <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09zM12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/></svg> Multi-Destination Publishing Studio</h2>
             <p>Deploy structured content with automatic rule validation & idempotency</p>
           </div>
 
@@ -326,7 +326,7 @@
               <label class="form-label" for="pub-body">
                 Markdown Rendition Content
                 <span style="float:right; color:var(--brand-cyan); font-size:0.75rem; cursor:pointer;" onclick="loadSampleContent()">
-                  Insert Sample Tech Article ⚡
+                  Insert Sample Tech Article
                 </span>
               </label>
               <textarea id="pub-body" class="form-textarea" rows="7" required 
@@ -360,7 +360,7 @@ Learn more at https://incubrix.com</textarea>
 
             <div style="display:flex; gap:12px; margin-top:1.5rem;">
               <button type="submit" class="btn-primary" id="btn-publish-submit" style="flex:1;">
-                <span>🚀</span> Deploy Content Now
+                Deploy Content Now
               </button>
               <button type="button" class="btn-secondary" onclick="resetPublishForm()">
                 Reset
@@ -391,7 +391,7 @@ Learn more at https://incubrix.com</textarea>
           <!-- Live Result Card -->
           <div class="dashboard-card" id="publish-result-box" style="margin-top:1.5rem; display:none;">
             <div class="card-title-group" style="margin-bottom:1rem;">
-              <h2><span style="color:var(--ok)">✓</span> Distribution Succeeded!</h2>
+              <h2><span class="badge-ok">SUCCESS</span> Distribution Succeeded!</h2>
               <p>Content successfully certified and broadcasted to destination</p>
             </div>
 
@@ -428,7 +428,7 @@ Learn more at https://incubrix.com</textarea>
     <div class="tab-pane" id="tab-recommend">
       <div class="dashboard-card">
         <div class="card-title-group" style="margin-bottom:1.5rem;">
-          <h2><span>🧠</span> Gemini AI Intelligent Matcher (Outstanding Level)</h2>
+          <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg> Gemini AI Intelligent Matcher</h2>
           <p>Analyzes your content snippet and scores all 150+ long-tail destinations based on audience resonance, format fit, and posting rules</p>
         </div>
 
@@ -471,7 +471,7 @@ Learn more at https://incubrix.com</textarea>
               </div>
 
               <button type="submit" class="btn-primary" id="btn-rec-submit" style="width:100%; margin-top:1.2rem;">
-                <span>✨</span> Run Gemini Match Analysis
+                Run Gemini Match Analysis
               </button>
             </div>
           </div>
@@ -480,7 +480,7 @@ Learn more at https://incubrix.com</textarea>
         <!-- Recommended Cards Container -->
         <div style="margin-top:2.5rem;">
           <h3 style="font-size:1.1rem; color:#fff; display:flex; align-items:center; gap:8px;">
-            <span>🎯</span> Top Matching Destinations
+            Top Matching Destinations
             <span id="rec-count-badge" class="chip chip-level">0 candidates</span>
           </h3>
 
@@ -504,15 +504,15 @@ Learn more at https://incubrix.com</textarea>
         
         <div class="card-header-row">
           <div class="card-title-group">
-            <h2><span>🌐</span> Verified Community Catalogue (150+ Destinations)</h2>
+            <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Verified Community Catalogue (150+ Destinations)</h2>
             <p>Researched destinations with community rules, audience taxonomy, and certification levels</p>
           </div>
           <div style="display:flex; gap:10px;">
             <button class="btn-secondary" onclick="exportCatalogueCSV()">
-              <span>📥</span> Export CSV
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> Export CSV
             </button>
             <button class="btn-primary" onclick="openCSVImportModal()">
-              <span>📤</span> Import CSV (AI Scored)
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg> Import CSV (AI Scored)
             </button>
           </div>
         </div>
@@ -520,7 +520,7 @@ Learn more at https://incubrix.com</textarea>
         <!-- Filter and Search Bar -->
         <div class="catalogue-controls-bar">
           <div class="search-input-wrapper">
-            <span class="search-icon-badge">🔍</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input type="text" id="cat-search" class="form-input search-field" 
                    placeholder="Search community name, platform, surface, or audience tag..." 
                    oninput="filterCatalogue()">
@@ -580,7 +580,7 @@ Learn more at https://incubrix.com</textarea>
     <div class="tab-pane" id="tab-certify">
       <div class="dashboard-card">
         <div class="card-title-group" style="margin-bottom:1.5rem;">
-          <h2><span>🛡️</span> Automated Connector Certification Lab</h2>
+          <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Automated Connector Certification Lab</h2>
           <p>Runs the full automated lifecycle loop: Schema Validation → Test Publish → Status Check → Teardown Delete → MinIO Proof Storage</p>
         </div>
 
@@ -633,7 +633,7 @@ Learn more at https://incubrix.com</textarea>
           </div>
           <div style="margin-top:20px;">
             <button class="btn-primary" onclick="runCertificationLoop()" id="btn-cert-run">
-              <span>🛡️</span> Run Full Certification Loop
+              Run Full Certification Loop
             </button>
           </div>
         </div>
@@ -718,7 +718,7 @@ Learn more at https://incubrix.com</textarea>
       const container = document.getElementById("toast-container");
       const toast = document.createElement("div");
       toast.className = `toast toast-${type}`;
-      toast.innerHTML = `<span>${type === 'success' ? '✓' : type === 'error' ? '⚠️' : 'ℹ️'}</span> <div>${message}</div>`;
+      toast.innerHTML = `<span class="toast-tag">[${type.toUpperCase()}]</span> <div>${message}</div>`;
       container.appendChild(toast);
       setTimeout(() => {
         toast.style.opacity = "0";
@@ -771,7 +771,7 @@ Learn more at https://incubrix.com</textarea>
 
           <div class="connector-footer-action">
             <span id="ping-status-${c.key}" class="chip chip-status-active">● Ready</span>
-            <button class="ping-btn" onclick="pingSingleConnector('${c.key}')">Validate Ping ⚡</button>
+            <button class="ping-btn" onclick="pingSingleConnector('${c.key}')">Validate Ping</button>
           </div>
         `;
         grid.appendChild(card);
@@ -800,7 +800,7 @@ Learn more at https://incubrix.com</textarea>
         const elapsed = Math.round(performance.now() - t0);
         if (statusEl) {
           statusEl.className = "chip chip-status-active";
-          statusEl.textContent = `✓ 200 OK (${elapsed}ms)`;
+          statusEl.textContent = `200 OK (${elapsed}ms)`;
         }
         showToast(`${key} validated successfully in ${elapsed}ms!`, "success");
       } catch (e) {
@@ -896,7 +896,7 @@ Learn more at https://incubrix.com</textarea>
 
       const submitBtn = document.getElementById("btn-publish-submit");
       submitBtn.disabled = true;
-      submitBtn.innerHTML = `<span>⏳</span> Queuing Workload...`;
+      submitBtn.innerHTML = `Queuing Workload...`;
 
       const consoleBox = document.getElementById("console-logs");
       const statusPill = document.getElementById("job-status-pill");
@@ -958,7 +958,7 @@ Learn more at https://incubrix.com</textarea>
         statusPill.style.color = "var(--danger)";
         showToast(err.message, "error");
         submitBtn.disabled = false;
-        submitBtn.innerHTML = `<span>🚀</span> Deploy Content Now`;
+        submitBtn.innerHTML = `Deploy Content Now`;
       }
     }
 
@@ -990,7 +990,7 @@ Learn more at https://incubrix.com</textarea>
 
             showToast("Content broadcast successfully verified!", "success");
             submitBtn.disabled = false;
-            submitBtn.innerHTML = `<span>🚀</span> Deploy Content Now`;
+            submitBtn.innerHTML = `Deploy Content Now`;
 
           } else if (job.status === "failed") {
             clearInterval(pollInterval);
@@ -999,7 +999,7 @@ Learn more at https://incubrix.com</textarea>
             appendLog(`[ERROR] Execution failed: ${job.error?.code} — ${job.error?.message}`, "error");
             showToast(`Failed: ${job.error?.message}`, "error");
             submitBtn.disabled = false;
-            submitBtn.innerHTML = `<span>🚀</span> Deploy Content Now`;
+            submitBtn.innerHTML = `Deploy Content Now`;
           }
         } catch (e) {
           console.error("Polling error:", e);
@@ -1030,7 +1030,7 @@ Learn more at https://incubrix.com</textarea>
 
       const btn = document.getElementById("btn-rec-submit");
       btn.disabled = true;
-      btn.innerHTML = `<span>✨</span> Analyzing with Gemini AI...`;
+      btn.innerHTML = `Analyzing with Gemini AI...`;
 
       const container = document.getElementById("recommendations-container");
       container.innerHTML = `<div style="grid-column:1/-1; padding:2rem; text-align:center; color:var(--brand-cyan);">Gemini 2.5 AI matching content against 150+ communities...</div>`;
@@ -1054,7 +1054,7 @@ Learn more at https://incubrix.com</textarea>
         container.innerHTML = `<div style="grid-column:1/-1; color:var(--danger); padding:2rem; text-align:center;">Failed to run recommender: ${err.message}</div>`;
       } finally {
         btn.disabled = false;
-        btn.innerHTML = `<span>✨</span> Run Gemini Match Analysis`;
+        btn.innerHTML = `Run Gemini Match Analysis`;
       }
     }
 
@@ -1079,7 +1079,7 @@ Learn more at https://incubrix.com</textarea>
               <span class="chip chip-connector">${r.connector_key || 'platform'}</span>
             </div>
             <div class="rec-score-badge">
-              <span>★</span> ${scorePercent}% Fit
+              <span class="badge-fit">${scorePercent}% Fit</span>
             </div>
           </div>
 
@@ -1091,7 +1091,7 @@ Learn more at https://incubrix.com</textarea>
             <span style="font-size:0.75rem; color:var(--ok);">● Rules Compliant</span>
             <button class="btn-primary" style="padding:6px 14px; font-size:0.76rem;" 
                     onclick="useInPublishing('${r.destination_id}', '${r.destination_name}')">
-              Publish Here 🚀
+              Publish Here
             </button>
           </div>
         `;
@@ -1127,7 +1127,12 @@ Learn more at https://incubrix.com</textarea>
         tr.innerHTML = `
           <td>
             <strong>${d.name}</strong>
-            <div style="font-size:0.75rem; color:var(--text-muted);">${d.url || ''}</div>
+            <div>
+              <a href="${d.url}" target="_blank" rel="noopener noreferrer" style="color:var(--brand-cyan); text-decoration:none; font-size:0.75rem; display:inline-flex; align-items:center; gap:4px;">
+                ${d.url || ''}
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
+              </a>
+            </div>
           </td>
           <td><span class="chip chip-connector">${d.platform_key}</span></td>
           <td><code>${d.connector_key}</code></td>
@@ -1223,7 +1228,7 @@ Learn more at https://incubrix.com</textarea>
       const logsBox = document.getElementById("cert-console-logs");
 
       btn.disabled = true;
-      btn.innerHTML = `<span>⏳</span> Certifying...`;
+      btn.innerHTML = `Certifying...`;
       statusPill.textContent = "RUNNING";
       statusPill.style.color = "var(--brand-cyan)";
       logsBox.innerHTML = "";
@@ -1282,7 +1287,7 @@ Learn more at https://incubrix.com</textarea>
           statusPill.style.color = "var(--ok)";
           showToast(`Connector "${conn}" fully CERTIFIED!`, "success");
           btn.disabled = false;
-          btn.innerHTML = `<span>🛡️</span> Run Full Certification Loop`;
+          btn.innerHTML = `Run Full Certification Loop`;
         }, 3200);
 
       } catch (err) {
@@ -1290,7 +1295,7 @@ Learn more at https://incubrix.com</textarea>
         statusPill.textContent = "FAILED";
         statusPill.style.color = "var(--danger)";
         btn.disabled = false;
-        btn.innerHTML = `<span>🛡️</span> Run Full Certification Loop`;
+        btn.innerHTML = `Run Full Certification Loop`;
       }
     }
 

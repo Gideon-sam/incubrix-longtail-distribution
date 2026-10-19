@@ -4,10 +4,11 @@ Recommender service — Outstanding level.
 Given a content item, ranks destinations by fit:
   - Audience alignment (AI, video, marketing, SaaS, creators, founders)
   - Rules compatibility (promo policy, link policy, frequency cap)
-  - Past publish results (success rate from job history)
+  - Historical publish success rate (from job history)
   - Relevance score stored on destination
+  - Certification level & publication eligibility
 
-Returns top-N destinations with a reason per destination.
+Returns top-N destinations with reasons, warnings, and eligibility.
 """
 from __future__ import annotations
 from typing import Any, Optional
@@ -20,7 +21,6 @@ from api.middleware.logging_mw import get_logger
 
 log = get_logger("services.recommender")
 
-# Keywords that signal IncuBrix's target audience
 AUDIENCE_KEYWORDS = {
     "ai": 5, "artificial intelligence": 5, "machine learning": 4, "ml": 4,
     "video": 5, "youtube": 4, "streaming": 3,
@@ -33,15 +33,9 @@ AUDIENCE_KEYWORDS = {
 
 
 def _compute_audience_score(dest: Destination, rendition_text: str) -> float:
-    """
-    Score how well a destination's audience aligns with IncuBrix's audience
-    AND the content being published.
-    0.0 to 1.0.
-    """
-    # Base score from stored relevance_score (1-5) → 0.2 to 1.0
+    """Score how well a destination's audience aligns with content."""
     base = (getattr(dest, "relevance_score", 3) or 3) / 5.0
 
-    # Boost for keyword matches in destination category/name
     dest_text = " ".join(filter(None, [
         dest.name or "", dest.category or "", str(dest.audience_tags or "")
     ])).lower()
@@ -51,7 +45,6 @@ def _compute_audience_score(dest: Destination, rendition_text: str) -> float:
         if kw in dest_text:
             keyword_boost += weight * 0.01
 
-    # Content match boost — does the content mention audience topics?
     content_boost = 0.0
     content_lower = rendition_text.lower()
     for kw, weight in AUDIENCE_KEYWORDS.items():
@@ -62,29 +55,23 @@ def _compute_audience_score(dest: Destination, rendition_text: str) -> float:
 
 
 def _check_rules_compatibility(dest: Destination, rendition_text: str, has_links: bool, is_promo: bool) -> tuple[float, list[str]]:
-    """
-    Check if content is compatible with destination's posting rules.
-    Returns (penalty 0.0-1.0, list of warnings).
-    """
+    """Check content compatibility with rules. Returns (penalty, warnings)."""
     penalty = 0.0
     warnings = []
 
-    # Self-promotion check
     promo_keywords = ["buy", "sale", "discount", "trial", "signup", "subscribe", "our product", "check out our"]
     content_is_promo = is_promo or any(kw in rendition_text.lower() for kw in promo_keywords)
     if content_is_promo and not getattr(dest, "self_promo_allowed", True):
         penalty += 0.5
         warnings.append("Content may be promotional but destination bans self-promotion.")
 
-    # Link policy check
     if has_links and getattr(dest, "link_policy", "allowed") == "forbidden":
         penalty += 0.3
         warnings.append("Destination forbids links.")
 
-    # Automation check
     if not getattr(dest, "automation_allowed", True):
-        penalty += 0.2
-        warnings.append("Destination requires manual posting (assisted connector).")
+        penalty += 0.15
+        warnings.append("Destination requires assisted/manual posting.")
 
     return min(1.0, penalty), warnings
 
@@ -100,7 +87,7 @@ async def _get_success_rate(dest_id: str, db: AsyncSession) -> float:
         )
         total = total_q.scalar() or 0
         if total == 0:
-            return 0.8  # default optimistic for new destinations
+            return 0.8
 
         success_q = await db.execute(
             select(func.count(Job.id)).where(
@@ -125,18 +112,18 @@ async def recommend(
     db: Optional[AsyncSession] = None,
 ) -> list[dict[str, Any]]:
     """
-    Rank all certified destinations by fit for a given content item.
-
-    Returns list of dicts sorted by score desc:
-      {destination_id, name, connector_key, score, reason, warnings}
+    Rank all non-demoted destinations by fit for a given content item.
+    Excludes revoked destinations. Penalises L0/L1 and includes eligible_to_publish flag.
     """
     content = f"{title} {rendition_text}"
 
     if db is None:
         return []
 
-    # Load all L3+ certified destinations
-    query = select(Destination).where(Destination.level.in_(["L3", "L4"]))
+    # Exclude revoked destinations
+    query = select(Destination).where(
+        Destination.status != "revoked",
+    )
     if connector_key:
         query = query.where(Destination.connector_key == connector_key)
 
@@ -145,24 +132,33 @@ async def recommend(
 
     scored = []
     for dest in destinations:
-        # 1. Audience alignment (40%)
         audience_score = _compute_audience_score(dest, content)
-
-        # 2. Rules compatibility penalty (30%)
         rule_penalty, rule_warnings = _check_rules_compatibility(dest, content, has_links, is_promo)
-        rules_score = 1.0 - rule_penalty
-
-        # 3. Historical success rate (30%)
+        rules_score = max(0.0, 1.0 - rule_penalty)
         success_rate = await _get_success_rate(dest.id, db)
 
-        # Weighted final score
-        final_score = (
+        # Base weighted score
+        raw_score = (
             audience_score * 0.40 +
             rules_score * 0.30 +
             success_rate * 0.30
         )
 
-        # Build human-readable reason
+        # Certification level adjustment
+        # L3/L4 get full score. L2 gets slight discount. L0/L1 get assisted/uncertified penalty.
+        level = dest.level or "L0"
+        level_multipliers = {
+            "L4": 1.05,
+            "L3": 1.0,
+            "L2": 0.95,
+            "L1": 0.80,
+            "L0": 0.75,
+        }
+        level_mult = level_multipliers.get(level, 0.70)
+        final_score = min(1.0, raw_score * level_mult)
+
+        eligible_to_publish = level in ("L2", "L3", "L4") and dest.automation_allowed
+
         reason_parts = []
         if audience_score >= 0.7:
             reason_parts.append(f"Strong audience alignment (score {audience_score:.2f})")
@@ -171,22 +167,23 @@ async def recommend(
         else:
             reason_parts.append(f"Weak audience alignment (score {audience_score:.2f})")
 
+        if level in ("L0", "L1"):
+            reason_parts.append(f"Catalogue level {level} (manual/assisted review recommended)")
+
         if success_rate >= 0.95:
-            reason_parts.append("very high historical reliability")
-        elif success_rate >= 0.8:
-            reason_parts.append("good historical reliability")
-        else:
-            reason_parts.append(f"reliability {success_rate:.0%}")
+            reason_parts.append("high historical reliability")
 
         if rule_warnings:
-            reason_parts.append(f"⚠ {'; '.join(rule_warnings)}")
+            reason_parts.append(f"Notice: {'; '.join(rule_warnings)}")
 
         scored.append({
             "destination_id": dest.id,
             "name": dest.name,
             "url": dest.url,
             "connector_key": dest.connector_key,
-            "level": dest.level,
+            "level": level,
+            "eligible_to_publish": eligible_to_publish,
+            "status": getattr(dest, "status", "active"),
             "relevance_score": getattr(dest, "relevance_score", 3),
             "final_score": round(final_score, 4),
             "audience_score": round(audience_score, 4),
@@ -196,6 +193,5 @@ async def recommend(
             "warnings": rule_warnings,
         })
 
-    # Sort by score descending, take top N
     scored.sort(key=lambda x: x["final_score"], reverse=True)
     return scored[:top_n]

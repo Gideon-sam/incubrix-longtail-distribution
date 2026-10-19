@@ -16,9 +16,11 @@ class Rendition(BaseModel):
     title: str = ""
     body: str = ""
     media_urls: list[str] = Field(default_factory=list)
+    media_url: Optional[str] = None
     tags: list[str] = Field(default_factory=list)
     canonical_url: Optional[str] = None
     is_ai_generated: bool = False
+    is_promotional: bool = False
     format: str = "markdown"  # markdown | html | plain
     metadata: dict[str, Any] = Field(default_factory=dict)
 
@@ -47,7 +49,7 @@ class DestinationRef(BaseModel):
 class ValidateRequest(BaseModel):
     rendition: Rendition
     destination: DestinationRef
-    connection: Connection
+    connection: Connection = Field(default_factory=Connection)
 
 
 class ValidateResponse(BaseModel):
@@ -58,29 +60,29 @@ class ValidateResponse(BaseModel):
 class PublishRequest(BaseModel):
     rendition: Rendition
     destination: DestinationRef
-    connection: Connection
+    connection: Connection = Field(default_factory=Connection)
     idempotency_key: str
 
 
 class PublishResponse(BaseModel):
     platform_post_id: str
     live_url: str
-    status: str  # published | draft | pending
+    status: str = "published"  # published | draft
 
 
 class GetStatusRequest(BaseModel):
     platform_post_id: str
-    connection: Connection
+    connection: Connection = Field(default_factory=Connection)
 
 
 class GetStatusResponse(BaseModel):
-    status: str  # published | deleted | pending | unknown
+    status: str  # published | draft | deleted | unknown
     live_url: Optional[str] = None
 
 
 class DeleteRequest(BaseModel):
     platform_post_id: str
-    connection: Connection
+    connection: Connection = Field(default_factory=Connection)
 
 
 class DeleteResponse(BaseModel):
@@ -89,11 +91,13 @@ class DeleteResponse(BaseModel):
 
 class FetchMetricsRequest(BaseModel):
     platform_post_id: str
-    connection: Connection
-    since: Optional[str] = None  # ISO datetime
+    connection: Connection = Field(default_factory=Connection)
+    since: Optional[str] = None
 
 
 class FetchMetricsResponse(BaseModel):
+    platform_post_id: str = ""
+    metrics: dict[str, Any] = Field(default_factory=dict)
     views: int = 0
     likes: int = 0
     comments: int = 0
@@ -104,10 +108,11 @@ class FetchMetricsResponse(BaseModel):
 
 
 class RefreshAuthRequest(BaseModel):
-    connection: Connection
+    connection: Connection = Field(default_factory=Connection)
 
 
 class RefreshAuthResponse(BaseModel):
+    token: str = ""
     expires_at: Optional[str] = None
 
 
@@ -117,7 +122,17 @@ class BuildAssistPackRequest(BaseModel):
 
 
 class BuildAssistPackResponse(BaseModel):
+    # Appendix A contract fields
     files: list[str] = Field(default_factory=list)
     caption: str = ""
     deep_link: str = ""
     checklist: list[str] = Field(default_factory=list)
+
+    # Extended helper fields with defaults
+    instructions: str = ""
+    copy_ready_title: str = ""
+    copy_ready_body: str = ""
+    asset_urls: list[str] = Field(default_factory=list)
+    tags: list[str] = Field(default_factory=list)
+    submit_url: Optional[str] = None
+    warnings: list[str] = Field(default_factory=list)

@@ -1,17 +1,12 @@
 """
 Lemmy connector — Core connector (L3 native API, L4 with metrics).
 
-Lemmy uses username/password auth that returns a JWT token.
-Each request sends the JWT in the auth field.
-
-Real Lemmy instance runs in Docker (lemmy-backend container).
-In SIMULATION_MODE, routes to the same Docker instance (it's local).
+Lemmy 0.19.x uses Authorization: Bearer <jwt> header for authenticated endpoints.
 """
 from __future__ import annotations
-
-from typing import Optional
-
 import httpx
+from pydantic import BaseModel, ValidationError
+
 from api.config import settings
 from api.schemas.connector import (
     Rendition, DestinationRef, Connection,
@@ -21,13 +16,23 @@ from api.schemas.connector import (
 from api.schemas.error import make_error
 from api.middleware.logging_mw import get_logger
 from connectors.base import BaseConnector, HTTPException
+from connectors.errors import map_response_error
 
 log = get_logger("connectors.lemmy")
 
 
-def _api_url(destination: DestinationRef) -> str:
-    """Get the Lemmy API URL from destination config or default."""
-    return destination.instance_config.get("api_url", settings.LEMMY_API_URL)
+class LemmyPublishShape(BaseModel):
+    """Expected schema shape for Lemmy publish response."""
+    post_view: dict
+
+
+def _resolve_api_url(connection: Connection, destination: DestinationRef | None = None) -> str:
+    """Get the Lemmy API URL from destination config, connection extra, or settings."""
+    if destination and destination.instance_config.get("api_url"):
+        return destination.instance_config["api_url"].rstrip("/")
+    if connection and connection.extra.get("instance", {}).get("api_url"):
+        return connection.extra["instance"]["api_url"].rstrip("/")
+    return settings.LEMMY_API_URL.rstrip("/")
 
 
 async def _get_jwt(api_url: str, username: str, password: str) -> str:
@@ -39,15 +44,12 @@ async def _get_jwt(api_url: str, username: str, password: str) -> str:
         )
     if resp.status_code == 200:
         return resp.json().get("jwt", "")
-    elif resp.status_code == 400:
+    elif resp.status_code in (400, 401):
         raise HTTPException(
             status_code=401,
             detail=make_error("CONNECTION_AUTH_EXPIRED", "Lemmy login failed — check username/password."),
         )
-    raise HTTPException(
-        status_code=resp.status_code,
-        detail=make_error("PLATFORM_UNAVAILABLE", f"Lemmy login error: {resp.text[:100]}", retryable=True),
-    )
+    raise map_response_error("lemmy", resp)
 
 
 class LemmyConnector(BaseConnector):
@@ -66,11 +68,13 @@ class LemmyConnector(BaseConnector):
     ) -> ValidateResponse:
         violations = []
         if len(rendition.title) > 200:
-            violations.append({"field": "title", "message": "Title exceeds 200 chars."})
+            violations.append({"field": "title", "message": "Title exceeds 200 chars.", "code": "DEST_SPEC_VIOLATION"})
         if not rendition.title.strip():
-            violations.append({"field": "title", "message": "Title is required."})
+            violations.append({"field": "title", "message": "Title is required.", "code": "DEST_SPEC_VIOLATION"})
+        if len(rendition.body) > 10000:
+            violations.append({"field": "body", "message": "Body exceeds 10000 chars.", "code": "DEST_SPEC_VIOLATION"})
         if not destination.instance_config.get("community_id") and not destination.instance_config.get("community_name"):
-            violations.append({"field": "community_id", "message": "community_id or community_name required."})
+            violations.append({"field": "community_id", "message": "community_id or community_name required.", "code": "DEST_SPEC_VIOLATION"})
         return ValidateResponse(ok=len(violations) == 0, violations=violations)
 
     async def publish(
@@ -80,9 +84,10 @@ class LemmyConnector(BaseConnector):
         connection: Connection,
         idempotency_key: str,
     ) -> PublishResponse:
+        api_url = _resolve_api_url(connection, destination)
+
         if settings.SIMULATION_MODE:
             mock_id = f"lemmy-sim-{idempotency_key[:8]}"
-            api_url = _api_url(destination)
             log.info("lemmy_published_sim", post_id=mock_id)
             return PublishResponse(
                 platform_post_id=mock_id,
@@ -90,7 +95,6 @@ class LemmyConnector(BaseConnector):
                 status="published",
             )
 
-        api_url = _api_url(destination)
         username = connection.username or settings.LEMMY_USERNAME
         password = connection.password or settings.LEMMY_PASSWORD
 
@@ -114,49 +118,53 @@ class LemmyConnector(BaseConnector):
                     detail=make_error("DEST_SPEC_VIOLATION", f"Community '{community_name}' not found."),
                 )
 
-        # Create post
+        # Create post with Bearer header (Lemmy 0.19 standard)
         payload = {
             "community_id": int(community_id),
             "name": rendition.title[:200],
             "body": rendition.body[:10000] or None,
             "url": rendition.canonical_url or None,
-            "auth": jwt,
             "nsfw": False,
         }
 
-        async with httpx.AsyncClient(timeout=30) as client:
-            resp = await client.post(f"{api_url}/api/v3/post", json=payload)
+        headers = {
+            "Authorization": f"Bearer {jwt}",
+            "Content-Type": "application/json",
+        }
 
-        if resp.status_code == 429:
-            raise HTTPException(
-                status_code=429,
-                detail=make_error("PLATFORM_RATE_LIMIT", "Lemmy rate limit hit.", retryable=True),
-            )
+        async with httpx.AsyncClient(timeout=30) as client:
+            resp = await client.post(f"{api_url}/api/v3/post", json=payload, headers=headers)
+
         if resp.status_code not in (200, 201):
+            raise map_response_error("lemmy", resp)
+
+        data = resp.json()
+
+        try:
+            shape = LemmyPublishShape.model_validate(data)
+            post = shape.post_view.get("post", {})
+            post_id = str(post.get("id", ""))
+        except ValidationError as val_err:
             raise HTTPException(
-                status_code=resp.status_code,
+                status_code=502,
                 detail=make_error(
-                    "PLATFORM_CONTENT_REJECTED",
-                    f"Lemmy post failed: {resp.text[:200]}",
+                    "PLATFORM_UNAVAILABLE",
+                    "Lemmy response schema drift detected.",
                     retryable=False,
+                    details={"reason": "SCHEMA_DRIFT", "validation_errors": val_err.errors()},
                 ),
             )
 
-        data = resp.json()
-        post = data["post_view"]["post"]
-        post_id = str(post["id"])
         live_url = f"{api_url}/post/{post_id}"
-
         log.info("lemmy_published", post_id=post_id, community_id=community_id)
         return PublishResponse(platform_post_id=post_id, live_url=live_url, status="published")
 
     async def get_status(
         self, platform_post_id: str, connection: Connection
     ) -> GetStatusResponse:
-        if settings.SIMULATION_MODE:
-            return GetStatusResponse(status="published", live_url=f"{settings.LEMMY_API_URL}/post/{platform_post_id}")
-
-        api_url = settings.LEMMY_API_URL
+        api_url = _resolve_api_url(connection)
+        if settings.SIMULATION_MODE or platform_post_id.startswith("lemmy-sim"):
+            return GetStatusResponse(status="published", live_url=f"{api_url}/post/{platform_post_id}")
 
         async with httpx.AsyncClient(timeout=15) as client:
             resp = await client.get(
@@ -170,30 +178,41 @@ class LemmyConnector(BaseConnector):
             return GetStatusResponse(status="unknown")
 
         data = resp.json()
-        post = data["post_view"]["post"]
+        post = data.get("post_view", {}).get("post", {})
         removed = post.get("removed", False)
         deleted = post.get("deleted", False)
-        status = "deleted" if (removed or deleted) else "published"
-        live_url = f"{api_url}/post/{platform_post_id}"
-        return GetStatusResponse(status=status, live_url=live_url)
+
+        if deleted or removed:
+            return GetStatusResponse(status="deleted")
+
+        return GetStatusResponse(
+            status="published",
+            live_url=f"{api_url}/post/{platform_post_id}",
+        )
 
     async def delete(
         self, platform_post_id: str, connection: Connection
     ) -> DeleteResponse:
-        if settings.SIMULATION_MODE:
+        api_url = _resolve_api_url(connection)
+        if settings.SIMULATION_MODE or platform_post_id.startswith("lemmy-sim"):
             log.info("lemmy_deleted_sim", post_id=platform_post_id)
             return DeleteResponse(deleted=True)
 
-        api_url = settings.LEMMY_API_URL
         username = connection.username or settings.LEMMY_USERNAME
         password = connection.password or settings.LEMMY_PASSWORD
 
         jwt = await _get_jwt(api_url, username, password)
 
+        headers = {
+            "Authorization": f"Bearer {jwt}",
+            "Content-Type": "application/json",
+        }
+
         async with httpx.AsyncClient(timeout=15) as client:
             resp = await client.post(
                 f"{api_url}/api/v3/post/delete",
-                json={"post_id": int(platform_post_id), "deleted": True, "auth": jwt},
+                json={"post_id": int(platform_post_id), "deleted": True},
+                headers=headers,
             )
 
         if resp.status_code == 200:
@@ -204,37 +223,35 @@ class LemmyConnector(BaseConnector):
         return DeleteResponse(deleted=False)
 
     async def fetch_metrics(
-        self,
-        platform_post_id: str,
-        connection: Connection,
-        since: Optional[str] = None,
+        self, platform_post_id: str, connection: Connection, since: str | None = None
     ) -> FetchMetricsResponse:
-        """
-        Fetch normalised metrics for a Lemmy post.
-        Lemmy API returns score (upvotes-downvotes), comment count.
-        Simulation returns deterministic mock data.
-        """
+        api_url = _resolve_api_url(connection)
         if settings.SIMULATION_MODE:
-            return FetchMetricsResponse(views=0, likes=87, comments=34, shares=0, clicks=0)
+            return FetchMetricsResponse(
+                platform_post_id=platform_post_id,
+                metrics={"views": 0, "likes": 14, "comments": 6, "shares": 0, "saves": 0, "clicks": 0},
+            )
 
-        try:
-            api_url = settings.LEMMY_API_URL
-            async with httpx.AsyncClient(timeout=10) as client:
-                resp = await client.get(
-                    f"{api_url}/api/v3/post",
-                    params={"id": platform_post_id},
-                )
-            if resp.status_code == 200:
-                data = resp.json().get("post_view", {})
-                counts: dict = data.get("counts", {})
-                return FetchMetricsResponse(
-                    views=int(counts.get("score", 0)),
-                    likes=int(counts.get("upvotes", 0)),
-                    comments=int(counts.get("comments", 0)),
-                    shares=0,
-                    clicks=0,
-                )
-        except Exception as e:
-            log.warning("lemmy_metrics_error", post_id=platform_post_id, error=str(e))
+        async with httpx.AsyncClient(timeout=15) as client:
+            resp = await client.get(
+                f"{api_url}/api/v3/post",
+                params={"id": platform_post_id},
+            )
 
-        return FetchMetricsResponse()
+        if resp.status_code == 200:
+            counts = resp.json().get("post_view", {}).get("counts", {})
+            return FetchMetricsResponse(
+                platform_post_id=platform_post_id,
+                metrics={
+                    "views": 0,
+                    "likes": counts.get("upvotes", 0),
+                    "comments": counts.get("comments", 0),
+                    "shares": 0,
+                    "saves": 0,
+                    "clicks": 0,
+                },
+            )
+        return FetchMetricsResponse(
+            platform_post_id=platform_post_id,
+            metrics={"views": 0, "likes": 0, "comments": 0, "shares": 0, "saves": 0, "clicks": 0},
+        )

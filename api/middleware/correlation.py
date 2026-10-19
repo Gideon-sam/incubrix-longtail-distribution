@@ -2,12 +2,12 @@
 Correlation ID middleware — Integration Standard #8.
 
 Reads X-Correlation-Id from the incoming request. If absent, generates
-a new UUID. Attaches it to the request state and includes it in every
-structured log entry and the response header.
+a new UUID. Binds it to structlog contextvars so every structured log entry
+includes it automatically, and echoes it in response headers.
 """
 from __future__ import annotations
 import uuid
-
+import structlog
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
 from starlette.responses import Response
@@ -19,15 +19,13 @@ class CorrelationIdMiddleware(BaseHTTPMiddleware):
     async def dispatch(
         self, request: Request, call_next: RequestResponseEndpoint
     ) -> Response:
-        # Use the caller's correlation ID or create one
-        correlation_id = request.headers.get(
-            "X-Correlation-Id", str(uuid.uuid4())
-        )
-        # Store on request state so handlers and loggers can read it
+        correlation_id = request.headers.get("X-Correlation-Id") or str(uuid.uuid4())
         request.state.correlation_id = correlation_id
 
-        response = await call_next(request)
+        # Bind to structlog contextvars
+        structlog.contextvars.clear_contextvars()
+        structlog.contextvars.bind_contextvars(correlation_id=correlation_id)
 
-        # Echo it back in the response
+        response = await call_next(request)
         response.headers["X-Correlation-Id"] = correlation_id
         return response

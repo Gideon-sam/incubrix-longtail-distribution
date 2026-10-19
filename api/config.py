@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     SIMULATION_MODE: bool = False
 
     # ── Database (Postgres) ─────────────────────────────────
+    POSTGRES_USER: str = "incubrix"
+    POSTGRES_PASSWORD: str = "incubrix_pass"
+    POSTGRES_DB: str = "incubrix"
     DATABASE_URL: str = (
         "postgresql+asyncpg://incubrix:incubrix_pass@postgres:5432/incubrix"
     )
@@ -36,6 +39,8 @@ class Settings(BaseSettings):
 
     # ── MinIO (S3-compatible storage for outputs/evidence) ──
     MINIO_ENDPOINT: str = "minio:9000"
+    MINIO_ROOT_USER: str = "incubrix"
+    MINIO_ROOT_PASSWORD: str = "incubrix_secret"
     MINIO_ACCESS_KEY: str = "incubrix"
     MINIO_SECRET_KEY: str = "incubrix_secret"
     MINIO_BUCKET: str = "incubrix-outputs"
@@ -49,6 +54,15 @@ class Settings(BaseSettings):
     # ── Rate limiting & auth for public demo ────────────────
     RATE_LIMIT: str = "60/minute"
     ACCESS_TOKEN: Optional[str] = None
+    CALLBACK_SECRET: str = "webhook_secret_key"
+    AUTO_DISCLOSURE: bool = False
+    ALLOWED_AUTOMATED_HOSTS: str = (
+        "http://mock-discourse:4100,http://mock-discourse-2:4101,"
+        "http://lemmy:8536,http://ghost:2368,https://dev.to,"
+        "http://mock-devto:4150,http://mock-webhook:4200,"
+        "http://mock-hashnode:4300,http://mock-peertube:4400"
+    )
+    RECERT_INTERVAL_DAYS: int = 25
 
     # ── Connector secrets ───────────────────────────────────
     DEVTO_API_KEY: Optional[str] = None
@@ -74,7 +88,7 @@ class Settings(BaseSettings):
 
     MRSS_OUTPUT_DIR: str = "/app/outputs/mrss"
 
-    model_config = {"env_file": ".env", "case_sensitive": True}
+    model_config = {"env_file": ".env", "case_sensitive": True, "extra": "ignore"}
 
 
 # Singleton — import this everywhere

@@ -3,18 +3,13 @@ Dev.to connector — Core connector (L3 native API, L4 with metrics).
 
 NOTE on delete: The Dev.to public API does not provide an article
 deletion endpoint. Workaround: all certification posts are created
-as UNPUBLISHED DRAFTS (published=false). They are never public,
-never spammy, and treated as deleted from IncuBrix's perspective.
-This limitation is documented in the manifest and REPORT.md.
-
-Real API key from DEVTO_API_KEY environment variable.
-In SIMULATION_MODE: returns deterministic mock data without any HTTP calls.
+as UNPUBLISHED DRAFTS (published=false).
+In delete(), we ensure the article is unpublished via PUT /api/articles/{id}
+with published: false, and verify via get_status() before returning deleted: true.
 """
 from __future__ import annotations
-
-from typing import Optional
-
 import httpx
+from pydantic import BaseModel, ValidationError
 
 from api.config import settings
 from api.schemas.connector import (
@@ -25,6 +20,7 @@ from api.schemas.connector import (
 from api.schemas.error import make_error
 from api.middleware.logging_mw import get_logger
 from connectors.base import BaseConnector, HTTPException
+from connectors.errors import map_response_error
 
 log = get_logger("connectors.devto")
 
@@ -32,15 +28,20 @@ _DEVTO_BASE = "https://dev.to"
 _DEVTO_MOCK = "http://mock-devto:4150"
 
 
+class DevToPublishShape(BaseModel):
+    """Expected schema shape for Dev.to publish response (Schema Drift protection)."""
+    id: int
+    url: str | None = None
+
+
 def _base_url() -> str:
-    """Return real Dev.to API URL, or mock URL in simulation mode."""
     if settings.SIMULATION_MODE:
         return _DEVTO_MOCK
     return _DEVTO_BASE
 
 
 class DevToConnector(BaseConnector):
-    """Dev.to connector — publishes as articles via the Dev.to API."""
+    """Dev.to connector — publishes articles via the Dev.to API."""
 
     @property
     def key(self) -> str:
@@ -53,7 +54,6 @@ class DevToConnector(BaseConnector):
     async def validate(
         self, rendition: Rendition, destination: DestinationRef, connection: Connection
     ) -> ValidateResponse:
-        """Check title length (<=250), body not empty, tags <=4."""
         violations = []
         if len(rendition.title) > 250:
             violations.append({
@@ -65,6 +65,12 @@ class DevToConnector(BaseConnector):
             violations.append({
                 "field": "body",
                 "message": "Body cannot be empty.",
+                "code": "DEST_SPEC_VIOLATION",
+            })
+        if len(rendition.body) > 50000:
+            violations.append({
+                "field": "body",
+                "message": f"Body exceeds 50000 chars ({len(rendition.body)}).",
                 "code": "DEST_SPEC_VIOLATION",
             })
         if len(rendition.tags) > 4:
@@ -82,13 +88,6 @@ class DevToConnector(BaseConnector):
         connection: Connection,
         idempotency_key: str,
     ) -> PublishResponse:
-        """
-        Publish as an UNPUBLISHED DRAFT (published=false).
-
-        During certification this keeps posts private and off the platform.
-        Dev.to limitation: no delete endpoint, so draft is the safe default.
-        SIMULATION_MODE: return mock response without any HTTP call.
-        """
         if settings.SIMULATION_MODE:
             mock_id = f"devto-sim-{idempotency_key[:8]}"
             log.info("devto_published_sim", article_id=mock_id)
@@ -122,37 +121,26 @@ class DevToConnector(BaseConnector):
                 headers={"api-key": api_key, "Content-Type": "application/json"},
             )
 
-        if resp.status_code == 429:
-            retry_after = resp.headers.get("X-RateLimit-Reset", "60")
-            raise HTTPException(
-                status_code=429,
-                detail=make_error(
-                    "PLATFORM_RATE_LIMIT",
-                    f"Dev.to rate limit. Retry after {retry_after}s.",
-                    retryable=True,
-                    details={"retry_after_seconds": retry_after},
-                ),
-            )
-
-        if resp.status_code == 401:
-            raise HTTPException(
-                status_code=401,
-                detail=make_error("CONNECTION_AUTH_EXPIRED", "Dev.to API key is invalid or revoked."),
-            )
-
         if resp.status_code not in (200, 201):
-            raise HTTPException(
-                status_code=resp.status_code,
-                detail=make_error(
-                    "PLATFORM_CONTENT_REJECTED",
-                    f"Dev.to rejected the post: {resp.text[:200]}",
-                    retryable=False,
-                ),
-            )
+            raise map_response_error("devto", resp)
 
         data = resp.json()
-        article_id = str(data.get("id", ""))
-        live_url: str = data.get("url") or "https://dev.to/dashboard"
+
+        # Schema drift check
+        try:
+            shape = DevToPublishShape.model_validate(data)
+            article_id = str(shape.id)
+            live_url = shape.url or "https://dev.to/dashboard"
+        except ValidationError as val_err:
+            raise HTTPException(
+                status_code=502,
+                detail=make_error(
+                    "PLATFORM_UNAVAILABLE",
+                    "Dev.to response schema drift detected.",
+                    retryable=False,
+                    details={"reason": "SCHEMA_DRIFT", "validation_errors": val_err.errors()},
+                ),
+            )
 
         log.info("devto_published", article_id=article_id, draft=True)
         return PublishResponse(
@@ -164,8 +152,7 @@ class DevToConnector(BaseConnector):
     async def get_status(
         self, platform_post_id: str, connection: Connection
     ) -> GetStatusResponse:
-        """Get article status from Dev.to API."""
-        if settings.SIMULATION_MODE:
+        if settings.SIMULATION_MODE or platform_post_id.startswith("devto-sim"):
             return GetStatusResponse(status="draft", live_url="https://dev.to/dashboard")
 
         api_key = connection.api_key or settings.DEVTO_API_KEY
@@ -182,65 +169,73 @@ class DevToConnector(BaseConnector):
             return GetStatusResponse(status="unknown")
 
         data = resp.json()
-        status: str = "published" if data.get("published") else "draft"
-        return GetStatusResponse(status=status, live_url=data.get("url"))
+        published = data.get("published", False)
+        status = "published" if published else "draft"
+        live_url = data.get("url") or "https://dev.to/dashboard"
+        return GetStatusResponse(status=status, live_url=live_url)
 
     async def delete(
         self, platform_post_id: str, connection: Connection
     ) -> DeleteResponse:
         """
-        Delete an article.
-        In simulation/mock mode: sends HTTP DELETE to the mock container.
-        In live Dev.to mode: Dev.to API has no DELETE endpoint; posts are created
-        as unpublished drafts (published=false) so they are never public.
+        Dev.to honest cleanup:
+        Dev.to has no delete API endpoint. We ensure published: false via PUT,
+        and confirm through get_status that it is not published before returning deleted: true.
         """
-        if settings.SIMULATION_MODE or "mock" in _base_url():
-            try:
-                api_key = connection.api_key or settings.DEVTO_API_KEY
-                async with httpx.AsyncClient(timeout=10) as client:
-                    await client.delete(
-                        f"{_base_url()}/api/articles/{platform_post_id}",
-                        headers={"api-key": api_key or ""},
-                    )
-            except Exception:
-                pass
+        if settings.SIMULATION_MODE or platform_post_id.startswith("devto-sim"):
+            log.info("devto_deleted_sim", article_id=platform_post_id)
             return DeleteResponse(deleted=True)
 
-        log.info(
-            "devto_delete_draft_safe",
-            article_id=platform_post_id,
-            note="Dev.to API has no delete endpoint. Certification post was created as unpublished draft.",
-        )
-        return DeleteResponse(deleted=True)
+        api_key = connection.api_key or settings.DEVTO_API_KEY
+        async with httpx.AsyncClient(timeout=15) as client:
+            try:
+                # Ensure draft / unpublish
+                await client.put(
+                    f"{_base_url()}/api/articles/{platform_post_id}",
+                    json={"article": {"published": False}},
+                    headers={"api-key": api_key or "", "Content-Type": "application/json"},
+                )
+            except Exception as e:
+                log.warning("devto_unpublish_failed", error=str(e))
+
+        # Confirm through get_status that it is NOT public
+        status = await self.get_status(platform_post_id, connection)
+        if status.status in ("draft", "deleted"):
+            log.info("devto_unpublish_confirmed", article_id=platform_post_id, status=status.status)
+            return DeleteResponse(deleted=True)
+
+        return DeleteResponse(deleted=False)
 
     async def fetch_metrics(
-        self,
-        platform_post_id: str,
-        connection: Connection,
-        since: Optional[str] = None,
+        self, platform_post_id: str, connection: Connection, since: str | None = None
     ) -> FetchMetricsResponse:
-        """Fetch article analytics from Dev.to."""
         if settings.SIMULATION_MODE:
-            return FetchMetricsResponse(views=1234, likes=89, comments=23)
+            return FetchMetricsResponse(
+                platform_post_id=platform_post_id,
+                metrics={"views": 42, "likes": 5, "comments": 2, "shares": 1, "saves": 3, "clicks": 8},
+            )
 
         api_key = connection.api_key or settings.DEVTO_API_KEY
+        async with httpx.AsyncClient(timeout=15) as client:
+            resp = await client.get(
+                f"{_base_url()}/api/articles/{platform_post_id}",
+                headers={"api-key": api_key or ""},
+            )
 
-        try:
-            async with httpx.AsyncClient(timeout=15) as client:
-                resp = await client.get(
-                    f"{_base_url()}/api/articles/{platform_post_id}",
-                    headers={"api-key": api_key or ""},
-                )
-
-            if resp.status_code != 200:
-                return FetchMetricsResponse()
-
+        if resp.status_code == 200:
             data = resp.json()
             return FetchMetricsResponse(
-                views=int(data.get("page_views_count", 0)),
-                likes=int(data.get("positive_reactions_count", 0)),
-                comments=int(data.get("comments_count", 0)),
+                platform_post_id=platform_post_id,
+                metrics={
+                    "views": data.get("page_views_count", 0),
+                    "likes": data.get("public_reactions_count", 0),
+                    "comments": data.get("comments_count", 0),
+                    "shares": 0,
+                    "saves": 0,
+                    "clicks": 0,
+                },
             )
-        except Exception as e:
-            log.warning("devto_metrics_error", article_id=platform_post_id, error=str(e))
-            return FetchMetricsResponse()
+        return FetchMetricsResponse(
+            platform_post_id=platform_post_id,
+            metrics={"views": 0, "likes": 0, "comments": 0, "shares": 0, "saves": 0, "clicks": 0},
+        )

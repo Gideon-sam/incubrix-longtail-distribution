@@ -9,10 +9,12 @@ Core features NEVER depend on any AI model.
 from api.services.ai_adapter.base import BaseAIAdapter
 from api.services.ai_adapter.mock import MockAIAdapter
 
-# Factory function — returns the configured adapter
 def get_ai_adapter() -> BaseAIAdapter:
     from api.config import settings
     if settings.LLM_PROVIDER == "gemini" and settings.GEMINI_API_KEY:
-        from api.services.ai_adapter.gemini import GeminiAdapter
-        return GeminiAdapter()
+        try:
+            from api.services.ai_adapter.gemini import GeminiAdapter
+            return GeminiAdapter()
+        except Exception:
+            return MockAIAdapter()
     return MockAIAdapter()

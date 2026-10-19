@@ -1,0 +1,10 @@
+.env
+.git
+.venv
+venv
+__pycache__
+.pytest_cache
+*.db
+tests/batch_results
+outputs
+.vscode

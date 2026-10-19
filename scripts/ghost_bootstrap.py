@@ -1,16 +1,20 @@
 #!/usr/bin/env python3
 """
-Ghost bootstrap script — creates Admin API key and saves to .env.
-Runs after Ghost starts. Ghost auto-creates a default key on first run.
-We read the key from the database via the Ghost CLI or first-setup flow.
+Ghost bootstrap script — creates Admin API key and saves to shared secrets volume.
+Runs after Ghost starts. Uses persistent session with Origin/Referer headers for Ghost 5.
 """
+from __future__ import annotations
+import os
 import time
 import httpx
-import os
-import json
+from pathlib import Path
 
-GHOST_URL = os.getenv("GHOST_API_URL", "http://ghost:2368")
+GHOST_URL = os.getenv("GHOST_API_URL", "http://ghost:2368").rstrip("/")
+GHOST_EMAIL = os.getenv("GHOST_ADMIN_EMAIL", "incubrix@example.com")
+GHOST_PASSWORD = os.getenv("GHOST_PASSWORD", "Incubrix@2024!")
+SHARED_KEY_PATH = Path("/run/secrets-shared/ghost_admin_key")
 TIMEOUT = 120
+
 
 def wait_for_ghost():
     deadline = time.time() + TIMEOUT
@@ -18,76 +22,98 @@ def wait_for_ghost():
         try:
             r = httpx.get(f"{GHOST_URL}/ghost/api/admin/site/", timeout=5)
             if r.status_code in (200, 401):
-                print("✅ Ghost is ready.")
+                print("[INFO] Ghost is ready.")
                 return True
         except Exception:
             pass
-        print("⏳ Waiting for Ghost...")
+        print("[INFO] Waiting for Ghost...")
         time.sleep(5)
     raise RuntimeError("Ghost did not start in time.")
 
-def setup_ghost():
-    """Run Ghost first-time setup to get an admin key."""
-    setup_payload = {
-        "setup": [{
-            "name": "IncuBrix Admin",
-            "email": "incubrix@example.com",
-            "password": "Incubrix@2024!",
-            "blogTitle": "IncuBrix Test Blog",
-        }]
-    }
-    r = httpx.post(f"{GHOST_URL}/ghost/api/admin/authentication/setup/",
-                   json=setup_payload, timeout=30)
-    if r.status_code == 200:
-        print("✅ Ghost setup complete.")
-    elif r.status_code == 422:
-        print("ℹ️  Ghost already set up.")
-    else:
-        print(f"⚠️  Ghost setup: {r.status_code} {r.text[:200]}")
 
-def get_admin_token():
-    """Login to get a session token, then create API key."""
-    # Login
-    r = httpx.post(f"{GHOST_URL}/ghost/api/admin/session/",
-                   json={"username": "incubrix@example.com", "password": "Incubrix@2024!"},
-                   timeout=15)
-    if r.status_code != 200:
-        print(f"⚠️  Ghost login failed: {r.status_code} {r.text[:100]}")
+def setup_and_get_key():
+    """Persistent client session to setup Ghost and create integration key."""
+    headers = {
+        "Origin": GHOST_URL,
+        "Referer": f"{GHOST_URL}/ghost/",
+        "Accept": "application/json, text/plain, */*",
+    }
+
+    with httpx.Client(base_url=GHOST_URL, headers=headers, timeout=30.0) as client:
+        # 1. Setup flow
+        setup_payload = {
+            "setup": [{
+                "name": "IncuBrix Admin",
+                "email": GHOST_EMAIL,
+                "password": GHOST_PASSWORD,
+                "blogTitle": "IncuBrix Publication",
+            }]
+        }
+        r_setup = client.post("/ghost/api/admin/authentication/setup/", json=setup_payload)
+        if r_setup.status_code in (200, 201):
+            print("[INFO] Ghost initial setup completed.")
+        elif r_setup.status_code == 422:
+            print("[INFO] Ghost already set up.")
+        else:
+            print(f"[WARN] Ghost setup returned: {r_setup.status_code} {r_setup.text[:150]}")
+
+        # 2. Login
+        login_payload = {"username": GHOST_EMAIL, "password": GHOST_PASSWORD}
+        r_login = client.post("/ghost/api/admin/session/", json=login_payload)
+        if r_login.status_code != 200:
+            print(f"[WARN] Ghost session login failed: {r_login.status_code} {r_login.text[:150]}")
+            return ""
+
+        print("[INFO] Ghost session authenticated successfully.")
+
+        # 3. Check existing integrations
+        r_list = client.get("/ghost/api/admin/integrations/")
+        if r_list.status_code == 200:
+            integrations = r_list.json().get("integrations", [])
+            for integ in integrations:
+                if integ.get("name") == "IncuBrix":
+                    for key in integ.get("api_keys", []):
+                        if key.get("type") == "admin":
+                            full_key = f"{key['id']}:{key['secret']}"
+                            _save_key(full_key)
+                            return full_key
+
+        # 4. Create integration if not found
+        r_create = client.post(
+            "/ghost/api/admin/integrations/",
+            json={"integrations": [{"name": "IncuBrix"}]},
+        )
+        if r_create.status_code in (200, 201):
+            integration = r_create.json()["integrations"][0]
+            for key in integration.get("api_keys", []):
+                if key.get("type") == "admin":
+                    full_key = f"{key['id']}:{key['secret']}"
+                    _save_key(full_key)
+                    return full_key
+
+        print(f"[WARN] Failed to create Ghost integration: {r_create.status_code} {r_create.text[:200]}")
         return ""
 
-    session_cookie = r.headers.get("Set-Cookie", "")
 
-    # Create an integration (gets Admin API key)
-    headers = {"Cookie": session_cookie, "Content-Type": "application/json"}
-    r2 = httpx.post(
-        f"{GHOST_URL}/ghost/api/admin/integrations/",
-        json={"integrations": [{"name": "IncuBrix"}]},
-        headers=headers, timeout=15
-    )
-    if r2.status_code == 201:
-        integration = r2.json()["integrations"][0]
-        api_key = next(
-            (k["secret"] for k in integration.get("api_keys", []) if k["type"] == "admin"),
-            ""
-        )
-        key_id = next(
-            (k["id"] for k in integration.get("api_keys", []) if k["type"] == "admin"),
-            ""
-        )
-        full_key = f"{key_id}:{api_key}"
-        print(f"✅ Ghost Admin API key created: {full_key[:20]}...")
-        # Write to env file for other services to read
-        with open("/app/.ghost_key", "w") as f:
-            f.write(full_key)
-        return full_key
-    print(f"⚠️  Ghost integration creation: {r2.status_code} {r2.text[:200]}")
-    return ""
+def _save_key(key: str):
+    """Write key to shared volume and local app folder."""
+    try:
+        SHARED_KEY_PATH.parent.mkdir(parents=True, exist_ok=True)
+        SHARED_KEY_PATH.write_text(key, encoding="utf-8")
+        print(f"[INFO] Saved Ghost admin key to {SHARED_KEY_PATH}")
+    except Exception as e:
+        print(f"[WARN] Could not save to {SHARED_KEY_PATH}: {e}")
+
+    try:
+        Path("/app/.ghost_key").write_text(key, encoding="utf-8")
+    except Exception:
+        pass
+
 
 if __name__ == "__main__":
     wait_for_ghost()
-    setup_ghost()
     time.sleep(2)
-    key = get_admin_token()
+    key = setup_and_get_key()
     if key:
-        print(f"GHOST_ADMIN_API_KEY={key}")
-    print("✅ Ghost bootstrap complete.")
+        print(f"[INFO] GHOST_ADMIN_API_KEY generated: {key[:15]}...")
+    print("[INFO] Ghost bootstrap complete.")

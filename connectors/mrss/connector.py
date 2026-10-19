@@ -9,7 +9,6 @@ from __future__ import annotations
 import uuid
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
-from typing import Optional
 
 from api.config import settings
 from api.schemas.connector import (

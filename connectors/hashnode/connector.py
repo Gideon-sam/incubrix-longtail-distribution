@@ -6,7 +6,7 @@ from __future__ import annotations
 import httpx
 from api.config import settings
 from api.schemas.connector import (
-    Rendition, DestinationRef, Connection,
+    Connection,
     ValidateResponse, PublishResponse, GetStatusResponse, DeleteResponse,
 )
 from api.schemas.error import make_error
@@ -46,7 +46,6 @@ class HashnodeConnector(BaseConnector):
 
     async def publish(self, rendition, destination, connection, idempotency_key):
         if settings.SIMULATION_MODE:
-            import uuid
             mock_id = f"hashnode-sim-{idempotency_key[:8]}"
             pub_id = destination.instance_config.get("publication_id", "mock_pub_id")
             log.info("hashnode_published_sim", post_id=mock_id)
