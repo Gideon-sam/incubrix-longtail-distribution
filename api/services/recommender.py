@@ -22,16 +22,17 @@ from api.config import settings
 
 log = get_logger("services.recommender")
 
-# Fallback taxonomy when Gemini is not active
+# Fallback taxonomy when Gemini is not active — IncuBrix's target audiences
 TAXONOMY_MAP = {
-    "automotive": ["car", "cars", "engine", "engines", "motor", "vehicle", "vehicles", "turbo", "mechanic", "automotive", "tires", "transmission"],
-    "developer": ["code", "developer", "api", "python", "software", "bug", "git", "javascript", "typescript", "frontend", "backend", "fullstack", "react", "fastapi"],
-    "AI": ["ai", "llm", "gpt", "model", "neural", "machine learning", "deep learning", "nlp", "vision", "gemini", "claude"],
-    "video": ["video", "youtube", "stream", "streaming", "peertube", "clip", "media", "camera", "creator", "shorts"],
-    "startups": ["startup", "startups", "founder", "founders", "saas", "mrr", "revenue", "pricing", "bootstrapped", "vc", "pitch"],
-    "marketing": ["marketing", "seo", "growth", "conversion", "newsletter", "audience", "traffic", "funnel", "copywriting"],
-    "engineering": ["engineering", "hardware", "electronics", "fabrication", "cad", "mechanics", "diy", "tools", "robotics"],
+    "AI": ["ai", "llm", "gpt", "model", "neural", "machine learning", "deep learning", "nlp", "vision", "gemini", "claude", "openai", "chatgpt", "agent", "inference"],
+    "video": ["video", "youtube", "stream", "streaming", "peertube", "clip", "media", "camera", "creator", "shorts", "vlog", "podcast", "reel", "ctv"],
+    "marketing": ["marketing", "seo", "growth", "conversion", "newsletter", "audience", "traffic", "funnel", "copywriting", "brand", "campaign", "analytics", "ctr"],
+    "SaaS": ["saas", "mrr", "arr", "b2b", "subscription", "pricing", "churn", "onboarding", "product", "software", "dashboard", "feature"],
+    "creators": ["creator", "creators", "content", "blog", "newsletter", "writing", "publish", "substack", "ghost", "medium", "hashnode", "devto"],
+    "founders": ["startup", "startups", "founder", "founders", "bootstrapped", "vc", "pitch", "investor", "fundraise", "equity", "accelerator", "yc", "hn"],
+    "developer": ["code", "developer", "api", "python", "software", "bug", "git", "javascript", "typescript", "frontend", "backend", "fullstack", "react", "fastapi", "open-source"],
 }
+
 
 
 def _heuristic_analyze(title: str, text: str) -> dict[str, Any]:
