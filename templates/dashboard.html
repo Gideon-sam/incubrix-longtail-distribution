@@ -742,14 +742,28 @@ Learn more at https://incubrix.com</textarea>
       }, 4000);
     }
 
+    // ── Safe UUID generator (works on HTTP and HTTPS) ───────────────────────
+    function safeUUID() {
+      if (window.crypto && typeof window.crypto.randomUUID === "function") {
+        try { return window.crypto.randomUUID(); } catch (e) {}
+      }
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    }
+
     // ── Load Registered Connectors (Tab 1) ───────────────────────────────────
     async function loadConnectors() {
       try {
         const res = await fetch("/api/v1/connectors");
         if (!res.ok) throw new Error("Failed to fetch connectors");
-        registeredConnectors = await res.json();
+        const data = await res.json();
+        registeredConnectors = Array.isArray(data) ? data : (data.connectors || []);
         
-        document.getElementById("metric-connectors").textContent = registeredConnectors.length;
+        const metricEl = document.getElementById("metric-connectors");
+        if (metricEl) metricEl.textContent = registeredConnectors.length;
         renderConnectorsGrid(registeredConnectors);
       } catch (err) {
         console.error("Error loading connectors:", err);
@@ -765,7 +779,8 @@ Learn more at https://incubrix.com</textarea>
         const card = document.createElement("div");
         card.className = "connector-card";
         
-        const capsHtml = (c.capabilities || []).map(cap => `<span class="cap-pill">${cap}</span>`).join("");
+        const rawCaps = Array.isArray(c.capabilities) ? c.capabilities : (typeof c.capabilities === "string" ? c.capabilities.split(" ").filter(Boolean) : []);
+        const capsHtml = rawCaps.map(cap => `<span class="cap-pill">${cap}</span>`).join("");
         
         card.innerHTML = `
           <div>
@@ -898,51 +913,50 @@ Learn more at https://incubrix.com</textarea>
     async function handlePublish(event) {
       event.preventDefault();
 
-      const destId = document.getElementById("pub-destination").value;
-      if (!destId) {
-        showToast("Please choose a target destination community.", "error");
-        return;
-      }
-
-      const title = document.getElementById("pub-title").value.trim();
-      const body = document.getElementById("pub-body").value.trim();
-      const canonical = document.getElementById("pub-canonical").value.trim() || null;
-      const tags = document.getElementById("pub-tags").value.split(",").map(t => t.trim()).filter(Boolean);
-      const isSim = document.getElementById("pub-simulation").checked;
-
       const submitBtn = document.getElementById("btn-publish-submit");
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = `Queuing Workload...`;
-
       const consoleBox = document.getElementById("console-logs");
       const statusPill = document.getElementById("job-status-pill");
       const resultBox = document.getElementById("publish-result-box");
-      resultBox.style.display = "none";
-
-      consoleBox.innerHTML = "";
-      statusPill.textContent = "QUEUED";
-      statusPill.style.color = "var(--warn)";
-
-      appendLog(`[1/4] Generating cryptographic Idempotency-Key...`, "info");
-
-      const idempotencyKey = "idem-" + crypto.randomUUID();
-
-      const payload = {
-        destination_id: destId,
-        rendition: {
-          title: title,
-          body: body,
-          canonical_url: canonical,
-          tags: tags,
-          summary: body.substring(0, 120)
-        },
-        connection: {
-          auth_type: "api_key",
-          credentials: { api_key: "live-auth-token" }
-        }
-      };
 
       try {
+        const destId = document.getElementById("pub-destination").value;
+        if (!destId) {
+          showToast("Please choose a target destination community.", "error");
+          return;
+        }
+
+        const title = document.getElementById("pub-title").value.trim();
+        const body = document.getElementById("pub-body").value.trim();
+        const canonical = document.getElementById("pub-canonical").value.trim() || null;
+        const tags = document.getElementById("pub-tags").value.split(",").map(t => t.trim()).filter(Boolean);
+        const isSim = document.getElementById("pub-simulation").checked;
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `Queuing Workload...`;
+
+        resultBox.style.display = "none";
+        consoleBox.innerHTML = "";
+        statusPill.textContent = "QUEUED";
+        statusPill.style.color = "var(--warn)";
+
+        appendLog(`[1/4] Generating cryptographic Idempotency-Key...`, "info");
+        const idempotencyKey = "idem-" + safeUUID();
+
+        const payload = {
+          destination_id: destId,
+          rendition: {
+            title: title,
+            body: body,
+            canonical_url: canonical,
+            tags: tags,
+            summary: body.substring(0, 120)
+          },
+          connection: {
+            auth_type: "api_key",
+            credentials: { api_key: "live-auth-token" }
+          }
+        };
+
         appendLog(`[2/4] Transmitting POST /api/v1/publish (Target: ${destId})...`, "info");
         
         const res = await fetch("/api/v1/publish", {
@@ -955,7 +969,7 @@ Learn more at https://incubrix.com</textarea>
         });
 
         if (!res.ok) {
-          const errData = await res.json();
+          const errData = await res.json().catch(() => ({}));
           throw new Error(errData.error?.message || `HTTP ${res.status}`);
         }
 
@@ -995,13 +1009,14 @@ Learn more at https://incubrix.com</textarea>
             clearInterval(pollInterval);
             statusPill.textContent = "SUCCEEDED";
             statusPill.style.color = "var(--ok)";
-            appendLog(`[4/4] Complete! Live published URL: ${job.result?.url || 'Simulated record'}`, "success");
+            const liveUrl = job.result_data?.live_url || job.result_url || job.result?.url || "https://incubrix.com/published";
+            appendLog(`[4/4] Complete! Live published URL: ${liveUrl}`, "success");
 
             // Update result UI
             resultBox.style.display = "block";
-            document.getElementById("res-live-url").textContent = job.result?.url || "https://dev.to/incubrix/post-live";
-            document.getElementById("res-live-url").href = job.result?.url || "#";
-            document.getElementById("res-platform-id").textContent = job.result?.platform_post_id || "ext-post-88219";
+            document.getElementById("res-live-url").textContent = liveUrl;
+            document.getElementById("res-live-url").href = liveUrl;
+            document.getElementById("res-platform-id").textContent = job.result_data?.platform_post_id || job.result?.platform_post_id || "post-" + Date.now();
             document.getElementById("res-idempotency").textContent = idempotencyKey;
 
             showToast("Content broadcast successfully verified!", "success");
@@ -1012,8 +1027,10 @@ Learn more at https://incubrix.com</textarea>
             clearInterval(pollInterval);
             statusPill.textContent = "FAILED";
             statusPill.style.color = "var(--danger)";
-            appendLog(`[ERROR] Execution failed: ${job.error?.code} — ${job.error?.message}`, "error");
-            showToast(`Failed: ${job.error?.message}`, "error");
+            const errCode = job.error?.code || job.error_code || "EXEC_ERROR";
+            const errMsg = job.error?.message || job.error_message || "Execution failed";
+            appendLog(`[ERROR] Execution failed: ${errCode} — ${errMsg}`, "error");
+            showToast(`Failed: ${errMsg}`, "error");
             submitBtn.disabled = false;
             submitBtn.innerHTML = `Deploy Content Now`;
           }
@@ -1086,12 +1103,14 @@ Learn more at https://incubrix.com</textarea>
       recs.forEach(r => {
         const card = document.createElement("div");
         card.className = "rec-card";
-        const scorePercent = Math.min(100, Math.round((r.score || 0.85) * 100));
+        const scorePercent = Math.min(100, Math.round((r.final_score || r.score || 0.85) * 100));
+        const destName = r.name || r.destination_name || r.destination_id;
+        const destSafeName = (destName || "").replace(/'/g, "\\'");
 
         card.innerHTML = `
           <div class="rec-header">
             <div>
-              <div class="rec-dest-name">${r.destination_name || r.destination_id}</div>
+              <div class="rec-dest-name">${destName}</div>
               <span class="chip chip-connector">${r.connector_key || 'platform'}</span>
             </div>
             <div class="rec-score-badge">
@@ -1106,7 +1125,7 @@ Learn more at https://incubrix.com</textarea>
           <div class="rec-footer">
             <span style="font-size:0.75rem; color:var(--ok);">● Rules Compliant</span>
             <button class="btn-primary" style="padding:6px 14px; font-size:0.76rem;" 
-                    onclick="useInPublishing('${r.destination_id}', '${r.destination_name}')">
+                    onclick="useInPublishing('${r.destination_id}', '${destSafeName}')">
               Publish Here
             </button>
           </div>
