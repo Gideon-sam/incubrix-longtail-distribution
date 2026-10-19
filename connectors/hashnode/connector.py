@@ -76,8 +76,9 @@ class HashnodeConnector(BaseConnector):
         if "errors" in data:
             raise HTTPException(422, make_error("PLATFORM_CONTENT_REJECTED", str(data["errors"]), retryable=False))
         post = data["data"]["publishPost"]["post"]
-        log.info("hashnode_published", post_id=post["id"])
-        return PublishResponse(platform_post_id=post["id"], live_url=post["url"], status="published")
+        raw_url = post.get("url", "")
+        browser_url = f"/proxy/hashnode/@incubrix/{post['slug']}" if "mock-hashnode" in raw_url else raw_url
+        return PublishResponse(platform_post_id=post["id"], live_url=browser_url, status="published")
 
     async def get_status(self, platform_post_id, connection):
         if settings.SIMULATION_MODE:

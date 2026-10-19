@@ -303,10 +303,23 @@ async def dashboard(request: Request):
     return HTMLResponse(content="<h1>IncuBrix Mission Control</h1>")
 
 
-@app.api_route("/proxy/ghost/{path:path}", methods=["GET", "POST", "PUT", "DELETE"], include_in_schema=False)
-async def proxy_ghost(path: str, request: Request):
-    """Proxy requests to internal Ghost container for browser access."""
-    target_url = f"{settings.GHOST_API_URL.rstrip('/')}/{path}"
+SERVICE_BACKENDS = {
+    "ghost": "http://ghost:2368",
+    "lemmy": "http://lemmy:8536",
+    "discourse": "http://mock-discourse:4100",
+    "peertube": "http://mock-peertube:4400",
+    "hashnode": "http://mock-hashnode:4300",
+    "webhook": "http://mock-webhook:4200",
+}
+
+
+@app.api_route("/proxy/{service}/{path:path}", methods=["GET", "POST", "PUT", "DELETE"], include_in_schema=False)
+async def proxy_service(service: str, path: str, request: Request):
+    """Proxy requests to internal containers for browser access."""
+    base = SERVICE_BACKENDS.get(service)
+    if not base:
+        return Response(content=f"Unknown service '{service}'", status_code=404)
+    target_url = f"{base}/{path}"
     headers = dict(request.headers)
     headers.pop("host", None)
     body = await request.body()
@@ -326,6 +339,6 @@ async def proxy_ghost(path: str, request: Request):
             )
         except Exception as exc:
             return Response(
-                content=f"Ghost container not reachable: {str(exc)}",
+                content=f"Service '{service}' container not reachable: {str(exc)}",
                 status_code=502,
             )

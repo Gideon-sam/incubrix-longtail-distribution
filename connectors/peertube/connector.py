@@ -50,9 +50,10 @@ class PeerTubeConnector(BaseConnector):
             import uuid
             mock_id = str(uuid.uuid4())
             log.info("peertube_published_sim", video_id=mock_id)
+            browser_url = f"/proxy/peertube/videos/watch/{mock_id}" if "mock-peertube:4400" in api else f"{api}/videos/watch/{mock_id}"
             return PublishResponse(
                 platform_post_id=mock_id,
-                live_url=f"{api}/videos/watch/{mock_id}",
+                live_url=browser_url,
                 status="published",
             )
 
@@ -72,9 +73,9 @@ class PeerTubeConnector(BaseConnector):
         data = resp.json()
         vid = data.get("video", data)
         vid_id = str(vid.get("uuid", vid.get("id", "")))
-        live_url = f"{api}/videos/watch/{vid_id}"
+        browser_url = f"/proxy/peertube/videos/watch/{vid_id}" if "mock-peertube:4400" in api else f"{api}/videos/watch/{vid_id}"
         log.info("peertube_published", video_id=vid_id)
-        return PublishResponse(platform_post_id=vid_id, live_url=live_url, status="published")
+        return PublishResponse(platform_post_id=vid_id, live_url=browser_url, status="published")
 
     async def get_status(self, platform_post_id, connection):
         if settings.SIMULATION_MODE:

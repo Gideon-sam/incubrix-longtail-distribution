@@ -89,9 +89,10 @@ class LemmyConnector(BaseConnector):
         if settings.SIMULATION_MODE:
             mock_id = f"lemmy-sim-{idempotency_key[:8]}"
             log.info("lemmy_published_sim", post_id=mock_id)
+            browser_url = f"/proxy/lemmy/post/{mock_id}" if "lemmy:8536" in api_url else f"{api_url}/post/{mock_id}"
             return PublishResponse(
                 platform_post_id=mock_id,
-                live_url=f"{api_url}/post/{mock_id}",
+                live_url=browser_url,
                 status="published",
             )
 
@@ -155,9 +156,9 @@ class LemmyConnector(BaseConnector):
                 ),
             )
 
-        live_url = f"{api_url}/post/{post_id}"
+        browser_url = f"/proxy/lemmy/post/{post_id}" if "lemmy:8536" in api_url else f"{api_url}/post/{post_id}"
         log.info("lemmy_published", post_id=post_id, community_id=community_id)
-        return PublishResponse(platform_post_id=post_id, live_url=live_url, status="published")
+        return PublishResponse(platform_post_id=post_id, live_url=browser_url, status="published")
 
     async def get_status(
         self, platform_post_id: str, connection: Connection

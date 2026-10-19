@@ -123,11 +123,11 @@ class DiscourseConnector(BaseConnector):
                 ),
             )
 
-        live_url = f"{base}/t/{topic_id}"
+        browser_url = f"/proxy/discourse/t/{topic_id}" if "mock-discourse:4100" in base else f"{base}/t/{topic_id}"
         log.info("discourse_published", topic_id=topic_id, post_id=post_id, base_url=base)
         return PublishResponse(
             platform_post_id=post_id,
-            live_url=live_url,
+            live_url=browser_url,
             status="published",
         )
 
