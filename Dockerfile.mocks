@@ -3,4 +3,4 @@ FROM python:3.12-slim
 WORKDIR /app
 RUN pip install --no-cache-dir fastapi uvicorn httpx pydantic
 COPY mock_servers/ ./mock_servers/
-EXPOSE 4100 4101 4200 4300 4400 9000 9001
+EXPOSE 4100 4101 4200 4300 4400 8536 9000 9001

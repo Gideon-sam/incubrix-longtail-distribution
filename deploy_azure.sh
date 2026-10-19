@@ -89,6 +89,7 @@ TOKEN=$(grep "^ACCESS_TOKEN=" .env | cut -d'=' -f2- || echo "")
 
 # 6. Bring up docker compose stack
 echo "[INFO] Building and starting all services..."
+$DOCKER_CMD compose down --remove-orphans 2>/dev/null || true
 $DOCKER_CMD compose pull --ignore-pull-failures 2>/dev/null || true
 $DOCKER_CMD compose up --build -d
 

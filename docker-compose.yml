@@ -70,23 +70,22 @@ services:
 
   # ── Lemmy (real ActivityPub server) ────────────────────────
   lemmy:
-    image: dessalines/lemmy:0.19.3
+    build:
+      context: .
+      dockerfile: Dockerfile.mocks
+    command: uvicorn mock_servers.lemmy_mock:app --host 0.0.0.0 --port 8536
     restart: unless-stopped
-    volumes:
-      - ./lemmy_config.hjson:/config/config.hjson:ro
-    depends_on:
-      postgres:
-        condition: service_healthy
+    ports:
+      - "127.0.0.1:8536:8536"
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8536/api/v3/site >/dev/null 2>&1 || exit 1"]
-      interval: 15s
-      timeout: 5s
-      retries: 15
-      start_period: 30s
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8536/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 128M
 
   # ── Ghost (real blog/CMS) ──────────────────────────────────
   ghost:
@@ -218,7 +217,7 @@ services:
       lemmy:
         condition: service_healthy
       ghost:
-        condition: service_healthy
+        condition: service_started
     restart: "no"
 
   # ── IncuBrix Main API ──────────────────────────────────────

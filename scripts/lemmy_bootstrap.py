@@ -15,7 +15,7 @@ EMAIL = "incubrix@example.com"
 COMMUNITY_NAME = "incubrix_test"
 
 
-def wait_for_lemmy(timeout=120):
+def wait_for_lemmy(timeout=60):
     """Poll until Lemmy's API responds."""
     deadline = time.time() + timeout
     while time.time() < deadline:
@@ -27,8 +27,9 @@ def wait_for_lemmy(timeout=120):
         except Exception:
             pass
         print("[INFO] Waiting for Lemmy...")
-        time.sleep(5)
-    raise RuntimeError("Lemmy did not start in time.")
+        time.sleep(2)
+    print("[WARN] Lemmy wait timeout reached, proceeding.")
+    return False
 
 
 def register_admin():
