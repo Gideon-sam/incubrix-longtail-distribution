@@ -239,7 +239,7 @@ services:
       HMAC_WEBHOOK_URL: http://mock-webhook:4200/webhook
       HASHNODE_API_URL: http://mock-hashnode:4300
       PEERTUBE_API_URL: http://mock-peertube:4400
-      SIMULATION_MODE: ${SIMULATION_MODE:-false}
+      SIMULATION_MODE: ${SIMULATION_MODE:-true}
     ports:
       - "8000:8000"
     depends_on:

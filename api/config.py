@@ -13,7 +13,7 @@ from typing import Optional
 class Settings(BaseSettings):
     """Central configuration — every field maps to an env var."""
 
-    # ── Service identity ────────────────────────────────────
+    # -- Service identity ----------------------------------------
     SERVICE_NAME: str = "incubrix-longtail"
     SERVICE_VERSION: str = "1.0.0"
     HOST: str = "0.0.0.0"
@@ -21,11 +21,13 @@ class Settings(BaseSettings):
     DEBUG: bool = False
     LOG_LEVEL: str = "INFO"
 
-    # ── Simulation mode ─────────────────────────────────────
+    # -- Simulation mode -----------------------------------------
     # When True, connectors route to mock backends automatically.
-    SIMULATION_MODE: bool = False
+    # Defaults to True: docker compose up works with ZERO keys.
+    # Set SIMULATION_MODE=false in .env for live credentials.
+    SIMULATION_MODE: bool = True
 
-    # ── Database (Postgres) ─────────────────────────────────
+    # -- Database (Postgres) -------------------------------------
     POSTGRES_USER: str = "incubrix"
     POSTGRES_PASSWORD: str = "incubrix_pass"
     POSTGRES_DB: str = "incubrix"
@@ -34,10 +36,10 @@ class Settings(BaseSettings):
     )
     DATABASE_ECHO: bool = False
 
-    # ── Redis (job queue + idempotency cache) ───────────────
+    # -- Redis (job queue + idempotency cache) -------------------
     REDIS_URL: str = "redis://redis:6379/0"
 
-    # ── MinIO (S3-compatible storage for outputs/evidence) ──
+    # -- MinIO (S3-compatible storage for outputs/evidence) ------
     MINIO_ENDPOINT: str = "minio:9000"
     MINIO_ROOT_USER: str = "incubrix"
     MINIO_ROOT_PASSWORD: str = "incubrix_secret"
@@ -46,12 +48,15 @@ class Settings(BaseSettings):
     MINIO_BUCKET: str = "incubrix-outputs"
     MINIO_SECURE: bool = False
 
-    # ── AI provider ─────────────────────────────────────────
+    # -- AI provider ---------------------------------------------
     # "mock" (default, no key) or "gemini" (needs GEMINI_API_KEY)
     LLM_PROVIDER: str = "mock"
     GEMINI_API_KEY: Optional[str] = None
+    # Comma-separated model names tried in priority order.
+    # Falls back to mock adapter if all fail (shows ai_fallback=true in response).
+    GEMINI_MODEL: str = "gemini-2.5-flash-preview-05-20,gemini-2.0-flash,gemini-1.5-flash"
 
-    # ── Rate limiting & auth for public demo ────────────────
+    # -- Rate limiting & auth for public demo --------------------
     RATE_LIMIT: str = "60/minute"
     ACCESS_TOKEN: Optional[str] = None
     CALLBACK_SECRET: str = "webhook_secret_key"
@@ -64,7 +69,7 @@ class Settings(BaseSettings):
     )
     RECERT_INTERVAL_DAYS: int = 25
 
-    # ── Connector secrets ───────────────────────────────────
+    # -- Connector secrets ---------------------------------------
     DEVTO_API_KEY: Optional[str] = None
 
     GHOST_ADMIN_API_KEY: Optional[str] = None
