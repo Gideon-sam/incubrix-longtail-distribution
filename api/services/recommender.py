@@ -67,36 +67,44 @@ def _compute_semantic_audience_score(
     analysis: dict[str, Any],
 ) -> tuple[float, str]:
     """Score how well a destination's audience aligns with content semantics."""
-    primary_cat = (analysis.get("primary_category") or "general").lower()
+    primary_domain = (analysis.get("primary_domain") or analysis.get("primary_category") or "general").lower()
     topics = set(t.lower() for t in analysis.get("topics", []))
-    content_words = set(re.findall(r"\b[a-z]{3,}\b", f"{title} {rendition_text}".lower()))
+    target_audiences = set(t.lower() for t in analysis.get("target_audience", []))
+    content_words = set(re.findall(r"\b[a-z]{2,}\b", f"{title} {rendition_text}".lower()))
+    all_semantic_terms = topics | target_audiences | {primary_domain} | content_words
 
-    dest_cat = (dest.category or "").lower()
-    dest_name = (dest.name or "").lower()
-    dest_reason = (getattr(dest, "relevance_reason", "") or "").lower()
+    dest_name = dest.name if isinstance(dest.name, str) else ""
+    dest_cat = dest.category if isinstance(dest.category, str) else ""
+    dest_name = dest_name.lower()
+    dest_cat = dest_cat.lower()
+    dest_reason = getattr(dest, "relevance_reason", "")
+    dest_reason = dest_reason.lower() if isinstance(dest_reason, str) else ""
 
     dest_tags_raw = dest.audience_tags or []
     if isinstance(dest_tags_raw, str):
         dest_tags = set(t.strip().lower() for t in dest_tags_raw.split(",") if t.strip())
-    else:
+    elif isinstance(dest_tags_raw, (list, set, tuple)):
         dest_tags = set(str(t).strip().lower() for t in dest_tags_raw if str(t).strip())
+    else:
+        dest_tags = set()
 
     base = ((getattr(dest, "relevance_score", 3) or 3) / 5.0) * 0.70  # 0.42 to 0.70
 
-    # 1. Category alignment
+    # 1. Category and domain alignment
     cat_boost = 0.0
-    if dest_cat == primary_cat and primary_cat != "general":
-        cat_boost = 0.35
-    elif (primary_cat == "automotive" and dest_cat in ["engineering", "tech", "community"]) or \
-         (primary_cat == "developer" and dest_cat in ["tech", "engineering", "ai", "publishing"]) or \
-         (primary_cat == "ai" and dest_cat in ["developer", "tech", "engineering"]) or \
-         (primary_cat == "startups" and dest_cat in ["marketing", "business", "community"]) or \
-         (primary_cat == "video" and dest_cat in ["creators", "media", "ctv"]):
+    if dest_cat == primary_domain and primary_domain != "general":
+        cat_boost = 0.40
+    elif dest_cat in ["publishing", "community", "video", "creator", "creators", "newsletter"]:
+        cat_boost = 0.20  # Open/broad destinations fit general creator content
+    elif (primary_domain in ["developer", "software", "tech", "web"] and dest_cat in ["tech", "engineering", "ai", "publishing", "developer"]) or \
+         (primary_domain in ["automotive", "hardware", "robotics"] and dest_cat in ["engineering", "tech", "community"]) or \
+         (primary_domain in ["startups", "business", "saas", "finance"] and dest_cat in ["marketing", "business", "community", "product"]) or \
+         (primary_domain in ["ai", "machine learning"] and dest_cat in ["developer", "tech", "engineering"]):
         cat_boost = 0.25
 
-    # 2. Topic tag matches
-    tag_matches = topics.intersection(dest_tags)
-    topic_boost = len(tag_matches) * 0.20
+    # 2. Semantic tag matches (topics + target audiences + domain)
+    tag_matches = all_semantic_terms.intersection(dest_tags)
+    topic_boost = len(tag_matches) * 0.22
 
     # 3. Direct word overlap
     word_matches = content_words.intersection(dest_tags)
@@ -104,16 +112,17 @@ def _compute_semantic_audience_score(
 
     # 4. In-name or description mentions
     text_boost = 0.0
-    for t in topics:
-        if t in dest_name or t in dest_reason:
+    for t in all_semantic_terms:
+        if len(t) > 2 and (t in dest_name or t in dest_reason):
             text_boost += 0.15
 
-    # 5. Domain mismatch penalty
+    # 5. Domain mismatch penalty (prevents hyper-niche destinations on unrelated content)
     mismatch_penalty = 0.0
-    if primary_cat == "automotive" and dest_cat in ["developer", "saas", "marketing", "nocode"]:
-        mismatch_penalty = 0.40
-    elif primary_cat == "developer" and dest_cat in ["automotive", "audio", "ctv"]:
-        mismatch_penalty = 0.40
+    tech_domains = {"developer", "software", "tech", "ai", "data", "engineering"}
+    if primary_domain not in tech_domains and dest_cat in ["developer", "ai"] and len(tag_matches) == 0:
+        mismatch_penalty = 0.35
+    elif primary_domain != "automotive" and dest_cat == "automotive" and len(tag_matches) == 0:
+        mismatch_penalty = 0.35
 
     raw = base + cat_boost + topic_boost + word_boost + text_boost - mismatch_penalty
     final_score = min(0.99, max(0.15, raw))
@@ -123,11 +132,11 @@ def _compute_semantic_audience_score(
     if all_matched_terms:
         reason_text = f"High audience resonance for {', '.join(all_matched_terms[:3])}"
     elif cat_boost > 0.3:
-        reason_text = f"Direct category fit ({dest.category})"
-    elif cat_boost > 0:
-        reason_text = f"Complementary domain alignment with {dest.category}"
+        reason_text = f"Direct domain fit ({dest.category})"
+    elif analysis.get("intent_summary"):
+        reason_text = analysis["intent_summary"]
     else:
-        reason_text = "General audience reach"
+        reason_text = f"Complementary domain alignment with {dest.category}"
 
     return final_score, reason_text
 

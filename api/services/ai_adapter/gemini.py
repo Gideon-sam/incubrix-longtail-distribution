@@ -6,6 +6,7 @@ Uses async HTTP client with automatic fallback across Gemini 3.8 / 2.5 / latest 
 """
 from __future__ import annotations
 import json
+import re
 import httpx
 from typing import Any, Optional
 
@@ -70,36 +71,36 @@ class GeminiAdapter(BaseAIAdapter):
         return json.loads(text)
 
     async def analyze_content(self, title: str, body: str) -> dict[str, Any]:
-        """Extract semantic topics, primary category, and audience profile."""
+        """Dynamically extract semantic domain, topics, target audience, and intent from ANY content."""
         prompt = (
             "You are IncuBrix AI Content Matcher.\n"
             f"Content Title: {title}\n"
             f"Content Body: {body[:1500]}\n\n"
             "Analyze this content and output valid JSON only:\n"
             "{\n"
-            '  "primary_category": "automotive" | "developer" | "AI" | "engineering" | "video" | "marketing" | "startups" | "general",\n'
+            '  "primary_domain": "<main domain e.g. automotive, software, gaming, culinary, finance, marketing, hardware, health, travel, business, general>",\n'
+            '  "target_audience": ["target_group_1", "target_group_2", "target_group_3"],\n'
             '  "topics": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"],\n'
-            '  "intent_summary": "1-sentence summary of target audience fit"\n'
+            '  "intent_summary": "1-sentence summary of the content focus and intended audience"\n'
             "}"
         )
         try:
             raw = await self._generate_text(prompt, temperature=0.1)
-            return self._clean_json(raw)
+            parsed = self._clean_json(raw)
+            # Ensure primary_category is populated for compatibility
+            parsed["primary_category"] = parsed.get("primary_domain") or parsed.get("primary_category") or "general"
+            return parsed
         except Exception as exc:
             log.warning("gemini_content_analysis_failed", error=str(exc))
-            # Fallback based on basic heuristics
+            # Dynamic fallback
             lower = f"{title} {body}".lower()
-            category = "general"
-            if any(k in lower for k in ["car", "engine", "motor", "vehicle", "turbo", "brake", "mechanic"]):
-                category = "automotive"
-            elif any(k in lower for k in ["code", "developer", "api", "python", "software", "bug"]):
-                category = "developer"
-            elif any(k in lower for k in ["ai", "llm", "gpt", "model", "neural"]):
-                category = "AI"
+            words = [w for w in re.findall(r"\b[a-z]{3,}\b", lower) if len(w) > 3][:6]
             return {
-                "primary_category": category,
-                "topics": [w for w in lower.split() if len(w) > 3][:5],
-                "intent_summary": f"Content categorized as {category}.",
+                "primary_domain": "general",
+                "primary_category": "general",
+                "target_audience": ["general audience"],
+                "topics": words,
+                "intent_summary": f"Content centered on {', '.join(words[:3])}.",
             }
 
     async def capture_rules(self, rules_page_text: str) -> list[dict[str, Any]]:
