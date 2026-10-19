@@ -133,3 +133,43 @@ def test_openapi_schema_matches_running_service():
     live_spec = app.openapi()
     assert set(file_spec.get("paths", {}).keys()) == set(live_spec.get("paths", {}).keys())
 
+
+def test_all_v1_post_endpoints_require_idempotency_key():
+    """Integration Standard #4: Every POST endpoint under /api/v1 must require Idempotency-Key header."""
+    from api.main import app
+    spec = app.openapi()
+    paths = spec.get("paths", {})
+    missing_header_endpoints = []
+    v1_post_count = 0
+
+    for path, methods in paths.items():
+        if path.startswith("/api/v1") and "post" in methods:
+            v1_post_count += 1
+            op = methods["post"]
+            params = op.get("parameters", [])
+            has_idempotency = any(
+                p.get("in") == "header" and p.get("name", "").lower() == "idempotency-key" and p.get("required") is True
+                for p in params
+            )
+            if not has_idempotency:
+                missing_header_endpoints.append(path)
+
+    assert v1_post_count >= 8, f"Expected at least 8 /api/v1 POST endpoints, found {v1_post_count}"
+    assert not missing_header_endpoints, (
+        f"The following /api/v1 POST endpoints are missing required Idempotency-Key header: {missing_header_endpoints}"
+    )
+
+
+@pytest.mark.asyncio
+async def test_missing_idempotency_key_returns_422(client: AsyncClient):
+    """POST without Idempotency-Key must return 422 in standard error envelope."""
+    resp = await client.post(
+        "/api/v1/publish",
+        json={"destination_id": "seed-discourse-1", "rendition": {"title": "T", "body": "B"}, "connection": {}},
+    )
+    assert resp.status_code == 422
+    data = resp.json()
+    assert "error" in data
+    assert data["error"]["code"] == "DEST_SPEC_VIOLATION"
+
+

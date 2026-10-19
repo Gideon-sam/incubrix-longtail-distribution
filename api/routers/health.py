@@ -19,11 +19,13 @@ router = APIRouter(tags=["Health"])
 @router.get("/health", summary="Liveness check")
 async def health():
     """Returns 200 immediately — used by Docker/Kubernetes liveness probes."""
+    from connectors.registry import list_connectors
     return {
         "status": "ok",
         "service": settings.SERVICE_NAME,
         "version": settings.SERVICE_VERSION,
         "simulation_mode": settings.SIMULATION_MODE,
+        "connectors_loaded": len(list_connectors()),
     }
 
 

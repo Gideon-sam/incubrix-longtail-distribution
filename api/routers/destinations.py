@@ -14,6 +14,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional
 
 from api.database import get_db
+from api.dependencies.idempotency import require_idempotency_key
+from api.services.idempotency import check_cached_response, store_cached_response
 from api.models.destination import Destination
 from api.schemas.destination import DestinationCreate, DestinationResponse, DestinationRulesUpdate
 from api.schemas.error import make_error
@@ -42,12 +44,30 @@ async def list_destinations(
 async def create_destination(
     body: DestinationCreate,
     db: AsyncSession = Depends(get_db),
+    idempotency_key: str = Depends(require_idempotency_key),
 ):
     """Add a new destination to the catalogue. One row = one new instance (no new code)."""
+    try:
+        is_dup, cached = await check_cached_response(
+            db, idempotency_key, "destinations", body.url or "create", body.model_dump()
+        )
+        if is_dup and cached:
+            return cached
+    except ValueError as e:
+        raise HTTPException(
+            status_code=409,
+            detail=make_error("DEST_SPEC_VIOLATION", str(e), retryable=False),
+        )
+
     data = body.model_dump(exclude_none=True)
     dest = Destination(**data)
     db.add(dest)
     await db.flush()
+    await db.refresh(dest)
+    res_data = DestinationResponse.model_validate(dest).model_dump(mode="json")
+    await store_cached_response(
+        db, idempotency_key, "destinations", body.url or "create", body.model_dump(), res_data
+    )
     return dest
 
 

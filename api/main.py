@@ -149,7 +149,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
     if is_missing_idempotency:
         return JSONResponse(
-            status_code=400,
+            status_code=422,
             content=make_error(
                 "DEST_SPEC_VIOLATION",
                 "Missing required header: Idempotency-Key",

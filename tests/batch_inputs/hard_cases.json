@@ -32,7 +32,7 @@
     "expected_status": 404
   },
   {
-    "name": "Hard Case 2.1 - Publish without Idempotency-Key rejected with 400",
+    "name": "Hard Case 2.1 - Publish without Idempotency-Key rejected with 422",
     "method": "POST",
     "path": "/api/v1/publish",
     "headers": {"Content-Type": "application/json"},
@@ -41,13 +41,16 @@
       "rendition": {"title": "Missing Idempotency", "body": "Content"},
       "connection": {}
     },
-    "expected_status": 400
+    "expected_status": 422
   },
   {
     "name": "Phase 4.1 - Content tailoring endpoint",
     "method": "POST",
     "path": "/api/v1/tailor",
-    "headers": {"Content-Type": "application/json"},
+    "headers": {
+      "Content-Type": "application/json",
+      "Idempotency-Key": "hardcase-tailor-01"
+    },
     "body": {
       "destination_id": "seed-devto-1",
       "rendition": {

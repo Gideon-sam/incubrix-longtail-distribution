@@ -22,6 +22,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.database import get_db
+from api.dependencies.idempotency import require_idempotency_key
+from api.services.idempotency import check_cached_response, store_cached_response
 from api.models.destination import Destination
 from api.models.rule import RuleProposal, DestinationRule
 from api.services import job_manager
@@ -264,7 +266,7 @@ async def import_catalogue(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
-    idempotency_key: str = Header(..., alias="Idempotency-Key"),
+    idempotency_key: str = Depends(require_idempotency_key),
 ):
     """Import destinations from CSV file with 50-worker bounded reachability checks."""
     if not file.filename or not file.filename.endswith(".csv"):
@@ -293,8 +295,21 @@ class RulesCaptureRequest(BaseModel):
 async def capture_rules(
     request: RulesCaptureRequest,
     db: AsyncSession = Depends(get_db),
+    idempotency_key: str = Depends(require_idempotency_key),
 ):
     """AI reads destination rules page and proposes rules."""
+    try:
+        is_dup, cached = await check_cached_response(
+            db, idempotency_key, "rules_capture", request.destination_id or "capture", request.model_dump()
+        )
+        if is_dup and cached:
+            return cached
+    except ValueError as e:
+        raise HTTPException(
+            status_code=409,
+            detail=make_error("DEST_SPEC_VIOLATION", str(e), retryable=False),
+        )
+
     import httpx
     async with httpx.AsyncClient(timeout=15) as client:
         try:
@@ -320,7 +335,7 @@ async def capture_rules(
         created.append(proposal)
 
     await db.flush()
-    return {
+    result_data = {
         "destination_id": request.destination_id,
         "proposals": [
             {
@@ -334,6 +349,10 @@ async def capture_rules(
         ],
         "note": "Proposals require POST to /api/v1/rules/{id}/confirm to take effect.",
     }
+    await store_cached_response(
+        db, idempotency_key, "rules_capture", request.destination_id or "capture", request.model_dump(), result_data
+    )
+    return result_data
 
 
 @router.post("/rules/{proposal_id}/confirm", summary="Human confirms a proposed rule")
@@ -341,12 +360,26 @@ async def confirm_rule(
     proposal_id: str,
     confirmed_by: str = Body(..., embed=True),
     db: AsyncSession = Depends(get_db),
+    idempotency_key: str = Depends(require_idempotency_key),
 ):
     """
     Confirm an AI-proposed rule.
     Phase 4.2 compliance: confirmed values are written directly into the destination fields
     that the rules engine reads!
     """
+    req_body = {"proposal_id": proposal_id, "confirmed_by": confirmed_by}
+    try:
+        is_dup, cached = await check_cached_response(
+            db, idempotency_key, "rules_confirm", proposal_id, req_body
+        )
+        if is_dup and cached:
+            return cached
+    except ValueError as e:
+        raise HTTPException(
+            status_code=409,
+            detail=make_error("DEST_SPEC_VIOLATION", str(e), retryable=False),
+        )
+
     result = await db.execute(
         select(RuleProposal).where(RuleProposal.id == proposal_id)
     )
@@ -388,7 +421,7 @@ async def confirm_rule(
 
     await db.commit()
 
-    return {
+    resp_data = {
         "message": "Rule confirmed and activated on destination.",
         "proposal_id": proposal_id,
         "rule_id": active_rule.id,
@@ -396,3 +429,7 @@ async def confirm_rule(
         "rule_value": active_rule.rule_value,
         "destination_id": proposal.destination_id,
     }
+    await store_cached_response(
+        db, idempotency_key, "rules_confirm", proposal_id, req_body, resp_data
+    )
+    return resp_data

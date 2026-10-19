@@ -6,11 +6,14 @@ POST /api/v1/admin/recertify    — trigger manual recertification cycle
 GET  /api/v1/admin/recert/status — last recertification summary
 """
 from __future__ import annotations
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional
 
 from api.database import get_db
+from api.dependencies.idempotency import require_idempotency_key
+from api.services.idempotency import check_cached_response, store_cached_response
+from api.schemas.error import make_error
 from api.services.recommender import recommend
 from api.services.recertification import check_and_recertify
 from api.middleware.logging_mw import get_logger
@@ -64,15 +67,33 @@ async def recommend_destinations(
     "/admin/recertify",
     summary="Trigger manual recertification cycle for all due destinations",
 )
-async def trigger_recertification(db: AsyncSession = Depends(get_db)):
+async def trigger_recertification(
+    db: AsyncSession = Depends(get_db),
+    idempotency_key: str = Depends(require_idempotency_key),
+):
     """
     Manually trigger the recertification cycle.
     Checks all L3/L4 destinations, re-certifies those due (>30 days),
     demotes failures to L2 and returns a summary.
     """
+    try:
+        is_dup, cached = await check_cached_response(
+            db, idempotency_key, "admin_recertify", "global", {}
+        )
+        if is_dup and cached:
+            return cached
+    except ValueError as e:
+        raise HTTPException(
+            status_code=409,
+            detail=make_error("DEST_SPEC_VIOLATION", str(e), retryable=False),
+        )
+
     global _last_recert_summary
     summary = await check_and_recertify(db)
     _last_recert_summary = summary
+    await store_cached_response(
+        db, idempotency_key, "admin_recertify", "global", {}, summary
+    )
     return summary
 
 

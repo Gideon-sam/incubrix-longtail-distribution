@@ -146,3 +146,67 @@ async def save_result(
             key=idempotency_key,
             platform_post_id=platform_post_id,
         )
+
+
+async def check_cached_response(
+    db: AsyncSession,
+    idempotency_key: str,
+    scope: str,
+    target_id: str,
+    request_body: dict[str, Any],
+) -> tuple[bool, Optional[dict]]:
+    """
+    Check if a response is already cached for this idempotency key.
+    Returns (is_duplicate, cached_response_data).
+    Raises ValueError if same key was used with a different request body.
+    """
+    dest_key = target_id[:36] if target_id else "default"
+    scope_key = scope[:50]
+    body_hash = _hash_body(request_body)
+
+    result = await db.execute(
+        select(IdempotencyRecord).where(
+            IdempotencyRecord.idempotency_key == idempotency_key,
+            IdempotencyRecord.connector_key == scope_key,
+            IdempotencyRecord.destination_id == dest_key,
+        )
+    )
+    existing = result.scalar_one_or_none()
+    if existing:
+        if existing.body_hash != body_hash:
+            raise ValueError(
+                f"Idempotency key '{idempotency_key}' was previously used with a different request body."
+            )
+        return True, existing.response_data
+    return False, None
+
+
+async def store_cached_response(
+    db: AsyncSession,
+    idempotency_key: str,
+    scope: str,
+    target_id: str,
+    request_body: dict[str, Any],
+    response_data: dict[str, Any],
+):
+    """Store cached response for an idempotent operation."""
+    import uuid
+    dest_key = target_id[:36] if target_id else "default"
+    scope_key = scope[:50]
+    body_hash = _hash_body(request_body)
+
+    record = IdempotencyRecord(
+        idempotency_key=idempotency_key,
+        connector_key=scope_key,
+        destination_id=dest_key,
+        body_hash=body_hash,
+        job_id=str(uuid.uuid4()),
+        status="completed",
+        response_data=response_data,
+    )
+    try:
+        db.add(record)
+        await db.flush()
+    except IntegrityError:
+        await db.rollback()
+

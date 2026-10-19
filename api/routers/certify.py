@@ -20,6 +20,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
 
 from api.database import get_db
+from api.dependencies.idempotency import require_idempotency_key
 from api.services import job_manager
 from api.schemas.job import JobResponse
 from api.schemas.connector import Connection, DestinationRef, Rendition
@@ -287,7 +288,7 @@ async def certify(
     request: CertifyRequest,
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
-    idempotency_key: str = Header(..., alias="Idempotency-Key"),
+    idempotency_key: str = Depends(require_idempotency_key),
 ):
     """Start a certification run. Returns 202 + job_id."""
     job = await job_manager.create_job(db, "certify", request.callback_url)

@@ -23,6 +23,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel, Field
 
 from api.database import get_db
+from api.dependencies.idempotency import require_idempotency_key
 from api.schemas.error import make_error
 from api.schemas.job import JobResponse
 from api.schemas.connector import Rendition, DestinationRef, Connection
@@ -309,7 +310,7 @@ async def publish(
     request: PublishJobRequest,
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
-    idempotency_key: str = Header(..., alias="Idempotency-Key"),
+    idempotency_key: str = Depends(require_idempotency_key),
 ):
     """
     Submit a publish job. Returns 202 + job_id immediately.

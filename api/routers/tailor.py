@@ -14,11 +14,14 @@ from __future__ import annotations
 import re
 from typing import Optional, Any
 from pydantic import BaseModel, Field
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.database import get_db
+from api.dependencies.idempotency import require_idempotency_key
+from api.services.idempotency import check_cached_response, store_cached_response
+from api.schemas.error import make_error
 from api.models.destination import Destination
 from api.services.ai_adapter.mock import _truncate
 from api.middleware.logging_mw import get_logger
@@ -50,8 +53,20 @@ class TailorResponse(BaseModel):
 async def tailor_content_endpoint(
     req: TailorRequest,
     db: AsyncSession = Depends(get_db),
+    idempotency_key: str = Depends(require_idempotency_key),
 ):
     """Adapt content structure, length, and style for the destination."""
+    try:
+        is_dup, cached = await check_cached_response(
+            db, idempotency_key, "tailor", req.destination_id or "tailor", req.model_dump()
+        )
+        if is_dup and cached:
+            return TailorResponse(**cached)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=409,
+            detail=make_error("DEST_SPEC_VIOLATION", str(e), retryable=False),
+        )
     dest = None
     surface = req.surface or "topic"
     platform_key = req.platform_key or "discourse"
@@ -124,7 +139,7 @@ async def tailor_content_endpoint(
         "tailored_length": len(tailored_body),
     }
 
-    return TailorResponse(
+    res_obj = TailorResponse(
         title=tailored_title,
         body=tailored_body,
         tags=formatted_tags,
@@ -132,3 +147,7 @@ async def tailor_content_endpoint(
         diff=diff,
         warnings=warnings,
     )
+    await store_cached_response(
+        db, idempotency_key, "tailor", req.destination_id or "tailor", req.model_dump(), res_obj.model_dump()
+    )
+    return res_obj

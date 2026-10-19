@@ -310,7 +310,10 @@ paths:
         required: true
         schema:
           type: string
+          description: 'Unique request key for safe retries (Integration Standard
+            #4)'
           title: Idempotency-Key
+        description: 'Unique request key for safe retries (Integration Standard #4)'
       requestBody:
         required: true
         content:
@@ -377,6 +380,16 @@ paths:
       description: Add a new destination to the catalogue. One row = one new instance
         (no new code).
       operationId: create_destination_api_v1_destinations_post
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema:
+          type: string
+          description: 'Unique request key for safe retries (Integration Standard
+            #4)'
+          title: Idempotency-Key
+        description: 'Unique request key for safe retries (Integration Standard #4)'
       requestBody:
         required: true
         content:
@@ -482,7 +495,10 @@ paths:
         required: true
         schema:
           type: string
+          description: 'Unique request key for safe retries (Integration Standard
+            #4)'
           title: Idempotency-Key
+        description: 'Unique request key for safe retries (Integration Standard #4)'
       requestBody:
         required: true
         content:
@@ -516,7 +532,10 @@ paths:
         required: true
         schema:
           type: string
+          description: 'Unique request key for safe retries (Integration Standard
+            #4)'
           title: Idempotency-Key
+        description: 'Unique request key for safe retries (Integration Standard #4)'
       requestBody:
         required: true
         content:
@@ -543,12 +562,22 @@ paths:
       summary: AI rules capture from destination rules page (Advanced)
       description: AI reads destination rules page and proposes rules.
       operationId: capture_rules_api_v1_rules_capture_post
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema:
+          type: string
+          description: 'Unique request key for safe retries (Integration Standard
+            #4)'
+          title: Idempotency-Key
+        description: 'Unique request key for safe retries (Integration Standard #4)'
       requestBody:
+        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/RulesCaptureRequest'
-        required: true
       responses:
         '200':
           description: Successful Response
@@ -580,6 +609,15 @@ paths:
         schema:
           type: string
           title: Proposal Id
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema:
+          type: string
+          description: 'Unique request key for safe retries (Integration Standard
+            #4)'
+          title: Idempotency-Key
+        description: 'Unique request key for safe retries (Integration Standard #4)'
       requestBody:
         required: true
         content:
@@ -697,12 +735,28 @@ paths:
 
         demotes failures to L2 and returns a summary.'
       operationId: trigger_recertification_api_v1_admin_recertify_post
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema:
+          type: string
+          description: 'Unique request key for safe retries (Integration Standard
+            #4)'
+          title: Idempotency-Key
+        description: 'Unique request key for safe retries (Integration Standard #4)'
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/v1/admin/recert/status:
     get:
       tags:
@@ -723,12 +777,22 @@ paths:
       summary: Tailor content for destination
       description: Adapt content structure, length, and style for the destination.
       operationId: tailor_content_endpoint_api_v1_tailor_post
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema:
+          type: string
+          description: 'Unique request key for safe retries (Integration Standard
+            #4)'
+          title: Idempotency-Key
+        description: 'Unique request key for safe retries (Integration Standard #4)'
       requestBody:
+        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/TailorRequest'
-        required: true
       responses:
         '200':
           description: Successful Response
@@ -787,15 +851,28 @@ paths:
       tags:
       - Metrics
       summary: Fetch and store metric snapshot
-      description: Fetch metrics from connector, normalize, and store snapshot in
+      description: 'Fetch metrics from connector, normalize, and store snapshot in
         database.
+
+        On connector failure returns standard error envelope — never stores zeros
+        silently.'
       operationId: fetch_and_store_metrics_api_v1_metrics_fetch_post
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema:
+          type: string
+          description: 'Unique request key for safe retries (Integration Standard
+            #4)'
+          title: Idempotency-Key
+        description: 'Unique request key for safe retries (Integration Standard #4)'
       requestBody:
+        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/MetricFetchRequest'
-        required: true
       responses:
         '200':
           description: Successful Response
@@ -879,15 +956,36 @@ components:
       title: BuildAssistPackRequest
     BuildAssistPackResponse:
       properties:
+        files:
+          items:
+            type: string
+          type: array
+          title: Files
+        caption:
+          type: string
+          title: Caption
+          default: ''
+        deep_link:
+          type: string
+          title: Deep Link
+          default: ''
+        checklist:
+          items:
+            type: string
+          type: array
+          title: Checklist
         instructions:
           type: string
           title: Instructions
+          default: ''
         copy_ready_title:
           type: string
           title: Copy Ready Title
+          default: ''
         copy_ready_body:
           type: string
           title: Copy Ready Body
+          default: ''
         asset_urls:
           items:
             type: string
@@ -909,10 +1007,6 @@ components:
           type: array
           title: Warnings
       type: object
-      required:
-      - instructions
-      - copy_ready_title
-      - copy_ready_body
       title: BuildAssistPackResponse
     CertifyRequest:
       properties:
@@ -1277,13 +1371,40 @@ components:
         platform_post_id:
           type: string
           title: Platform Post Id
+          default: ''
         metrics:
           additionalProperties: true
           type: object
           title: Metrics
+        views:
+          type: integer
+          title: Views
+          default: 0
+        likes:
+          type: integer
+          title: Likes
+          default: 0
+        comments:
+          type: integer
+          title: Comments
+          default: 0
+        shares:
+          type: integer
+          title: Shares
+          default: 0
+        saves:
+          type: integer
+          title: Saves
+          default: 0
+        watch_time_s:
+          type: integer
+          title: Watch Time S
+          default: 0
+        clicks:
+          type: integer
+          title: Clicks
+          default: 0
       type: object
-      required:
-      - platform_post_id
       title: FetchMetricsResponse
     GetStatusRequest:
       properties:
@@ -1410,6 +1531,10 @@ components:
         saves:
           type: integer
           title: Saves
+        watch_time_s:
+          type: integer
+          title: Watch Time S
+          default: 0
         clicks:
           type: integer
           title: Clicks
@@ -1499,14 +1624,13 @@ components:
         token:
           type: string
           title: Token
+          default: ''
         expires_at:
           anyOf:
           - type: string
           - type: 'null'
           title: Expires At
       type: object
-      required:
-      - token
       title: RefreshAuthResponse
     Rendition:
       properties:
