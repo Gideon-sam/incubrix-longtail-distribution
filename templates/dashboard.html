@@ -352,9 +352,9 @@ Learn more at https://incubrix.com</textarea>
             </div>
 
             <div class="checkbox-row">
-              <input type="checkbox" id="pub-simulation" checked>
+              <input type="checkbox" id="pub-simulation">
               <label for="pub-simulation" style="cursor:pointer;">
-                <strong>Safe Simulation Mode</strong> (Execute full validation loop without creating live public post)
+                <strong>Safe Simulation Mode</strong> (Check for dry-run simulation; leave unchecked to broadcast live to platforms)
               </label>
             </div>
 
@@ -953,7 +953,8 @@ Learn more at https://incubrix.com</textarea>
           },
           connection: {
             auth_type: "api_key",
-            credentials: { api_key: "live-auth-token" }
+            credentials: { api_key: "live-auth-token" },
+            extra: { simulation: isSim }
           }
         };
 

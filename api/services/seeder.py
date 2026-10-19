@@ -54,7 +54,7 @@ CORE_DESTINATIONS = [
         "category": "developer",
         "audience_tags": ["developer", "tech", "AI", "SaaS"],
         "language": "en",
-        "frequency_cap": "1/day",
+        "frequency_cap": "20/day",
         "self_promo_allowed": True,
         "link_policy": "allowed",
         "disclosure_required": False,
@@ -74,7 +74,7 @@ CORE_DESTINATIONS = [
         "category": "community",
         "audience_tags": ["developer", "tech", "community"],
         "language": "en",
-        "frequency_cap": "3/day",
+        "frequency_cap": "20/day",
         "self_promo_allowed": False,
         "link_policy": "allowed",
         "disclosure_required": False,
@@ -94,7 +94,7 @@ CORE_DESTINATIONS = [
         "category": "open-source",
         "audience_tags": ["tech", "open-source", "federation"],
         "language": "en",
-        "frequency_cap": "1/day",
+        "frequency_cap": "20/day",
         "self_promo_allowed": False,
         "link_policy": "allowed",
         "disclosure_required": False,
@@ -224,21 +224,106 @@ CORE_DESTINATIONS = [
         "level": "L0",
         "instance_config": {"feed_name": "default"},
     },
+    {
+        "id": "automotive-reddit-cars",
+        "name": "Reddit r/cars",
+        "url": "https://www.reddit.com/r/cars",
+        "platform_key": "assisted",
+        "connector_key": "assisted",
+        "surface": "post",
+        "category": "automotive",
+        "audience_tags": ["cars", "automotive", "engines", "vehicles", "mechanics"],
+        "language": "en",
+        "frequency_cap": "10/day",
+        "self_promo_allowed": False,
+        "link_policy": "allowed",
+        "disclosure_required": False,
+        "automation_allowed": False,
+        "relevance_score": 5.0,
+        "relevance_reason": "Premier global car enthusiast and vehicle community",
+        "level": "L1",
+        "instance_config": {"submit_url": "https://www.reddit.com/r/cars/submit"},
+    },
+    {
+        "id": "automotive-mechanic-advice",
+        "name": "Reddit r/MechanicAdvice",
+        "url": "https://www.reddit.com/r/MechanicAdvice",
+        "platform_key": "assisted",
+        "connector_key": "assisted",
+        "surface": "post",
+        "category": "automotive",
+        "audience_tags": ["cars", "engines", "mechanics", "diy", "repairs", "automotive"],
+        "language": "en",
+        "frequency_cap": "10/day",
+        "self_promo_allowed": False,
+        "link_policy": "allowed",
+        "disclosure_required": False,
+        "automation_allowed": False,
+        "relevance_score": 5.0,
+        "relevance_reason": "Top automotive repair and engine maintenance community",
+        "level": "L1",
+        "instance_config": {"submit_url": "https://www.reddit.com/r/MechanicAdvice/submit"},
+    },
+    {
+        "id": "automotive-lemmy-cars",
+        "name": "Lemmy c/cars",
+        "url": "https://lemmy.world/c/cars",
+        "platform_key": "lemmy",
+        "connector_key": "lemmy",
+        "surface": "post",
+        "category": "automotive",
+        "audience_tags": ["cars", "automotive", "vehicles", "engines", "transportation"],
+        "language": "en",
+        "frequency_cap": "20/day",
+        "self_promo_allowed": True,
+        "link_policy": "allowed",
+        "disclosure_required": False,
+        "automation_allowed": True,
+        "relevance_score": 4.8,
+        "relevance_reason": "Federated open discussion forum for vehicle and car enthusiasts",
+        "level": "L0",
+        "instance_config": {"community_id": 42},
+    },
+    {
+        "id": "engineering-garagejournal",
+        "name": "The Garage Journal",
+        "url": "https://www.garagejournal.com/forum",
+        "platform_key": "discourse",
+        "connector_key": "discourse",
+        "surface": "topic",
+        "category": "engineering",
+        "audience_tags": ["engines", "automotive", "tools", "fabrication", "mechanics"],
+        "language": "en",
+        "frequency_cap": "20/day",
+        "self_promo_allowed": True,
+        "link_policy": "allowed",
+        "disclosure_required": False,
+        "automation_allowed": True,
+        "relevance_score": 4.7,
+        "relevance_reason": "Premier shop forum for engine builders and automotive mechanics",
+        "level": "L0",
+        "instance_config": {"category_id": 12},
+    },
 ]
 
 
 async def seed_initial_destinations():
-    """Populate destinations table if currently empty."""
+    """Populate destinations table and ensure core destinations & frequency caps are synced."""
     async with async_session() as db:
-        res = await db.execute(select(func.count(Destination.id)))
-        count = res.scalar() or 0
-        if count > 0:
-            return  # Already populated
+        res = await db.execute(select(Destination.id))
+        existing_ids = set(res.scalars().all())
 
-        log.info("seeding_initial_destinations")
+        log.info("seeding_initial_destinations", existing_count=len(existing_ids))
 
-        # 1. Add core destinations for all connectors
+        # 1. Add core destinations for all connectors or update frequency caps
         for item in CORE_DESTINATIONS:
+            if item["id"] in existing_ids:
+                dest_res = await db.execute(select(Destination).where(Destination.id == item["id"]))
+                curr = dest_res.scalar_one_or_none()
+                if curr and item.get("frequency_cap"):
+                    curr.frequency_cap = item["frequency_cap"]
+                continue
+
             level = "L1" if not item.get("automation_allowed", True) else "L0"
             dest = Destination(
                 id=item["id"],

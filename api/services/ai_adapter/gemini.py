@@ -1,20 +1,13 @@
 """
-Gemini AI adapter — real LLM calls via google-genai SDK.
+Gemini AI adapter — real LLM calls via Google Generative Language API.
 
 Active when: LLM_PROVIDER=gemini AND GEMINI_API_KEY is set.
-Falls back to mock if the API is unavailable.
-Uses google-genai (current unified SDK, replaces deprecated google-generativeai).
+Uses async HTTP client with automatic fallback across Gemini 3.8 / 2.5 / latest models.
 """
 from __future__ import annotations
-from typing import Any
-
-try:
-    from google import genai  # type: ignore
-    from google.genai import types  # type: ignore
-except ImportError:
-    from typing import cast
-    genai = cast(Any, None)
-    types = cast(Any, None)
+import json
+import httpx
+from typing import Any, Optional
 
 from api.config import settings
 from api.services.ai_adapter.base import BaseAIAdapter
@@ -22,14 +15,92 @@ from api.middleware.logging_mw import get_logger
 
 log = get_logger("services.ai_adapter.gemini")
 
-MODEL = "gemini-2.0-flash"
+PREFERRED_MODELS = [
+    "gemini-3.8-flash",
+    "gemini-flash-latest",
+    "gemini-2.5-flash",
+]
 
 
 class GeminiAdapter(BaseAIAdapter):
-    """Real Gemini adapter using google-genai SDK."""
+    """Real Gemini adapter using direct asynchronous Generative Language API."""
 
-    def __init__(self):
-        self._client = genai.Client(api_key=settings.GEMINI_API_KEY)
+    def __init__(self, api_key: Optional[str] = None):
+        self._api_key = api_key or settings.GEMINI_API_KEY
+
+    async def _generate_text(self, prompt: str, temperature: float = 0.2) -> str:
+        """Call Gemini REST endpoint trying preferred models with fast failover."""
+        if not self._api_key:
+            raise ValueError("GEMINI_API_KEY is not configured.")
+
+        last_error = None
+        for model in PREFERRED_MODELS:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={self._api_key}"
+            payload = {
+                "contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {"temperature": temperature},
+            }
+            try:
+                async with httpx.AsyncClient(timeout=15.0) as client:
+                    resp = await client.post(url, json=payload)
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        candidates = data.get("candidates", [])
+                        if candidates and "content" in candidates[0]:
+                            parts = candidates[0]["content"].get("parts", [])
+                            if parts:
+                                return parts[0].get("text", "").strip()
+                    else:
+                        last_error = f"{model} returned HTTP {resp.status_code}: {resp.text[:150]}"
+            except Exception as exc:
+                last_error = f"{model} request exception: {str(exc)}"
+
+        raise RuntimeError(f"All Gemini models failed. Last error: {last_error}")
+
+    def _clean_json(self, text: str) -> Any:
+        """Strip markdown fences and parse json."""
+        text = text.strip()
+        if text.startswith("```"):
+            parts = text.split("```")
+            if len(parts) >= 2:
+                text = parts[1]
+                if text.startswith("json"):
+                    text = text[4:]
+        text = text.strip()
+        return json.loads(text)
+
+    async def analyze_content(self, title: str, body: str) -> dict[str, Any]:
+        """Extract semantic topics, primary category, and audience profile."""
+        prompt = (
+            "You are IncuBrix AI Content Matcher.\n"
+            f"Content Title: {title}\n"
+            f"Content Body: {body[:1500]}\n\n"
+            "Analyze this content and output valid JSON only:\n"
+            "{\n"
+            '  "primary_category": "automotive" | "developer" | "AI" | "engineering" | "video" | "marketing" | "startups" | "general",\n'
+            '  "topics": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"],\n'
+            '  "intent_summary": "1-sentence summary of target audience fit"\n'
+            "}"
+        )
+        try:
+            raw = await self._generate_text(prompt, temperature=0.1)
+            return self._clean_json(raw)
+        except Exception as exc:
+            log.warning("gemini_content_analysis_failed", error=str(exc))
+            # Fallback based on basic heuristics
+            lower = f"{title} {body}".lower()
+            category = "general"
+            if any(k in lower for k in ["car", "engine", "motor", "vehicle", "turbo", "brake", "mechanic"]):
+                category = "automotive"
+            elif any(k in lower for k in ["code", "developer", "api", "python", "software", "bug"]):
+                category = "developer"
+            elif any(k in lower for k in ["ai", "llm", "gpt", "model", "neural"]):
+                category = "AI"
+            return {
+                "primary_category": category,
+                "topics": [w for w in lower.split() if len(w) > 3][:5],
+                "intent_summary": f"Content categorized as {category}.",
+            }
 
     async def capture_rules(self, rules_page_text: str) -> list[dict[str, Any]]:
         """Read a community rules page and propose posting rules."""
@@ -43,21 +114,9 @@ class GeminiAdapter(BaseAIAdapter):
             "Return ONLY valid JSON, no markdown.\n\n"
             f"Rules page text:\n{rules_page_text[:4000]}"
         )
-
         try:
-            response = self._client.models.generate_content(
-                model=MODEL,
-                contents=prompt,
-                config=types.GenerateContentConfig(temperature=0.1),
-            )
-            import json
-            text = response.text.strip()
-            # Strip any markdown code fences
-            if text.startswith("```"):
-                text = text.split("```")[1]
-                if text.startswith("json"):
-                    text = text[4:]
-            return json.loads(text)
+            raw = await self._generate_text(prompt, temperature=0.1)
+            return self._clean_json(raw)
         except Exception as exc:
             log.error("gemini_rules_capture_error", error=str(exc))
             return [{"rule_type": "self_promo", "rule_value": "true", "description": "Fallback"}]
@@ -67,26 +126,15 @@ class GeminiAdapter(BaseAIAdapter):
     ) -> dict[str, Any]:
         """Score destination relevance 1-5 for IncuBrix's audience."""
         prompt = (
-            "IncuBrix's audience: AI, video, marketing, SaaS, creators, founders.\n"
+            "IncuBrix's audience: AI, video, marketing, SaaS, creators, founders, engineering.\n"
             f"Destination: {destination_name}\n"
             f"Description: {destination_description[:500]}\n\n"
             "Score relevance 1-5 (5=perfect match, 1=no match).\n"
             "Return ONLY JSON: {\"score\": <int>, \"reason\": \"<short reason>\"}"
         )
-
         try:
-            response = self._client.models.generate_content(
-                model=MODEL,
-                contents=prompt,
-                config=types.GenerateContentConfig(temperature=0.2),
-            )
-            import json
-            text = response.text.strip()
-            if text.startswith("```"):
-                text = text.split("```")[1]
-                if text.startswith("json"):
-                    text = text[4:]
-            return json.loads(text)
+            raw = await self._generate_text(prompt, temperature=0.2)
+            return self._clean_json(raw)
         except Exception as exc:
             log.error("gemini_relevance_error", error=str(exc))
             return {"score": 3, "reason": "Fallback due to API error."}
@@ -111,23 +159,11 @@ class GeminiAdapter(BaseAIAdapter):
             "Return ONLY JSON: {\"title\": \"...\", \"body\": \"...\"}\n\n"
             f"Title: {title}\nBody: {body[:2000]}"
         )
-
         try:
-            response = self._client.models.generate_content(
-                model=MODEL,
-                contents=prompt,
-                config=types.GenerateContentConfig(temperature=0.3),
-            )
-            import json
-            text = response.text.strip()
-            if text.startswith("```"):
-                text = text.split("```")[1]
-                if text.startswith("json"):
-                    text = text[4:]
-            return json.loads(text)
+            raw = await self._generate_text(prompt, temperature=0.3)
+            return self._clean_json(raw)
         except Exception as exc:
             log.error("gemini_tailor_error", error=str(exc))
-            # Fallback: truncate without AI
             return {
                 "title": title[:title_max],
                 "body": body[:body_max],

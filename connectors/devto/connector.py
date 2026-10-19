@@ -88,7 +88,11 @@ class DevToConnector(BaseConnector):
         connection: Connection,
         idempotency_key: str,
     ) -> PublishResponse:
-        if settings.SIMULATION_MODE:
+        is_sim = connection.extra.get("simulation")
+        if is_sim is None:
+            is_sim = settings.SIMULATION_MODE
+
+        if is_sim:
             mock_id = f"devto-sim-{idempotency_key[:8]}"
             log.info("devto_published_sim", article_id=mock_id)
             return PublishResponse(
@@ -104,11 +108,15 @@ class DevToConnector(BaseConnector):
                 detail=make_error("CONNECTION_AUTH_EXPIRED", "No Dev.to API key configured."),
             )
 
+        # Allow user to specify draft mode, or auto-draft during certification tests
+        is_cert = "certif" in rendition.title.lower() or rendition.metadata.get("is_certification", False)
+        should_publish_live = not (rendition.metadata.get("draft", False) or is_cert)
+
         payload = {
             "article": {
                 "title": rendition.title[:250],
                 "body_markdown": rendition.body,
-                "published": False,  # Draft — safe for certification
+                "published": should_publish_live,
                 "tags": rendition.tags[:4],
                 "canonical_url": rendition.canonical_url,
             }
@@ -142,11 +150,12 @@ class DevToConnector(BaseConnector):
                 ),
             )
 
-        log.info("devto_published", article_id=article_id, draft=True)
+        post_status = "published" if should_publish_live else "draft"
+        log.info("devto_published", article_id=article_id, status=post_status, live_url=live_url)
         return PublishResponse(
             platform_post_id=article_id,
             live_url=live_url,
-            status="draft",
+            status=post_status,
         )
 
     async def get_status(

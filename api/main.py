@@ -301,3 +301,31 @@ async def dashboard(request: Request):
         content = content.replace("</head>", f"{token_injection}</head>")
         return HTMLResponse(content=content)
     return HTMLResponse(content="<h1>IncuBrix Mission Control</h1>")
+
+
+@app.api_route("/proxy/ghost/{path:path}", methods=["GET", "POST", "PUT", "DELETE"], include_in_schema=False)
+async def proxy_ghost(path: str, request: Request):
+    """Proxy requests to internal Ghost container for browser access."""
+    target_url = f"{settings.GHOST_API_URL.rstrip('/')}/{path}"
+    headers = dict(request.headers)
+    headers.pop("host", None)
+    body = await request.body()
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        try:
+            resp = await client.request(
+                method=request.method,
+                url=target_url,
+                headers=headers,
+                content=body,
+                params=dict(request.query_params),
+            )
+            return Response(
+                content=resp.content,
+                status_code=resp.status_code,
+                headers=dict(resp.headers),
+            )
+        except Exception as exc:
+            return Response(
+                content=f"Ghost container not reachable: {str(exc)}",
+                status_code=502,
+            )

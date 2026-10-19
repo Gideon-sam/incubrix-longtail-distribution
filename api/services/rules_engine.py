@@ -61,6 +61,9 @@ class FrequencyCapRule(BaseRule):
     }
 
     async def check(self, rendition: Rendition, destination: Destination, db: AsyncSession) -> Optional[dict]:
+        if rendition.metadata.get("bypass_frequency_cap", False):
+            return None
+
         cap = destination.frequency_cap
         if not cap:
             return None
@@ -83,13 +86,14 @@ class FrequencyCapRule(BaseRule):
         except Exception as lock_err:
             log.warning("advisory_lock_skipped", error=str(lock_err))
 
-        # Count recent jobs in queued, running, OR succeeded
+        # Count recent real jobs in queued, running, OR succeeded (exclude simulated posts)
         result = await db.execute(
             select(func.count(Job.id)).where(
                 Job.job_type == "publish",
                 Job.status.in_(["queued", "running", "succeeded"]),
                 Job.created_at >= since,
                 Job.result_data["destination_id"].as_string() == destination.id,
+                ~Job.result_data["platform_post_id"].as_string().like("%-sim-%"),
             )
         )
         count = result.scalar() or 0

@@ -145,9 +145,10 @@ class GhostConnector(BaseConnector):
         if settings.SIMULATION_MODE:
             mock_id = f"ghost-sim-{idempotency_key[:8]}"
             log.info("ghost_published_sim", post_id=mock_id)
+            browser_url = f"/proxy/ghost/ghost/#/editor/post/{mock_id}" if "ghost:2368" in api_url else f"{api_url}/ghost/#/editor/post/{mock_id}"
             return PublishResponse(
                 platform_post_id=mock_id,
-                live_url=f"{api_url}/ghost/#/editor/post/{mock_id}",
+                live_url=browser_url,
                 status="published",
             )
 
@@ -203,7 +204,8 @@ class GhostConnector(BaseConnector):
         try:
             shape = GhostPublishShape.model_validate(posts_list[0])
             post_id = shape.id
-            live_url = shape.url or f"{api_url}/{post_id}/"
+            raw_url = shape.url or f"{api_url}/{post_id}/"
+            live_url = f"/proxy/ghost/{post_id}/" if "ghost:2368" in raw_url else raw_url
         except ValidationError as val_err:
             raise HTTPException(
                 status_code=502,
