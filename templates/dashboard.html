@@ -676,6 +676,22 @@ Learn more at https://incubrix.com</textarea>
   <!-- HIGH-PERFORMANCE INTERACTIVE JAVASCRIPT LOGIC                         -->
   <!-- ===================================================================== -->
   <script>
+    // Automatically attach access token to all internal API requests
+    const originalFetch = window.fetch;
+    window.fetch = function(url, options = {}) {
+      options.headers = options.headers || {};
+      if (window.ACCESS_TOKEN) {
+        if (options.headers instanceof Headers) {
+          if (!options.headers.has("X-Access-Token")) options.headers.set("X-Access-Token", window.ACCESS_TOKEN);
+        } else if (Array.isArray(options.headers)) {
+          options.headers.push(["X-Access-Token", window.ACCESS_TOKEN]);
+        } else if (typeof options.headers === "object") {
+          if (!options.headers["X-Access-Token"]) options.headers["X-Access-Token"] = window.ACCESS_TOKEN;
+        }
+      }
+      return originalFetch(url, options);
+    };
+
     // Global State
     let allDestinations = [];
     let registeredConnectors = [];

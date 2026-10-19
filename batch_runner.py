@@ -212,6 +212,10 @@ def main():
         "--token", "-t", default=None,
         help="X-Access-Token for protected demo endpoints",
     )
+    parser.add_argument(
+        "--timeout", type=int, default=30,
+        help="Request timeout in seconds",
+    )
     args = parser.parse_args()
 
     exit_code = asyncio.run(run_batch(

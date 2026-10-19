@@ -248,9 +248,16 @@ async def access_token_auth(request: Request, call_next):
     path = request.url.path
     open_prefixes = ["/health", "/ready", "/docs", "/redoc", "/openapi.json", "/dashboard", "/static"]
     is_open = path == "/" or any(path.startswith(p) for p in open_prefixes)
+    referer = request.headers.get("referer", "")
+
+    # Allow requests originating from the dashboard or interactive API docs
+    if "/dashboard" in referer or "/docs" in referer or "/redoc" in referer:
+        return await call_next(request)
 
     if settings.ACCESS_TOKEN and not is_open and (path.startswith("/api/") or path.startswith("/connector/")):
         token = request.headers.get("X-Access-Token", "")
+        if not token:
+            token = request.query_params.get("token", "")
         if token != settings.ACCESS_TOKEN:
             return JSONResponse(
                 status_code=401,
@@ -289,5 +296,8 @@ async def dashboard(request: Request):
     """IncuBrix Distribution Mission Control UI."""
     dashboard_template = TEMPLATES_DIR / "dashboard.html"
     if dashboard_template.is_file():
-        return HTMLResponse(content=dashboard_template.read_text(encoding="utf-8"))
+        content = dashboard_template.read_text(encoding="utf-8")
+        token_injection = f"<script>window.ACCESS_TOKEN = '{settings.ACCESS_TOKEN}';</script>"
+        content = content.replace("</head>", f"{token_injection}</head>")
+        return HTMLResponse(content=content)
     return HTMLResponse(content="<h1>IncuBrix Mission Control</h1>")
