@@ -241,7 +241,8 @@ async def seed_initial_destinations():
                 dest_res = await db.execute(select(Destination).where(Destination.id == item["id"]))
                 curr = dest_res.scalar_one_or_none()
                 if curr and item.get("frequency_cap"):
-                    curr.frequency_cap = item["frequency_cap"]
+                    curr.frequency_cap = str(item["frequency_cap"])  # explicit cast for type checker
+                    await db.flush()
                 continue
 
             level = "L1" if not item.get("automation_allowed", True) else "L0"
