@@ -175,6 +175,20 @@ class DiscourseConnector(BaseConnector):
     ) -> FetchMetricsResponse:
         base = _resolve_base_url(connection)
 
+        if settings.SIMULATION_MODE:
+            return FetchMetricsResponse(
+                platform_post_id=platform_post_id,
+                metrics={
+                    "views": 42,
+                    "likes": 5,
+                    "comments": 3,
+                    "shares": 0,
+                    "saves": 0,
+                    "watch_time_s": 0,
+                    "clicks": 0,
+                },
+            )
+
         async with httpx.AsyncClient(timeout=10) as client:
             resp = await client.get(
                 f"{base}/posts/{platform_post_id}.json",
@@ -191,10 +205,11 @@ class DiscourseConnector(BaseConnector):
                     "comments": data.get("reply_count", 0),
                     "shares": 0,
                     "saves": 0,
+                    "watch_time_s": 0,
                     "clicks": 0,
                 },
             )
         return FetchMetricsResponse(
             platform_post_id=platform_post_id,
-            metrics={"views": 0, "likes": 0, "comments": 0, "shares": 0, "saves": 0, "clicks": 0},
+            metrics={"views": 0, "likes": 0, "comments": 0, "shares": 0, "saves": 0, "watch_time_s": 0, "clicks": 0},
         )

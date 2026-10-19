@@ -279,14 +279,14 @@ class GhostConnector(BaseConnector):
         if settings.SIMULATION_MODE:
             return FetchMetricsResponse(
                 platform_post_id=platform_post_id,
-                metrics={"views": 150, "likes": 12, "comments": 4, "shares": 2, "saves": 7, "clicks": 35},
+                metrics={"views": 150, "likes": 12, "comments": 4, "shares": 2, "saves": 7, "watch_time_s": 0, "clicks": 35},
             )
 
         admin_key = _resolve_ghost_key(connection)
         if not admin_key:
             return FetchMetricsResponse(
                 platform_post_id=platform_post_id,
-                metrics={"views": 0, "likes": 0, "comments": 0, "shares": 0, "saves": 0, "clicks": 0},
+                metrics={"views": 0, "likes": 0, "comments": 0, "shares": 0, "saves": 0, "watch_time_s": 0, "clicks": 0},
             )
 
         token = _make_jwt(admin_key)
@@ -307,10 +307,11 @@ class GhostConnector(BaseConnector):
                     "comments": 0,
                     "shares": 0,
                     "saves": 0,
+                    "watch_time_s": 0,
                     "clicks": count.get("clicks", 0),
                 },
             )
         return FetchMetricsResponse(
             platform_post_id=platform_post_id,
-            metrics={"views": 0, "likes": 0, "comments": 0, "shares": 0, "saves": 0, "clicks": 0},
+            metrics={"views": 0, "likes": 0, "comments": 0, "shares": 0, "saves": 0, "watch_time_s": 0, "clicks": 0},
         )

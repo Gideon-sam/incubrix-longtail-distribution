@@ -1,6 +1,7 @@
 """
 Metric Snapshot model — Phase 4.4.
-Stores normalized engagement metrics snapshots (views, likes, comments, shares, saves, clicks).
+Stores normalized engagement metrics snapshots.
+Shape: views, likes, comments, shares, saves, watch_time_s, clicks
 """
 from __future__ import annotations
 from datetime import datetime, timezone
@@ -26,6 +27,7 @@ class MetricSnapshot(Base):
     comments: Mapped[int] = mapped_column(Integer, default=0)
     shares: Mapped[int] = mapped_column(Integer, default=0)
     saves: Mapped[int] = mapped_column(Integer, default=0)
+    watch_time_s: Mapped[int] = mapped_column(Integer, default=0)
     clicks: Mapped[int] = mapped_column(Integer, default=0)
     raw_data: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     fetched_at: Mapped[datetime] = mapped_column(

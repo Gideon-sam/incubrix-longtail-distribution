@@ -230,7 +230,7 @@ class LemmyConnector(BaseConnector):
         if settings.SIMULATION_MODE:
             return FetchMetricsResponse(
                 platform_post_id=platform_post_id,
-                metrics={"views": 0, "likes": 14, "comments": 6, "shares": 0, "saves": 0, "clicks": 0},
+                metrics={"views": 0, "likes": 14, "comments": 6, "shares": 0, "saves": 0, "watch_time_s": 0, "clicks": 0},
             )
 
         async with httpx.AsyncClient(timeout=15) as client:
@@ -249,10 +249,11 @@ class LemmyConnector(BaseConnector):
                     "comments": counts.get("comments", 0),
                     "shares": 0,
                     "saves": 0,
+                    "watch_time_s": 0,
                     "clicks": 0,
                 },
             )
         return FetchMetricsResponse(
             platform_post_id=platform_post_id,
-            metrics={"views": 0, "likes": 0, "comments": 0, "shares": 0, "saves": 0, "clicks": 0},
+            metrics={"views": 0, "likes": 0, "comments": 0, "shares": 0, "saves": 0, "watch_time_s": 0, "clicks": 0},
         )
