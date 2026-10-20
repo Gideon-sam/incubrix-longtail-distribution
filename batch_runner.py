@@ -144,7 +144,7 @@ async def run_batch(
                 if case.get("method", "POST").upper() == "POST":
                     if "headers" not in case:
                         case["headers"] = {}
-                    if "Idempotency-Key" not in case["headers"]:
+                    if "Idempotency-Key" not in case["headers"] and case.get("expected_status") != 422:
                         case["headers"]["Idempotency-Key"] = f"batch-{file.stem}-{i}-{int(time.time())}"
 
                 result = await run_single(client, base_url, case, file.name)

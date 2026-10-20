@@ -30,11 +30,17 @@ def get_minio_client():
     try:
         from minio import Minio
         from minio.error import S3Error
+        import urllib3
+        http_pool = urllib3.PoolManager(
+            timeout=urllib3.Timeout(connect=1.5, read=2.0),
+            retries=urllib3.Retry(total=1, connect=1, read=1),
+        )
         client = Minio(
             settings.MINIO_ENDPOINT,
             access_key=settings.MINIO_ACCESS_KEY,
             secret_key=settings.MINIO_SECRET_KEY,
             secure=settings.MINIO_SECURE,
+            http_client=http_pool,
         )
         try:
             if not client.bucket_exists(settings.MINIO_BUCKET):

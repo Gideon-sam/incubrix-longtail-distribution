@@ -1,0 +1,207 @@
+[
+  {
+    "file": "hard_cases.json",
+    "method": "POST",
+    "path": "/connector/v1/devto/validate",
+    "status_code": 200,
+    "elapsed_ms": 11.6,
+    "expected_status": 200,
+    "passed": true,
+    "response": {
+      "ok": false,
+      "violations": [
+        {
+          "field": "title",
+          "message": "Title too long: 274 > 250 chars.",
+          "code": "DEST_SPEC_VIOLATION"
+        }
+      ]
+    }
+  },
+  {
+    "file": "hard_cases.json",
+    "method": "POST",
+    "path": "/connector/v1/unknown_connector/validate",
+    "status_code": 404,
+    "elapsed_ms": 10.8,
+    "expected_status": 404,
+    "passed": true,
+    "response": {
+      "error": {
+        "code": "CONNECTOR_DISABLED",
+        "message": "Connector 'unknown_connector' is not registered. Is the connector package loaded?",
+        "retryable": false,
+        "details": {}
+      },
+      "detail": {
+        "error": {
+          "code": "CONNECTOR_DISABLED",
+          "message": "Connector 'unknown_connector' is not registered. Is the connector package loaded?",
+          "retryable": false,
+          "details": {}
+        }
+      }
+    }
+  },
+  {
+    "file": "hard_cases.json",
+    "method": "POST",
+    "path": "/api/v1/publish",
+    "status_code": 422,
+    "elapsed_ms": 16.2,
+    "expected_status": 422,
+    "passed": true,
+    "response": {
+      "error": {
+        "code": "DEST_SPEC_VIOLATION",
+        "message": "Missing required header: Idempotency-Key",
+        "retryable": false,
+        "details": {
+          "errors": [
+            {
+              "type": "missing",
+              "loc": [
+                "header",
+                "Idempotency-Key"
+              ],
+              "msg": "Field required",
+              "input": null
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "file": "hard_cases.json",
+    "method": "POST",
+    "path": "/api/v1/tailor",
+    "status_code": 200,
+    "elapsed_ms": 25.5,
+    "expected_status": 200,
+    "passed": true,
+    "response": {
+      "title": "Discussion: A very long title that needs automated tailoring for publication",
+      "body": "Detailed content with technical details.\n\nNon-English excerpt: \u8fd9\u662f\u4e2d\u6587\u5185\u5bb9\uff0c\u5fc5\u987b\u5b8c\u6574\u4fdd\u7559\u3002\n\nWhat are your thoughts on this?",
+      "tags": [],
+      "canonical_url": null,
+      "diff": {
+        "title_changed": true,
+        "body_changed": true,
+        "tags_count": 0,
+        "orig_length": 77,
+        "tailored_length": 110
+      },
+      "warnings": []
+    }
+  },
+  {
+    "file": "hard_cases.json",
+    "method": "POST",
+    "path": "/api/v1/recommend",
+    "status_code": 200,
+    "elapsed_ms": 1586.3,
+    "expected_status": 200,
+    "passed": true,
+    "response": {
+      "query": {
+        "title": "developer python fastapi",
+        "has_links": true,
+        "is_promo": false
+      },
+      "total_candidates": 5,
+      "recommendations": [
+        {
+          "destination_id": "44dabdbc-6433-4449-8750-961b4d0aafe4",
+          "name": "Lobsters",
+          "url": "https://lobste.rs",
+          "connector_key": "assisted",
+          "level": "L1",
+          "eligible_to_publish": false,
+          "status": "active",
+          "relevance_score": 5.0,
+          "final_score": 0.8217,
+          "audience_score": 0.99,
+          "rules_score": 0.85,
+          "success_rate": 0.85,
+          "reason": "Heuristic AI matched 'developer python fastapi' to Lobsters (tech): High audience resonance for developer. Level L1 (assisted posting workflow). Notice: Destination requires assisted/manual posting..",
+          "warnings": [
+            "Destination requires assisted/manual posting."
+          ]
+        },
+        {
+          "destination_id": "76ca1d59-564e-4a87-9d55-a2c804d729e0",
+          "name": "The Pragmatic Engineer",
+          "url": "https://newsletter.pragmaticengineer.com",
+          "connector_key": "assisted",
+          "level": "L1",
+          "eligible_to_publish": false,
+          "status": "active",
+          "relevance_score": 4.0,
+          "final_score": 0.8217,
+          "audience_score": 0.99,
+          "rules_score": 0.85,
+          "success_rate": 0.85,
+          "reason": "Heuristic AI matched 'developer python fastapi' to The Pragmatic Engineer (engineering): High audience resonance for developer. Level L1 (assisted posting workflow). Notice: Destination requires assisted/manual posting..",
+          "warnings": [
+            "Destination requires assisted/manual posting."
+          ]
+        },
+        {
+          "destination_id": "83fc363f-a9a0-4039-bc13-664aec5ccf95",
+          "name": "TLDR Newsletter",
+          "url": "https://tldr.tech",
+          "connector_key": "assisted",
+          "level": "L1",
+          "eligible_to_publish": false,
+          "status": "active",
+          "relevance_score": 4.0,
+          "final_score": 0.8217,
+          "audience_score": 0.99,
+          "rules_score": 0.85,
+          "success_rate": 0.85,
+          "reason": "Heuristic AI matched 'developer python fastapi' to TLDR Newsletter (tech): High audience resonance for developer. Level L1 (assisted posting workflow). Notice: Destination requires assisted/manual posting..",
+          "warnings": [
+            "Destination requires assisted/manual posting."
+          ]
+        },
+        {
+          "destination_id": "0739e797-0327-4c61-a3e8-451398e69427",
+          "name": "AlphaSignal",
+          "url": "https://alphasignal.ai",
+          "connector_key": "assisted",
+          "level": "L1",
+          "eligible_to_publish": false,
+          "status": "active",
+          "relevance_score": 5.0,
+          "final_score": 0.8217,
+          "audience_score": 0.99,
+          "rules_score": 0.85,
+          "success_rate": 0.85,
+          "reason": "Heuristic AI matched 'developer python fastapi' to AlphaSignal (AI): High audience resonance for developer. Level L1 (assisted posting workflow). Notice: Destination requires assisted/manual posting..",
+          "warnings": [
+            "Destination requires assisted/manual posting."
+          ]
+        },
+        {
+          "destination_id": "b038e556-6c08-49d0-9461-c7b68fcd6feb",
+          "name": "Import AI",
+          "url": "https://importai.substack.com",
+          "connector_key": "assisted",
+          "level": "L1",
+          "eligible_to_publish": false,
+          "status": "active",
+          "relevance_score": 5.0,
+          "final_score": 0.8217,
+          "audience_score": 0.99,
+          "rules_score": 0.85,
+          "success_rate": 0.85,
+          "reason": "Heuristic AI matched 'developer python fastapi' to Import AI (AI): High audience resonance for developer. Level L1 (assisted posting workflow). Notice: Destination requires assisted/manual posting..",
+          "warnings": [
+            "Destination requires assisted/manual posting."
+          ]
+        }
+      ]
+    }
+  }
+]

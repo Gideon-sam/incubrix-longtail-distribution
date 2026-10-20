@@ -30,14 +30,32 @@ log = get_logger("routers.tailor")
 router = APIRouter(prefix="/api/v1", tags=["Tailoring"])
 
 
+from pydantic import BaseModel, Field, model_validator
+
+
 class TailorRequest(BaseModel):
-    title: str
-    body: str
+    title: Optional[str] = None
+    body: Optional[str] = None
+    rendition: Optional[dict[str, Any]] = None
     destination_id: Optional[str] = None
     surface: Optional[str] = None
     platform_key: Optional[str] = None
     canonical_url: Optional[str] = None
     tags: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _extract_rendition(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            rendition = data.get("rendition")
+            if isinstance(rendition, dict):
+                if not data.get("title") and "title" in rendition:
+                    data["title"] = rendition.get("title")
+                if not data.get("body") and "body" in rendition:
+                    data["body"] = rendition.get("body")
+                if not data.get("tags") and "tags" in rendition:
+                    data["tags"] = rendition.get("tags", [])
+        return data
 
 
 class TailorResponse(BaseModel):
@@ -77,6 +95,12 @@ async def tailor_content_endpoint(
         if dest:
             surface = dest.surface
             platform_key = dest.platform_key
+
+    if not req.title or not req.body:
+        raise HTTPException(
+            status_code=422,
+            detail=make_error("DEST_SPEC_VIOLATION", "Both 'title' and 'body' are required.", retryable=False),
+        )
 
     orig_title = req.title
     orig_body = req.body

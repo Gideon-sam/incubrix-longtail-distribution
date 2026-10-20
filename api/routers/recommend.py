@@ -63,6 +63,85 @@ async def recommend_destinations(
     }
 
 
+from pydantic import BaseModel, Field
+
+
+class ContentProfile(BaseModel):
+    topics: list[str] = Field(default_factory=list)
+    language: Optional[str] = "en"
+    title: Optional[str] = None
+    body: Optional[str] = None
+
+
+class RecommendRequest(BaseModel):
+    title: Optional[str] = None
+    body: Optional[str] = ""
+    has_links: bool = True
+    is_promo: bool = False
+    connector_key: Optional[str] = None
+    top_n: Optional[int] = 10
+    max_destinations: Optional[int] = None
+    content_profile: Optional[ContentProfile] = None
+
+
+@router.post(
+    "/recommend",
+    summary="Rank destinations by fit for a content item (Outstanding POST)",
+)
+async def recommend_destinations_post(
+    req: RecommendRequest,
+    db: AsyncSession = Depends(get_db),
+    idempotency_key: str = Depends(require_idempotency_key),
+):
+    """
+    POST variant of recommender accepting structured ContentProfile.
+    """
+    try:
+        is_dup, cached = await check_cached_response(
+            db, idempotency_key, "recommend", "global", req.model_dump()
+        )
+        if is_dup and cached:
+            return cached
+    except ValueError as e:
+        raise HTTPException(
+            status_code=409,
+            detail=make_error("DEST_SPEC_VIOLATION", str(e), retryable=False),
+        )
+
+    title = req.title or ""
+    body = req.body or ""
+    if req.content_profile:
+        if req.content_profile.title:
+            title = req.content_profile.title
+        elif not title and req.content_profile.topics:
+            title = " ".join(req.content_profile.topics)
+        if req.content_profile.body:
+            body = req.content_profile.body
+        elif not body and req.content_profile.topics:
+            body = f"Article on {', '.join(req.content_profile.topics)}"
+
+    top_n = req.max_destinations or req.top_n or 10
+
+    results = await recommend(
+        rendition_text=body[:500],
+        title=title,
+        has_links=req.has_links,
+        is_promo=req.is_promo,
+        top_n=top_n,
+        connector_key=req.connector_key,
+        db=db,
+    )
+    resp = {
+        "query": {"title": title, "has_links": req.has_links, "is_promo": req.is_promo},
+        "total_candidates": len(results),
+        "recommendations": results,
+    }
+    await store_cached_response(
+        db, idempotency_key, "recommend", "global", req.model_dump(), resp
+    )
+    return resp
+
+
 @router.post(
     "/admin/recertify",
     summary="Trigger manual recertification cycle for all due destinations",
