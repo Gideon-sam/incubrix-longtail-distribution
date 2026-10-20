@@ -9,6 +9,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional
+from pydantic import BaseModel, Field
 
 from api.database import get_db
 from api.dependencies.idempotency import require_idempotency_key
@@ -22,6 +23,24 @@ log = get_logger("routers.recommend")
 router = APIRouter(prefix="/api/v1", tags=["Recommender & Admin"])
 
 _last_recert_summary: dict = {}
+
+
+class ContentProfile(BaseModel):
+    topics: list[str] = Field(default_factory=list)
+    language: Optional[str] = "en"
+    title: Optional[str] = None
+    body: Optional[str] = None
+
+
+class RecommendRequest(BaseModel):
+    title: Optional[str] = None
+    body: Optional[str] = ""
+    has_links: bool = True
+    is_promo: bool = False
+    connector_key: Optional[str] = None
+    top_n: Optional[int] = 10
+    max_destinations: Optional[int] = None
+    content_profile: Optional[ContentProfile] = None
 
 
 @router.get(
@@ -61,27 +80,6 @@ async def recommend_destinations(
         "total_candidates": len(results),
         "recommendations": results,
     }
-
-
-from pydantic import BaseModel, Field
-
-
-class ContentProfile(BaseModel):
-    topics: list[str] = Field(default_factory=list)
-    language: Optional[str] = "en"
-    title: Optional[str] = None
-    body: Optional[str] = None
-
-
-class RecommendRequest(BaseModel):
-    title: Optional[str] = None
-    body: Optional[str] = ""
-    has_links: bool = True
-    is_promo: bool = False
-    connector_key: Optional[str] = None
-    top_n: Optional[int] = 10
-    max_destinations: Optional[int] = None
-    content_profile: Optional[ContentProfile] = None
 
 
 @router.post(

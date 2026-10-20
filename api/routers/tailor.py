@@ -13,7 +13,7 @@ Adapts title, body, and tags to match destination requirements:
 from __future__ import annotations
 import re
 from typing import Optional, Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -28,9 +28,6 @@ from api.middleware.logging_mw import get_logger
 
 log = get_logger("routers.tailor")
 router = APIRouter(prefix="/api/v1", tags=["Tailoring"])
-
-
-from pydantic import BaseModel, Field, model_validator
 
 
 class TailorRequest(BaseModel):
