@@ -332,6 +332,8 @@ header.top-nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
+  white-space: nowrap;
 }
 
 .tele-val {

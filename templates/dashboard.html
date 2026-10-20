@@ -87,26 +87,26 @@
     <div class="telemetry-strip" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); max-width:980px; margin:0 auto; gap:1.2rem;">
       <div class="telemetry-card">
         <div class="tele-label">
-          <span>Active Connectors</span>
-          <span style="color:var(--brand-cyan)">● Core + Adv</span>
+          <span>Connectors</span>
+          <span style="color:var(--brand-cyan)">● 9 Loaded</span>
         </div>
         <div class="tele-val" id="metric-connectors">9</div>
         <div class="tele-desc">100% Standardized Contract</div>
       </div>
       <div class="telemetry-card">
         <div class="tele-label">
-          <span>Communities Indexed</span>
-          <span style="color:var(--brand-primary-light)">● Reachable &amp; Verified</span>
+          <span>Destinations</span>
+          <span style="color:var(--brand-primary-light)">● 159 Indexed</span>
         </div>
-        <div class="tele-val" id="metric-destinations">1,906</div>
-        <div class="tele-desc">Curated Niche Publishing Targets</div>
+        <div class="tele-val" id="metric-destinations">159</div>
+        <div class="tele-desc">Curated Publishing Communities</div>
       </div>
       <div class="telemetry-card">
         <div class="tele-label">
-          <span>Potential Audience Reach</span>
-          <span style="color:var(--ok)">● Verified Readers</span>
+          <span>Audience Reach</span>
+          <span style="color:var(--ok)">● Verified</span>
         </div>
-        <div class="tele-val">14.2M+</div>
+        <div class="tele-val" id="metric-audience">14.2M+</div>
         <div class="tele-desc">Cumulative Network Audience</div>
       </div>
     </div>
@@ -928,6 +928,17 @@ Learn more at https://incubrix.com</textarea>
 
         const catHeaderCount = document.getElementById("cat-header-count");
         if (catHeaderCount) catHeaderCount.textContent = countStr;
+
+        let totalAud = 0;
+        allDestinations.forEach(d => {
+          totalAud += parseInt(d.est_audience || d.audience || 0) || 0;
+        });
+        const metricAudEl = document.getElementById("metric-audience");
+        if (metricAudEl && totalAud > 0) {
+          metricAudEl.textContent = (totalAud >= 1000000) 
+            ? (totalAud / 1000000).toFixed(1) + "M+" 
+            : totalAud.toLocaleString() + "+";
+        }
         
         populatePublishDropdown(allDestinations);
         renderCatalogueTable(allDestinations);
