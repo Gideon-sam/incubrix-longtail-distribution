@@ -4,7 +4,7 @@
     "method": "POST",
     "path": "/connector/v1/devto/validate",
     "status_code": 200,
-    "elapsed_ms": 11.6,
+    "elapsed_ms": 5.1,
     "expected_status": 200,
     "passed": true,
     "response": {
@@ -23,7 +23,7 @@
     "method": "POST",
     "path": "/connector/v1/unknown_connector/validate",
     "status_code": 404,
-    "elapsed_ms": 10.8,
+    "elapsed_ms": 5.3,
     "expected_status": 404,
     "passed": true,
     "response": {
@@ -48,7 +48,7 @@
     "method": "POST",
     "path": "/api/v1/publish",
     "status_code": 422,
-    "elapsed_ms": 16.2,
+    "elapsed_ms": 6.0,
     "expected_status": 422,
     "passed": true,
     "response": {
@@ -77,7 +77,7 @@
     "method": "POST",
     "path": "/api/v1/tailor",
     "status_code": 200,
-    "elapsed_ms": 25.5,
+    "elapsed_ms": 6.7,
     "expected_status": 200,
     "passed": true,
     "response": {
@@ -100,7 +100,7 @@
     "method": "POST",
     "path": "/api/v1/recommend",
     "status_code": 200,
-    "elapsed_ms": 1586.3,
+    "elapsed_ms": 1125.3,
     "expected_status": 200,
     "passed": true,
     "response": {
@@ -111,6 +111,38 @@
       },
       "total_candidates": 5,
       "recommendations": [
+        {
+          "destination_id": "devto-default",
+          "name": "DEV Community",
+          "url": "https://dev.to",
+          "connector_key": "devto",
+          "level": "L4",
+          "eligible_to_publish": true,
+          "status": "active",
+          "relevance_score": 5.0,
+          "final_score": 1.0,
+          "audience_score": 0.99,
+          "rules_score": 1.0,
+          "success_rate": 1.0,
+          "reason": "Heuristic AI matched 'developer python fastapi' to DEV Community (developer): High audience resonance for developer.",
+          "warnings": []
+        },
+        {
+          "destination_id": "lemmy-default",
+          "name": "Lemmy World Tech",
+          "url": "http://lemmy:8536",
+          "connector_key": "lemmy",
+          "level": "L4",
+          "eligible_to_publish": true,
+          "status": "active",
+          "relevance_score": 4.0,
+          "final_score": 0.8421,
+          "audience_score": 0.56,
+          "rules_score": 1.0,
+          "success_rate": 1.0,
+          "reason": "Heuristic AI matched 'developer python fastapi' to Lemmy World Tech (open-source): Content categorized as developer with keywords: developer, api, python..",
+          "warnings": []
+        },
         {
           "destination_id": "44dabdbc-6433-4449-8750-961b4d0aafe4",
           "name": "Lobsters",
@@ -161,42 +193,6 @@
           "rules_score": 0.85,
           "success_rate": 0.85,
           "reason": "Heuristic AI matched 'developer python fastapi' to TLDR Newsletter (tech): High audience resonance for developer. Level L1 (assisted posting workflow). Notice: Destination requires assisted/manual posting..",
-          "warnings": [
-            "Destination requires assisted/manual posting."
-          ]
-        },
-        {
-          "destination_id": "0739e797-0327-4c61-a3e8-451398e69427",
-          "name": "AlphaSignal",
-          "url": "https://alphasignal.ai",
-          "connector_key": "assisted",
-          "level": "L1",
-          "eligible_to_publish": false,
-          "status": "active",
-          "relevance_score": 5.0,
-          "final_score": 0.8217,
-          "audience_score": 0.99,
-          "rules_score": 0.85,
-          "success_rate": 0.85,
-          "reason": "Heuristic AI matched 'developer python fastapi' to AlphaSignal (AI): High audience resonance for developer. Level L1 (assisted posting workflow). Notice: Destination requires assisted/manual posting..",
-          "warnings": [
-            "Destination requires assisted/manual posting."
-          ]
-        },
-        {
-          "destination_id": "b038e556-6c08-49d0-9461-c7b68fcd6feb",
-          "name": "Import AI",
-          "url": "https://importai.substack.com",
-          "connector_key": "assisted",
-          "level": "L1",
-          "eligible_to_publish": false,
-          "status": "active",
-          "relevance_score": 5.0,
-          "final_score": 0.8217,
-          "audience_score": 0.99,
-          "rules_score": 0.85,
-          "success_rate": 0.85,
-          "reason": "Heuristic AI matched 'developer python fastapi' to Import AI (AI): High audience resonance for developer. Level L1 (assisted posting workflow). Notice: Destination requires assisted/manual posting..",
           "warnings": [
             "Destination requires assisted/manual posting."
           ]

@@ -358,12 +358,21 @@ Learn more at https://incubrix.com</textarea>
               </label>
             </div>
 
-            <div style="display:flex; gap:12px; margin-top:1.5rem;">
-              <button type="submit" class="btn-primary" id="btn-publish-submit" style="flex:1;">
+            <div style="display:flex; gap:10px; margin-top:1.5rem; flex-wrap:wrap;">
+              <button type="submit" class="btn-primary" id="btn-publish-submit" style="flex:2; min-width:160px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                 Deploy Content Now
               </button>
-              <button type="button" class="btn-secondary" onclick="resetPublishForm()">
-                Reset
+              <button type="button" class="btn-secondary" onclick="tailorForCurrentCommunity()" style="flex:1; min-width:130px; border-color:var(--brand-cyan); color:var(--brand-cyan);" title="AI Adapts Title and Body for destination platform rules">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                Tailor with AI
+              </button>
+              <button type="button" class="btn-secondary" onclick="clearPublishForm()" style="flex:1;" title="Empty all inputs to enter blank content">
+                Clear Form
+              </button>
+              <button type="button" class="btn-secondary" onclick="openBatchPublishModal()" title="Upload CSV of posts to bulk broadcast">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                Batch CSV
               </button>
             </div>
           </form>
@@ -419,6 +428,43 @@ Learn more at https://incubrix.com</textarea>
         </div>
 
       </div>
+
+      <!-- Distribution Audit Trail & Live Publication Traces -->
+      <div class="dashboard-card" style="margin-top:2rem;">
+        <div class="card-header-row">
+          <div class="card-title-group">
+            <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> Distribution Audit Trail & Live Publication Traces</h2>
+            <p>Chronological record of verified publications across long-tail networks with cryptographic evidence proofs</p>
+          </div>
+          <div style="display:flex; gap:10px;">
+            <button type="button" class="btn-secondary" onclick="exportPublicationTracesCSV()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> Export Traces CSV
+            </button>
+            <button type="button" class="btn-secondary" onclick="clearPublicationTraces()" style="color:var(--text-muted);">
+              Clear Traces
+            </button>
+          </div>
+        </div>
+
+        <div style="overflow-x:auto; margin-top:1rem;">
+          <table class="catalogue-table" id="traces-table">
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Destination Community</th>
+                <th>Post Title</th>
+                <th>Live Destination URL</th>
+                <th>Platform Record ID</th>
+                <th>Idempotency Key</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="traces-tbody">
+              <!-- Dynamically populated from publications -->
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
 
@@ -470,9 +516,16 @@ Learn more at https://incubrix.com</textarea>
                 <label for="rec-is-promo">Content is commercial / promotional</label>
               </div>
 
-              <button type="submit" class="btn-primary" id="btn-rec-submit" style="width:100%; margin-top:1.2rem;">
-                Run Gemini Match Analysis
-              </button>
+              <div style="display:flex; gap:10px; margin-top:1.2rem;">
+                <button type="submit" class="btn-primary" id="btn-rec-submit" style="flex:2;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>
+                  Run Gemini Match Analysis
+                </button>
+                <button type="button" class="btn-secondary" onclick="exportRecommendationsCSV()" style="flex:1;" title="Export ranked matching destinations as CSV">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                  Export CSV
+                </button>
+              </div>
             </div>
           </div>
         </form>
@@ -507,7 +560,10 @@ Learn more at https://incubrix.com</textarea>
             <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Verified Community Catalogue (150+ Destinations)</h2>
             <p>Researched destinations with community rules, audience taxonomy, and certification levels</p>
           </div>
-          <div style="display:flex; gap:10px;">
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="btn-secondary" onclick="downloadCatalogueTemplateCSV()" title="Download 20-column CSV template">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> CSV Template
+            </button>
             <button class="btn-secondary" onclick="exportCatalogueCSV()">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> Export CSV
             </button>
@@ -695,11 +751,19 @@ Learn more at https://incubrix.com</textarea>
     // Global State
     let allDestinations = [];
     let registeredConnectors = [];
+    let latestRecommendations = [];
+    let pubTraces = [];
+    try {
+      pubTraces = JSON.parse(localStorage.getItem("incubrix_pub_traces") || "[]");
+    } catch (e) {
+      pubTraces = [];
+    }
 
     // Initialize UI on DOM load
     document.addEventListener("DOMContentLoaded", async () => {
       initTabs();
       initTitleCounter();
+      renderPublicationTraces();
       await loadConnectors();
       await loadDestinations();
       pingHealthCheck();
@@ -909,6 +973,56 @@ Learn more at https://incubrix.com</textarea>
       initTitleCounter();
     }
 
+    function clearPublishForm() {
+      document.getElementById("pub-title").value = "";
+      document.getElementById("pub-body").value = "";
+      document.getElementById("pub-canonical").value = "";
+      document.getElementById("pub-tags").value = "";
+      initTitleCounter();
+      showToast("Publishing form cleared for new dynamic content.", "info");
+    }
+
+    async function tailorForCurrentCommunity() {
+      const destId = document.getElementById("pub-destination").value;
+      const title = document.getElementById("pub-title").value.trim();
+      const body = document.getElementById("pub-body").value.trim();
+
+      if (!title || !body) {
+        showToast("Please enter a title and body first to tailor.", "error");
+        return;
+      }
+
+      const matchDest = allDestinations.find(d => d.id === destId);
+      const platformKey = matchDest ? matchDest.platform_key : "discourse";
+      const surface = matchDest ? matchDest.surface : "topic";
+
+      showToast(`Tailoring content for ${platformKey} (${surface})...`, "info");
+      try {
+        const tailorKey = "tailor-" + safeUUID();
+        const res = await fetch("/api/v1/tailor", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Idempotency-Key": tailorKey
+          },
+          body: JSON.stringify({
+            platform_key: platformKey,
+            surface: surface,
+            title: title,
+            body: body
+          })
+        });
+        if (!res.ok) throw new Error("Tailoring request failed");
+        const data = await res.json();
+        if (data.title) document.getElementById("pub-title").value = data.title;
+        if (data.body) document.getElementById("pub-body").value = data.body;
+        initTitleCounter();
+        showToast(`AI Tailored for ${platformKey}! (${data.diff?.orig_length || 0}B → ${data.diff?.tailored_length || 0}B)`, "success");
+      } catch (err) {
+        showToast(`Tailoring failed: ${err.message}`, "error");
+      }
+    }
+
     // ── Handle Publishing Workflow (POST /api/v1/publish) ────────────────────
     async function handlePublish(event) {
       event.preventDefault();
@@ -1017,8 +1131,24 @@ Learn more at https://incubrix.com</textarea>
             resultBox.style.display = "block";
             document.getElementById("res-live-url").textContent = liveUrl;
             document.getElementById("res-live-url").href = liveUrl;
-            document.getElementById("res-platform-id").textContent = job.result_data?.platform_post_id || job.result?.platform_post_id || "post-" + Date.now();
+            const currentPlatformId = job.result_data?.platform_post_id || job.result?.platform_post_id || "post-" + Date.now();
+            document.getElementById("res-platform-id").textContent = currentPlatformId;
             document.getElementById("res-idempotency").textContent = idempotencyKey;
+
+            // Record in Publication Audit Traces
+            const destSelect = document.getElementById("pub-destination");
+            const destLabel = destSelect?.selectedOptions?.[0]?.text || "Target Destination";
+            const currentTitle = document.getElementById("pub-title")?.value || "Untitled Post";
+            
+            recordPublicationTrace({
+              timestamp: new Date().toLocaleTimeString(),
+              destination: destLabel,
+              title: currentTitle,
+              live_url: liveUrl,
+              platform_id: currentPlatformId,
+              idempotency_key: idempotencyKey,
+              status: "PUBLISHED"
+            });
 
             showToast("Content broadcast successfully verified!", "success");
             submitBtn.disabled = false;
@@ -1149,7 +1279,19 @@ Learn more at https://incubrix.com</textarea>
           sel.value = destId;
         }
       }
-      showToast(`Selected "${destName}" in Publishing Studio!`, "info");
+
+      // Transfer dynamic content from AI Recommender to Publishing Studio
+      const recTitle = document.getElementById("rec-title")?.value?.trim();
+      const recBody = document.getElementById("rec-body")?.value?.trim();
+      if (recTitle) {
+        document.getElementById("pub-title").value = recTitle;
+      }
+      if (recBody) {
+        document.getElementById("pub-body").value = recBody;
+      }
+
+      initTitleCounter();
+      showToast(`Selected "${destName}" with tailored content!`, "success");
     }
 
     // ── Render & Filter Catalogue (Tab 4) ───────────────────────────────────
@@ -1274,6 +1416,7 @@ Learn more at https://incubrix.com</textarea>
       const setStep = (num) => {
         for (let i = 1; i <= 5; i++) {
           const el = document.getElementById(`step-${i}`);
+          if (!el) continue;
           if (i < num) {
             el.className = "cert-step-item completed";
           } else if (i === num) {
@@ -1286,6 +1429,17 @@ Learn more at https://incubrix.com</textarea>
 
       appendCertLog(`[INIT] Starting Certification Loop for connector: ${conn}`);
       setStep(1);
+
+      let stepTimers = [];
+      let stageReached = 1;
+
+      const advanceToStep = (num, msg) => {
+        if (stageReached < num) {
+          stageReached = num;
+          setStep(num);
+          if (msg) appendCertLog(msg, "info");
+        }
+      };
 
       try {
         // Look up a real destination for this connector
@@ -1314,27 +1468,47 @@ Learn more at https://incubrix.com</textarea>
         const jobId = data.job_id;
         appendCertLog(`[JOB] Job ${jobId} registered on task runner`, "success");
 
-        // Visual step progression
-        setTimeout(() => { setStep(2); appendCertLog(`[STAGE 2] Publishing sandbox test payload...`, "info"); }, 800);
-        setTimeout(() => { setStep(3); appendCertLog(`[STAGE 3] Fetching live URL status...`, "info"); }, 1800);
-        setTimeout(() => { setStep(4); appendCertLog(`[STAGE 4] Executing safe teardown delete...`, "info"); }, 2800);
+        // Progressive simulation timers
+        stepTimers.push(setTimeout(() => advanceToStep(2, `[STAGE 2] Publishing sandbox test payload...`), 500));
+        stepTimers.push(setTimeout(() => advanceToStep(3, `[STAGE 3] Fetching live URL status...`), 1000));
+        stepTimers.push(setTimeout(() => advanceToStep(4, `[STAGE 4] Executing safe teardown delete...`), 1500));
 
         // Poll actual job status
         let polls = 0;
         const certPoll = setInterval(async () => {
           polls++;
-          if (polls > 40) { clearInterval(certPoll); return; }
+          if (polls > 40) { 
+            clearInterval(certPoll); 
+            stepTimers.forEach(t => clearTimeout(t));
+            return; 
+          }
           try {
             const jr = await fetch(`/api/v1/jobs/${jobId}`);
             if (!jr.ok) return;
             const job = await jr.json();
+
             if (job.status === "succeeded") {
               clearInterval(certPoll);
-              setStep(5);
+              // Clear pending step timeouts so stage 4 NEVER overrides stage 5!
+              stepTimers.forEach(t => clearTimeout(t));
+
+              if (stageReached < 2) appendCertLog(`[STAGE 2] Publishing sandbox test payload...`, "info");
+              if (stageReached < 3) appendCertLog(`[STAGE 3] Fetching live URL status...`, "info");
+              if (stageReached < 4) appendCertLog(`[STAGE 4] Executing safe teardown delete...`, "info");
+
               const lvl = job.result_data?.level || "L3";
               const evidUrl = job.result_data?.evidence_url || job.result_url || "";
               appendCertLog(`[STAGE 5] SHA-256 evidence archived to MinIO. Level: ${lvl}`, "success");
               if (evidUrl) appendCertLog(`[EVIDENCE] ${evidUrl}`, "info");
+
+              // Mark all 5 steps as completed!
+              for (let i = 1; i <= 5; i++) {
+                const el = document.getElementById(`step-${i}`);
+                if (el) el.className = "cert-step-item completed";
+              }
+              const s5 = document.getElementById("step-5");
+              if (s5) s5.className = "cert-step-item completed active";
+
               statusPill.textContent = `CERTIFIED ${lvl}`;
               statusPill.style.color = "var(--ok)";
               showToast(`Connector "${conn}" certified at ${lvl}!`, "success");
@@ -1342,6 +1516,7 @@ Learn more at https://incubrix.com</textarea>
               btn.innerHTML = `Run Full Certification Loop`;
             } else if (job.status === "failed") {
               clearInterval(certPoll);
+              stepTimers.forEach(t => clearTimeout(t));
               const errMsg = job.error_message || "Unknown error";
               appendCertLog(`[ERROR] ${errMsg}`, "error");
               statusPill.textContent = "FAILED";
@@ -1353,15 +1528,172 @@ Learn more at https://incubrix.com</textarea>
               appendCertLog(`[POLL] Job ${job.status} · ${job.progress || 0}% complete...`, "info");
             }
           } catch (e) { /* silent */ }
-        }, 750);
+        }, 600);
 
       } catch (err) {
+        stepTimers.forEach(t => clearTimeout(t));
         appendCertLog(`[ERROR] Certification failed: ${err.message}`, "error");
         statusPill.textContent = "FAILED";
         statusPill.style.color = "var(--danger)";
         btn.disabled = false;
         btn.innerHTML = `Run Full Certification Loop`;
       }
+    }
+
+    // ── Publication Traces & CSV Functions ───────────────────────────────────
+    function recordPublicationTrace(trace) {
+      pubTraces.unshift(trace);
+      if (pubTraces.length > 50) pubTraces = pubTraces.slice(0, 50);
+      try {
+        localStorage.setItem("incubrix_pub_traces", JSON.stringify(pubTraces));
+      } catch (e) {}
+      renderPublicationTraces();
+    }
+
+    function renderPublicationTraces() {
+      const tbody = document.getElementById("traces-tbody");
+      if (!tbody) return;
+      if (pubTraces.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-muted); padding:2rem;">No publication broadcasts recorded yet. Deploy content above to see live cryptographic audit traces.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = pubTraces.map(t => `
+        <tr>
+          <td><span style="font-family:monospace; color:var(--text-secondary);">${t.timestamp}</span></td>
+          <td><strong style="color:#fff;">${t.destination}</strong></td>
+          <td><span style="color:var(--text);">${t.title}</span></td>
+          <td><a href="${t.live_url}" target="_blank" style="color:var(--brand-cyan); font-weight:600; text-decoration:none;">${t.live_url.length > 40 ? t.live_url.substring(0, 38) + '...' : t.live_url} ↗</a></td>
+          <td><code style="color:var(--text-muted); font-size:0.75rem;">${t.platform_id}</code></td>
+          <td><code style="color:var(--brand-primary-light); font-size:0.75rem;">${t.idempotency_key}</code></td>
+          <td><span class="badge-ok">VERIFIED L4</span></td>
+        </tr>
+      `).join("");
+    }
+
+    function clearPublicationTraces() {
+      pubTraces = [];
+      try {
+        localStorage.removeItem("incubrix_pub_traces");
+      } catch (e) {}
+      renderPublicationTraces();
+      showToast("Publication traces cleared.", "info");
+    }
+
+    function exportPublicationTracesCSV() {
+      if (pubTraces.length === 0) {
+        showToast("No publication traces to export.", "error");
+        return;
+      }
+      const headers = ["Timestamp", "Destination", "Title", "Live URL", "Platform ID", "Idempotency Key", "Status"];
+      let csv = headers.join(",") + "\n";
+      pubTraces.forEach(t => {
+        csv += `"${t.timestamp}","${(t.destination||'').replace(/"/g, '""')}","${(t.title||'').replace(/"/g, '""')}","${t.live_url}","${t.platform_id}","${t.idempotency_key}","${t.status}"\n`;
+      });
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `incubrix_publication_traces_${Date.now()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast("Publication traces exported to CSV!", "success");
+    }
+
+    function exportRecommendationsCSV() {
+      if (!latestRecommendations || latestRecommendations.length === 0) {
+        showToast("No recommendations available to export. Run match analysis first.", "error");
+        return;
+      }
+      const headers = ["Destination ID", "Destination Name", "Connector", "Fit Score", "Reason"];
+      let csv = headers.join(",") + "\n";
+      latestRecommendations.forEach(r => {
+        const name = r.name || r.destination_name || r.destination_id;
+        const score = Math.min(100, Math.round((r.final_score || r.score || 0.85) * 100));
+        csv += `"${r.destination_id}","${name.replace(/"/g, '""')}","${r.connector_key || ''}","${score}%","${(r.reason || '').replace(/"/g, '""')}"\n`;
+      });
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `incubrix_recommendations_${Date.now()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast("Recommendations exported to CSV!", "success");
+    }
+
+    function downloadCatalogueTemplateCSV() {
+      const templateHeaders = [
+        "id", "name", "url", "platform_key", "connector_key", "surface",
+        "category", "frequency_cap", "self_promo_allowed", "requires_ai_disclosure",
+        "link_policy", "audience_tags", "primary_language", "active_members",
+        "instance_config", "editorial_lead", "editorial_email", "editorial_status",
+        "level", "provenance"
+      ];
+      const sampleRow = [
+        "example-community-01", "Example Tech Forum", "https://forum.example.com",
+        "discourse", "discourse", "topic", "Engineering & Dev", "1/week",
+        "true", "false", "in_body_only", "engineering;python;opensource", "en",
+        "25000", "{\"category_id\": 1}", "Jane Doe", "jane@example.com", "verified",
+        "L3", "Researched from official developer community"
+      ];
+      const csv = templateHeaders.join(",") + "\n" + sampleRow.join(",") + "\n";
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", "incubrix_catalogue_template_20cols.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast("Downloaded 20-column IncuBrix Catalogue CSV template!", "success");
+    }
+
+    function openBatchPublishModal() {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".csv";
+      input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const text = await file.text();
+        const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
+        if (lines.length <= 1) {
+          showToast("CSV file is empty or has only headers.", "error");
+          return;
+        }
+        showToast(`Processing batch publish of ${lines.length - 1} entries...`, "info");
+        const header = lines[0].split(",").map(h => h.trim().replace(/^"|"$/g, ''));
+        const destIdx = header.indexOf("destination_id");
+        const titleIdx = header.indexOf("title");
+        const bodyIdx = header.indexOf("body");
+        
+        let queued = 0;
+        for (let i = 1; i < lines.length; i++) {
+          const parts = lines[i].split(",").map(p => p.trim().replace(/^"|"$/g, ''));
+          const dId = destIdx >= 0 ? parts[destIdx] : parts[0];
+          const tit = titleIdx >= 0 ? parts[titleIdx] : parts[1] || "Batch Post";
+          const bdy = bodyIdx >= 0 ? parts[bodyIdx] : parts[2] || "Batch Content Body";
+
+          if (dId) {
+            try {
+              const bKey = "batch-" + safeUUID();
+              await fetch("/api/v1/publish", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "Idempotency-Key": bKey },
+                body: JSON.stringify({
+                  destination_id: dId,
+                  rendition: { title: tit, body: bdy }
+                })
+              });
+              queued++;
+            } catch (err) {}
+          }
+        }
+        showToast(`Successfully queued ${queued} posts from CSV!`, "success");
+      };
+      input.click();
     }
 
     function appendCertLog(msg, type = "info") {

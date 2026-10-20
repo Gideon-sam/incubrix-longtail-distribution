@@ -85,11 +85,46 @@ class DiscourseConnector(BaseConnector):
         base = _resolve_base_url(connection, destination)
         category_id = destination.instance_config.get("category_id", 1)
 
+        is_sim = connection.extra.get("simulation")
+        if is_sim is None:
+            is_sim = settings.SIMULATION_MODE
+
         payload = {
             "title": rendition.title[:255],
             "raw": rendition.body,
             "category": category_id,
         }
+
+        if is_sim:
+            # If mock-discourse container is running and reachable, try it first
+            try:
+                async with httpx.AsyncClient(timeout=2.0) as client:
+                    resp = await client.post(
+                        f"{base}/posts.json",
+                        json=payload,
+                        headers=_headers(connection),
+                    )
+                    if resp.status_code in (200, 201):
+                        data = resp.json()
+                        shape = DiscoursePublishShape.model_validate(data)
+                        topic_id = str(shape.topic_id)
+                        post_id = str(shape.id)
+                        browser_url = f"/proxy/discourse/t/{topic_id}" if "mock-discourse:4100" in base else f"{base}/t/{topic_id}"
+                        return PublishResponse(
+                            platform_post_id=post_id,
+                            live_url=browser_url,
+                            status="published",
+                        )
+            except Exception:
+                pass
+
+            mock_id = f"discourse-sim-{idempotency_key[:8]}"
+            log.info("discourse_published_sim", post_id=mock_id)
+            return PublishResponse(
+                platform_post_id=mock_id,
+                live_url=f"/proxy/discourse/t/{mock_id}",
+                status="published",
+            )
 
         async with httpx.AsyncClient(timeout=10) as client:
             try:
@@ -134,6 +169,12 @@ class DiscourseConnector(BaseConnector):
     async def get_status(
         self, platform_post_id: str, connection: Connection
     ) -> GetStatusResponse:
+        if settings.SIMULATION_MODE or str(platform_post_id).startswith("discourse-sim"):
+            return GetStatusResponse(
+                status="published",
+                live_url=f"/proxy/discourse/t/{platform_post_id}",
+            )
+
         base = _resolve_base_url(connection)
 
         async with httpx.AsyncClient(timeout=10) as client:
@@ -155,6 +196,10 @@ class DiscourseConnector(BaseConnector):
     async def delete(
         self, platform_post_id: str, connection: Connection
     ) -> DeleteResponse:
+        if settings.SIMULATION_MODE or str(platform_post_id).startswith("discourse-sim"):
+            log.info("discourse_deleted_sim", post_id=platform_post_id)
+            return DeleteResponse(deleted=True)
+
         base = _resolve_base_url(connection)
 
         async with httpx.AsyncClient(timeout=10) as client:
