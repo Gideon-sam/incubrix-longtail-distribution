@@ -116,6 +116,28 @@ async def update_rules(
     return dest
 
 
+@router.delete("/destinations/{destination_id}")
+async def delete_destination(
+    destination_id: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Delete a destination from the catalogue."""
+    result = await db.execute(
+        select(Destination).where(Destination.id == destination_id)
+    )
+    dest = result.scalar_one_or_none()
+    if not dest:
+        raise HTTPException(
+            status_code=404,
+            detail=make_error(
+                "DEST_SPEC_VIOLATION", f"Destination '{destination_id}' not found."
+            ),
+        )
+    await db.delete(dest)
+    await db.commit()
+    return {"deleted": True, "destination_id": destination_id}
+
+
 @router.get("/connectors", summary="List all registered connectors")
 async def list_connectors_endpoint():
     """List all loaded connectors with their manifest info."""

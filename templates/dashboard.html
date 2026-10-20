@@ -33,7 +33,7 @@
         <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg> AI Recommender
       </button>
       <button class="nav-tab-btn" data-tab="tab-catalogue">
-        <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Catalogue (159)
+        <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> <span id="nav-catalogue-text">Catalogue</span>
       </button>
       <button class="nav-tab-btn" data-tab="tab-certify">
         <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Certification Lab
@@ -44,7 +44,7 @@
     <div class="nav-right-meta">
       <div class="badge-live-beacon" id="system-beacon" style="cursor:pointer;" onclick="togglePublishMode()" title="Click to toggle Live Broadcast vs Dry-Run Simulation">
         <span class="pulse-dot"></span>
-        <span id="beacon-text">LIVE BROADCAST READY (159 DESTINATIONS)</span>
+        <span id="beacon-text">LIVE BROADCAST READY</span>
       </div>
       <a href="/docs" target="_blank" class="api-docs-link">
         <svg class="nav-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> API Docs
@@ -66,7 +66,7 @@
     </p>
 
     <!-- Executive Telemetry Strip -->
-    <div class="telemetry-strip" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
+    <div class="telemetry-strip" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); max-width:760px; margin:0 auto; gap:1.2rem;">
       <div class="telemetry-card">
         <div class="tele-label">
           <span>Active Connectors</span>
@@ -78,18 +78,10 @@
       <div class="telemetry-card">
         <div class="tele-label">
           <span>Communities Indexed</span>
-          <span style="color:var(--brand-primary-light)">● Real World</span>
+          <span style="color:var(--brand-primary-light)">● Reachable &amp; Verified</span>
         </div>
-        <div class="tele-val" id="metric-destinations">159</div>
-        <div class="tele-desc">Verified Reachability &amp; Limits</div>
-      </div>
-      <div class="telemetry-card">
-        <div class="tele-label">
-          <span>Anti-Spam Safety</span>
-          <span style="color:var(--ok)">● Active</span>
-        </div>
-        <div class="tele-val">4 Rules</div>
-        <div class="tele-desc">Frequency Cap &amp; Policy Guard</div>
+        <div class="tele-val" id="metric-destinations">1,589</div>
+        <div class="tele-desc">Curated Niche Publishing Targets</div>
       </div>
     </div>
   </section>
@@ -380,10 +372,6 @@ Learn more at https://incubrix.com</textarea>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
                 Batch CSV
               </button>
-              <button type="button" class="btn-secondary" onclick="triggerPolicyViolationDemo()" style="flex:1; min-width:160px; border-color:var(--danger); color:var(--danger);" title="Simulates a self-promotional content violation to verify rules engine anti-spam block">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01"/></svg>
-                Demo Policy Violation
-              </button>
             </div>
           </form>
         </div>
@@ -446,6 +434,10 @@ Learn more at https://incubrix.com</textarea>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
                 🔁 Replay Same Request (Verify Idempotency)
               </button>
+              <button type="button" class="btn-secondary" id="btn-unpublish-last" onclick="unpublishLastPost()" style="border-color:var(--danger); color:var(--danger);" title="Unpublish and delete this post from the destination">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                🗑 Unpublish / Delete from Destination
+              </button>
               <span id="replay-badge" style="display:none;" class="badge-ok">VERIFIED IDEMPOTENT (NO DUPLICATE)</span>
             </div>
           </div>
@@ -481,6 +473,7 @@ Learn more at https://incubrix.com</textarea>
                 <th>Platform Record ID</th>
                 <th>Idempotency Key</th>
                 <th>Status</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody id="traces-tbody">
@@ -975,7 +968,11 @@ Learn more at https://incubrix.com</textarea>
         if (!res.ok) throw new Error("Failed to fetch destinations");
         allDestinations = await res.json();
         
-        document.getElementById("metric-destinations").textContent = `${allDestinations.length}+`;
+        const metricDestEl = document.getElementById("metric-destinations");
+        if (metricDestEl) metricDestEl.textContent = allDestinations.length.toLocaleString();
+        
+        const navCatText = document.getElementById("nav-catalogue-text");
+        if (navCatText) navCatText.textContent = `Catalogue (${allDestinations.length.toLocaleString()})`;
         
         populatePublishDropdown(allDestinations);
         renderCatalogueTable(allDestinations);
@@ -1074,6 +1071,8 @@ Learn more at https://incubrix.com</textarea>
       } catch (err) {
         showToast(`Tailoring failed: ${err.message}`, "error");
       }
+    }
+
     let currentPublishMode = "live";
     let lastPublishPayload = null;
     let lastPublishIdempotencyKey = null;
@@ -1322,6 +1321,7 @@ Learn more at https://incubrix.com</textarea>
               live_url: liveUrl,
               platform_id: currentPlatformId,
               idempotency_key: idempotencyKey,
+              connector_key: lastPublishPayload?.destination?.platform_key || "",
               status: "PUBLISHED"
             });
 
@@ -1510,11 +1510,34 @@ Learn more at https://incubrix.com</textarea>
           <td>${d.self_promo_allowed ? '<span style="color:var(--ok)">Yes</span>' : '<span style="color:var(--danger)">No</span>'}</td>
           <td><span class="chip chip-level">${d.level || 'L3'}</span></td>
           <td>
-            <button class="ping-btn" onclick="useInPublishing('${d.id}', '${d.name}')">Select</button>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <button class="ping-btn" onclick="useInPublishing('${d.id}', '${d.name}')">Select</button>
+              <button type="button" class="btn-secondary" style="padding:4px 8px; font-size:0.75rem; color:var(--danger); border-color:rgba(239,68,68,0.3); border-radius:4px;" onclick="deleteDestination('${d.id}', '${d.name}')" title="Delete destination from catalogue">Delete</button>
+            </div>
           </td>
         `;
         tbody.appendChild(tr);
       });
+    }
+
+    async function deleteDestination(id, name) {
+      if (!confirm(`Are you sure you want to delete destination "${name}"?`)) return;
+      try {
+        const res = await fetch(`/api/v1/destinations/${encodeURIComponent(id)}`, {
+          method: "DELETE"
+        });
+        if (res.ok) {
+          allDestinations = allDestinations.filter(d => d.id !== id);
+          filterCatalogue();
+          const metricEl = document.getElementById("metric-destinations");
+          if (metricEl) metricEl.textContent = allDestinations.length.toLocaleString();
+          showToast(`Destination "${name}" removed from catalogue.`, "success");
+        } else {
+          showToast("Failed to delete destination from database.", "error");
+        }
+      } catch (err) {
+        showToast(`Delete error: ${err.message}`, "error");
+      }
     }
 
     function filterCatalogue() {
@@ -1745,37 +1768,135 @@ Learn more at https://incubrix.com</textarea>
       const tbody = document.getElementById("traces-tbody");
       if (!tbody) return;
       if (!Array.isArray(pubTraces) || pubTraces.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-muted); padding:2rem;">No publication broadcasts recorded yet. Deploy content above to see live cryptographic audit traces.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-muted); padding:2rem;">No publication broadcasts recorded yet. Deploy content above to see live cryptographic audit traces.</td></tr>`;
         return;
       }
-      tbody.innerHTML = pubTraces.map(t => {
+      tbody.innerHTML = pubTraces.map((t, idx) => {
         if (!t) return "";
         const rawUrl = (t.live_url && typeof t.live_url === "string") ? t.live_url : (t.live_url ? String(t.live_url) : "#");
-        const displayUrl = rawUrl.length > 40 ? rawUrl.substring(0, 38) + "..." : rawUrl;
-        const timestamp = t.timestamp || new Date().toISOString();
+        const displayUrl = rawUrl.length > 36 ? rawUrl.substring(0, 34) + "..." : rawUrl;
+        const timestamp = t.timestamp || new Date().toLocaleTimeString();
         const destination = t.destination || "Unknown";
         const title = t.title || "Untitled";
         const platformId = t.platform_id || "—";
+        const shortPlatformId = platformId.length > 20 ? platformId.substring(0, 16) + '...' : platformId;
         const idempotencyKey = t.idempotency_key || "—";
+        const shortIdemKey = idempotencyKey.length > 22 ? idempotencyKey.substring(0, 18) + '...' : idempotencyKey;
         const linkHtml = (rawUrl && rawUrl !== "#") 
           ? `<a href="${rawUrl}" target="_blank" style="color:var(--brand-cyan); font-weight:600; text-decoration:none;">${displayUrl} ↗</a>`
           : `<span style="color:var(--text-muted);">—</span>`;
+        const isDeleted = t.status === "DELETED";
 
         return `
           <tr>
-            <td><span style="font-family:monospace; color:var(--text-secondary);">${timestamp}</span></td>
+            <td><span style="font-family:monospace; color:var(--text-secondary); font-size:0.8rem;">${timestamp}</span></td>
             <td><strong style="color:#fff;">${destination}</strong></td>
-            <td><span style="color:var(--text);">${title}</span></td>
+            <td><span style="color:var(--text); font-weight:500;">${title}</span></td>
             <td>${linkHtml}</td>
-            <td><code style="color:var(--text-muted); font-size:0.75rem;">${platformId}</code></td>
-            <td><code style="color:var(--brand-primary-light); font-size:0.75rem;">${idempotencyKey}</code></td>
-            <td><span class="badge-ok">VERIFIED L4</span></td>
+            <td><code style="color:var(--text-muted); font-size:0.75rem;" title="${platformId}">${shortPlatformId}</code></td>
+            <td><code style="color:var(--brand-primary-light); font-size:0.75rem;" title="${idempotencyKey}">${shortIdemKey}</code></td>
+            <td><span class="${isDeleted ? 'chip chip-level' : 'badge-ok'}" style="${isDeleted ? 'background:rgba(239,68,68,0.15); color:var(--danger);' : ''}">${t.status || 'VERIFIED L4'}</span></td>
+            <td>
+              <button type="button" class="btn-secondary" style="padding:4px 9px; font-size:0.75rem; color:var(--danger); border-color:rgba(239,68,68,0.3); border-radius:4px; display:inline-flex; align-items:center; gap:4px;" onclick="deletePublicationTrace(${idx})" title="Unpublish from platform and remove trace">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                Delete
+              </button>
+            </td>
           </tr>
         `;
       }).filter(Boolean).join("");
     }
 
+    async function deletePublicationTrace(idx) {
+      const trace = pubTraces[idx];
+      if (!trace) return;
+      if (!confirm(`Are you sure you want to delete trace for "${trace.title}"?`)) return;
+
+      const connectorKey = trace.connector_key || (trace.destination ? trace.destination.toLowerCase().split(/[\s(]/)[0] : "");
+      const postId = trace.platform_id;
+
+      if (connectorKey && postId && postId !== "—" && !postId.includes("sim-")) {
+        try {
+          showToast(`Unpublishing from ${connectorKey}...`, "info");
+          await fetch(`/connector/v1/${connectorKey}/delete`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              platform_post_id: String(postId),
+              connection: { auth_type: "api_key", credentials: {} }
+            })
+          });
+        } catch (e) {
+          console.warn("Unpublish remote call:", e);
+        }
+      }
+
+      pubTraces.splice(idx, 1);
+      try {
+        localStorage.setItem("incubrix_pub_traces", JSON.stringify(pubTraces));
+      } catch (e) {}
+      renderPublicationTraces();
+      showToast("Publication trace deleted.", "success");
+    }
+
+    async function unpublishLastPost() {
+      if (!lastPublishPayload || !lastPublishPayload.destination) {
+        showToast("No active publication available to unpublish.", "error");
+        return;
+      }
+      const platformKey = lastPublishPayload.destination.platform_key || "ghost";
+      const postId = document.getElementById("res-platform-id").textContent;
+      if (!postId || postId === "--") {
+        showToast("No platform ID found for this post.", "error");
+        return;
+      }
+      if (!confirm(`Unpublish and delete post "${postId}" from ${platformKey}?`)) return;
+
+      const btn = document.getElementById("btn-unpublish-last");
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = "Unpublishing...";
+      }
+
+      try {
+        const res = await fetch(`/connector/v1/${platformKey}/delete`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            platform_post_id: postId,
+            connection: { auth_type: "api_key", credentials: {} }
+          })
+        });
+        const data = await res.json();
+        if (data.deleted) {
+          showToast(`Successfully unpublished post from ${platformKey}!`, "success");
+          if (btn) {
+            btn.innerHTML = `✓ Post Deleted`;
+            btn.style.color = "var(--ok)";
+            btn.style.borderColor = "var(--ok)";
+          }
+          if (pubTraces.length > 0 && pubTraces[0].platform_id === postId) {
+            pubTraces[0].status = "DELETED";
+            try {
+              localStorage.setItem("incubrix_pub_traces", JSON.stringify(pubTraces));
+            } catch (e) {}
+            renderPublicationTraces();
+          }
+        } else {
+          showToast(`Platform responded: ${data.deletion_method || 'not deleted'}`, "info");
+          if (btn) btn.disabled = false;
+        }
+      } catch (err) {
+        showToast(`Failed to unpublish: ${err.message}`, "error");
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = `🗑 Unpublish / Delete from Destination`;
+        }
+      }
+    }
+
     function clearPublicationTraces() {
+      if (!confirm("Are you sure you want to clear all publication traces?")) return;
       pubTraces = [];
       try {
         localStorage.removeItem("incubrix_pub_traces");
