@@ -1057,9 +1057,10 @@ Learn more at https://incubrix.com</textarea>
         if (simBtn) simBtn.className = "btn-secondary";
         if (isSimInput) isSimInput.value = "false";
         if (pubBtnText) pubBtnText.textContent = "Broadcast Live to Destination";
-        if (beacon) beacon.innerHTML = 'LIVE &bull; 159 DEST';
+        const destCount = allDestinations ? allDestinations.length : 159;
+        if (beacon) beacon.innerHTML = `LIVE &bull; ${destCount} DEST`;
         if (beaconBox) {
-          beaconBox.title = 'Live Broadcast Mode Active: 9 Connectors · 159 Destinations';
+          beaconBox.title = `Live Broadcast Mode Active: 9 Connectors · ${destCount} Destinations`;
           beaconBox.style.borderColor = "rgba(34, 197, 94, 0.4)";
           beaconBox.style.background = "rgba(34, 197, 94, 0.1)";
           beaconBox.style.color = "var(--ok)";
