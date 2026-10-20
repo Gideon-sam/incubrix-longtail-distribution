@@ -8,13 +8,16 @@ IncuBrix Long-Tail Distribution empowers creators and technical engineering team
 
 ## Live Production Deployment & Reviewer Access
 
-- Working Live Demo URL: http://20.205.139.234:8000/dashboard
-- Interactive API Documentation: http://20.205.139.234:8000/docs
-- Health Liveness Probe: http://20.205.139.234:8000/health
-- Service Readiness Probe: http://20.205.139.234:8000/ready
-- Production Access Token: `1db2bb674718eaf6b1b7a3d90645f3a3cb0d46411bad011d`
-- Reviewer Access: Granted to `admin@incubrix.com`
-- Host Specifications: Microsoft Azure VM (Ubuntu 22.04 LTS, Standard B2s) with 24/7 systemd watchdog
+| Resource | Link |
+|---|---|
+| Live Dashboard | https://incubrix-longtail.eastasia.cloudapp.azure.com/dashboard |
+| Interactive API Docs | https://incubrix-longtail.eastasia.cloudapp.azure.com/docs |
+| Health Probe | https://incubrix-longtail.eastasia.cloudapp.azure.com/health |
+| Readiness Probe | https://incubrix-longtail.eastasia.cloudapp.azure.com/ready |
+| GitHub Repository | https://github.com/Gideon-sam/incubrix-longtail-distribution |
+| Access Token | `1db2bb674718eaf6b1b7a3d90645f3a3cb0d46411bad011d` |
+| Reviewer Access | `admin@incubrix.com` invited as collaborator |
+| Host | Microsoft Azure VM — East Asia (Ubuntu 22.04 LTS, Standard B2s) with systemd watchdog |
 
 ---
 
@@ -165,7 +168,7 @@ For continuous, production-grade 24/7 hosting on Microsoft Azure:
 ### 2. Execute Automated Deployment
 ```bash
 # Connect to Azure VM via SSH
-ssh azureuser@<AZURE_VM_PUBLIC_IP>
+ssh azureuser@incubrix-longtail.eastasia.cloudapp.azure.com
 
 # Clone and deploy
 git clone https://github.com/Gideon-sam/incubrix-longtail-distribution.git
