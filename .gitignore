@@ -56,3 +56,4 @@ minio-data/
 prompt_dump.txt
 prompt_full.txt
 scratch/
+batch_results/

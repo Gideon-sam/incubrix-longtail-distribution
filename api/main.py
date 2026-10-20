@@ -248,7 +248,7 @@ async def generic_error_handler(request: Request, exc: Exception):
 async def access_token_auth(request: Request, call_next):
     """Protect /api/ and /connector/ routes if ACCESS_TOKEN is configured."""
     path = request.url.path
-    open_prefixes = ["/health", "/ready", "/docs", "/redoc", "/openapi.json", "/dashboard", "/static"]
+    open_prefixes = ["/health", "/ready", "/docs", "/redoc", "/openapi.json", "/dashboard", "/static", "/favicon.ico"]
     is_open = path == "/" or any(path.startswith(p) for p in open_prefixes)
     referer = request.headers.get("referer", "")
 
@@ -290,6 +290,12 @@ app.include_router(metrics.router)
 
 if STATIC_DIR.is_dir():
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon_no_content():
+    """Return empty 204 response so browsers display no tab icon."""
+    return Response(status_code=204, media_type="image/x-icon")
 
 
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)

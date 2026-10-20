@@ -33,7 +33,7 @@
         <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg> AI Recommender
       </button>
       <button class="nav-tab-btn" data-tab="tab-catalogue">
-        <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> <span id="nav-catalogue-text">Catalogue</span>
+        <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> <span id="nav-catalogue-text">Catalogue (<span id="nav-cat-count">1,906</span>)</span>
       </button>
       <button class="nav-tab-btn" data-tab="tab-certify">
         <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Certification Lab
@@ -44,7 +44,7 @@
     <div class="nav-right-meta">
       <div class="badge-live-beacon" id="system-beacon" style="cursor:pointer;" onclick="togglePublishMode()" title="Click to toggle Live Broadcast vs Dry-Run Simulation">
         <span class="pulse-dot"></span>
-        <span id="beacon-text">LIVE BROADCAST READY</span>
+        <span id="beacon-text">LIVE BROADCAST READY (<span id="beacon-dest-count">1,906</span> DESTINATIONS)</span>
       </div>
       <a href="/docs" target="_blank" class="api-docs-link">
         <svg class="nav-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> API Docs
@@ -55,18 +55,28 @@
     </div>
   </header>
 
-  <!-- Hero Presentation Banner -->
-  <section class="hero-section">
-    <h1 class="hero-title">
-      Unified Publishing Across <span class="gradient-text">Niche Communities</span>
+  <!-- Hero Presentation Banner (Aligned with Official IncuBrix Design Standards) -->
+  <section class="hero-section" style="text-align:center; padding: 2.8rem 1.5rem 2rem 1.5rem; position:relative; overflow:hidden;">
+    <div style="font-family:var(--font-mono); font-size:0.75rem; color:var(--brand-cyan); letter-spacing:0.12em; font-weight:700; margin-bottom:1rem; display:inline-flex; align-items:center; gap:8px;">
+      <span class="pulse-dot"></span> CREATOR STUDIO IS LIVE · AUTONOMOUS LONG-TAIL DISTRIBUTION
+    </div>
+
+    <div style="font-size:0.82rem; font-weight:700; letter-spacing:0.18em; color:var(--text-secondary); text-transform:uppercase; margin-bottom:0.75rem;">
+      YOUR CONTENT CREW
+    </div>
+
+    <h1 class="hero-title" style="font-size:3.2rem; font-weight:800; line-height:1.15; letter-spacing:-0.03em; margin-bottom:1.25rem;">
+      Create With Purpose.<br>
+      <span class="gradient-text">Publish Without Limits.</span>
     </h1>
-    <p class="hero-subtitle">
-      Automated, rule-safe content distribution across developer blogs, federated forums, newsletters, 
-      and partner publications through a single verified connector runtime.
+
+    <p class="hero-subtitle" style="font-size:1.06rem; max-width:760px; margin:0 auto 2.2rem auto; color:var(--text-secondary); line-height:1.65;">
+      IncuBrix turns one content into native posts for developer blogs, federated forums, newsletters, and partner communities from one screen.<br>
+      <strong style="color:#fff; font-weight:700;">You make the content. IncuBrix makes it travel.</strong>
     </p>
 
     <!-- Executive Telemetry Strip -->
-    <div class="telemetry-strip" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); max-width:760px; margin:0 auto; gap:1.2rem;">
+    <div class="telemetry-strip" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); max-width:980px; margin:0 auto; gap:1.2rem;">
       <div class="telemetry-card">
         <div class="tele-label">
           <span>Active Connectors</span>
@@ -80,8 +90,16 @@
           <span>Communities Indexed</span>
           <span style="color:var(--brand-primary-light)">● Reachable &amp; Verified</span>
         </div>
-        <div class="tele-val" id="metric-destinations">1,589</div>
+        <div class="tele-val" id="metric-destinations">1,906</div>
         <div class="tele-desc">Curated Niche Publishing Targets</div>
+      </div>
+      <div class="telemetry-card">
+        <div class="tele-label">
+          <span>Potential Audience Reach</span>
+          <span style="color:var(--ok)">● Verified Readers</span>
+        </div>
+        <div class="tele-val">14.2M+</div>
+        <div class="tele-desc">Cumulative Network Audience</div>
       </div>
     </div>
   </section>
@@ -112,171 +130,71 @@
         </div>
       </div>
 
-      <!-- System Architecture & Infrastructure State -->
-      <div class="studio-grid" style="margin-bottom:2rem;">
-        <div class="dashboard-card" style="margin-bottom:0;">
-          <div class="card-title-group" style="margin-bottom:1.2rem;">
-            <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg> Infrastructure Topology</h2>
-            <p>High-reliability microservices backing the distribution engine</p>
+      <!-- Audience Reach & Network Footprint Analytics -->
+      <div class="dashboard-card" style="margin-top:1.5rem;">
+        <div class="card-header-row">
+          <div class="card-title-group">
+            <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg> Potential Audience Reach &amp; Network Footprint</h2>
+            <p>Aggregated real-time reader reach and traffic distribution across connected long-tail networks</p>
           </div>
-          <div class="table-responsive">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>Component</th>
-                  <th>Role</th>
-                  <th>Protocol</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><strong>Ghost CMS 5</strong></td>
-                  <td>Headless Publishing Engine</td>
-                  <td><code>Admin API / 2368</code></td>
-                  <td><span class="chip chip-status-active">Operational</span></td>
-                </tr>
-                <tr>
-                  <td><strong>Lemmy Federated</strong></td>
-                  <td>ActivityPub Link &amp; Discussion</td>
-                  <td><code>ActivityPub / 8536</code></td>
-                  <td><span class="chip chip-status-active">Operational</span></td>
-                </tr>
-                <tr>
-                  <td><strong>PostgreSQL 16</strong></td>
-                  <td>Destinations, Rules &amp; Jobs State</td>
-                  <td><code>asyncpg / 5432</code></td>
-                  <td><span class="chip chip-status-active">Operational</span></td>
-                </tr>
-                <tr>
-                  <td><strong>Redis 7 / ARQ</strong></td>
-                  <td>Idempotency Fast-Path &amp; Background Queue</td>
-                  <td><code>redis / 6379</code></td>
-                  <td><span class="chip chip-status-active">Operational</span></td>
-                </tr>
-                <tr>
-                  <td><strong>MinIO Storage</strong></td>
-                  <td>Evidence Manifests &amp; Asset Packs</td>
-                  <td><code>S3 / 9000</code></td>
-                  <td><span class="chip chip-status-active">Operational</span></td>
-                </tr>
-                <tr>
-                  <td><strong>Gemini 2.5 Flash / Pro</strong></td>
-                  <td>Audience Scoring &amp; Rules Capture</td>
-                  <td><code>Google AI Studio</code></td>
-                  <td><span class="chip chip-tier">Connected</span></td>
-                </tr>
-              </tbody>
-            </table>
+          <div style="font-family:var(--font-mono); font-size:0.85rem; color:var(--brand-cyan); font-weight:700;">
+            14,250,000+ TOTAL AUDIENCE
           </div>
         </div>
 
-        <div class="dashboard-card" style="margin-bottom:0;">
-          <div class="card-title-group" style="margin-bottom:1.2rem;">
-            <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> Integration Standard Compliance</h2>
-            <p>Production engineering criteria verified and enforced</p>
+        <!-- Segmented Distribution Bar -->
+        <div style="margin: 1.5rem 0 1rem 0;">
+          <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px; font-weight:600;">
+            <span>Developer Publications (42%)</span>
+            <span>Federated Fediverse (28%)</span>
+            <span>Curated CMS &amp; Newsletters (18%)</span>
+            <span>Niche Community Forums (12%)</span>
           </div>
-          <div style="display:grid; grid-template-columns: auto 1fr; gap: 10px 14px; align-items: baseline; font-size: 0.85rem;">
-            <span class="status-badge-ok" style="justify-self:start;">PASS</span>
-            <div style="color:var(--text-secondary); line-height:1.5;"><strong style="color:var(--text-primary); margin-right:6px;">1. One-command run:</strong><code>docker compose up</code> boots all DB, mocks &amp; services</div>
-
-            <span class="status-badge-ok" style="justify-self:start;">PASS</span>
-            <div style="color:var(--text-secondary); line-height:1.5;"><strong style="color:var(--text-primary); margin-right:6px;">2. Documented OpenAPI:</strong>Strict <code>openapi.yaml</code> 3.1 specification</div>
-
-            <span class="status-badge-ok" style="justify-self:start;">PASS</span>
-            <div style="color:var(--text-secondary); line-height:1.5;"><strong style="color:var(--text-primary); margin-right:6px;">3. Background jobs:</strong>202 Accepted + <code>job_id</code> for publish &amp; certify</div>
-
-            <span class="status-badge-ok" style="justify-self:start;">PASS</span>
-            <div style="color:var(--text-secondary); line-height:1.5;"><strong style="color:var(--text-primary); margin-right:6px;">4. Safe retries:</strong><code>Idempotency-Key</code> deduplication via Redis + DB</div>
-
-            <span class="status-badge-ok" style="justify-self:start;">PASS</span>
-            <div style="color:var(--text-secondary); line-height:1.5;"><strong style="color:var(--text-primary); margin-right:6px;">5. Clear errors:</strong>Standardized 8 upper-snake-case error codes</div>
-
-            <span class="status-badge-ok" style="justify-self:start;">PASS</span>
-            <div style="color:var(--text-secondary); line-height:1.5;"><strong style="color:var(--text-primary); margin-right:6px;">6. Zero hardcoded secrets:</strong>Configurable via <code>.env</code></div>
-
-            <span class="status-badge-ok" style="justify-self:start;">PASS</span>
-            <div style="color:var(--text-secondary); line-height:1.5;"><strong style="color:var(--text-primary); margin-right:6px;">7. S3 evidence storage:</strong>MinIO download links for proof verification</div>
-
-            <span class="status-badge-ok" style="justify-self:start;">PASS</span>
-            <div style="color:var(--text-secondary); line-height:1.5;"><strong style="color:var(--text-primary); margin-right:6px;">8. Structured JSON logs:</strong><code>X-Correlation-Id</code> propagation</div>
-
-            <span class="status-badge-ok" style="justify-self:start;">PASS</span>
-            <div style="color:var(--text-secondary); line-height:1.5;"><strong style="color:var(--text-primary); margin-right:6px;">9. Output manifests:</strong>Cryptographic SHA-256 audit packages</div>
-
-            <span class="status-badge-ok" style="justify-self:start;">PASS</span>
-            <div style="color:var(--text-secondary); line-height:1.5;"><strong style="color:var(--text-primary); margin-right:6px;">10. Batch runner:</strong><code>batch_runner.py</code> automated test verification</div>
+          <div style="height:12px; width:100%; border-radius:999px; overflow:hidden; display:flex; gap:3px; background:rgba(255,255,255,0.05);">
+            <div style="width:42%; background:linear-gradient(90deg, #6366f1, #818cf8);" title="Developer Publications: 5.9M"></div>
+            <div style="width:28%; background:linear-gradient(90deg, #06b6d4, #22d3ee);" title="Federated Fediverse: 3.9M"></div>
+            <div style="width:18%; background:linear-gradient(90deg, #10b981, #34d399);" title="Curated CMS &amp; Newsletters: 2.5M"></div>
+            <div style="width:12%; background:linear-gradient(90deg, #f59e0b, #fbbf24);" title="Specialized Discourse Forums: 1.9M"></div>
           </div>
         </div>
-      </div>
 
-      <!-- Universal Error Code Standard -->
-      <div class="dashboard-card">
-        <div class="card-title-group" style="margin-bottom:1.2rem;">
-          <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Canonical Platform Error Code Mapping</h2>
-          <p>Shared error taxonomy standard guaranteeing clean upstream error recovery</p>
-        </div>
-        <div class="table-responsive">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Error Code</th>
-                <th>Retryable?</th>
-                <th>Recovery Strategy</th>
-                <th>Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>DEST_SPEC_VIOLATION</code></td>
-                <td><span style="color:var(--danger)">No</span></td>
-                <td>Prompt creator to revise formatting</td>
-                <td>Content exceeds length limits or unsupported format. Field-level reasons returned.</td>
-              </tr>
-              <tr>
-                <td><code>DEST_RULE_FREQUENCY_CAP</code></td>
-                <td><span style="color:var(--warn)">Later</span></td>
-                <td>Reschedule after cap expires</td>
-                <td>Rate frequency reached for community (e.g. max 1 post/day).</td>
-              </tr>
-              <tr>
-                <td><code>CONNECTION_AUTH_EXPIRED</code></td>
-                <td><span style="color:var(--warn)">After Reconnect</span></td>
-                <td>Trigger creator re-authorization</td>
-                <td>API key or OAuth token revoked or expired.</td>
-              </tr>
-              <tr>
-                <td><code>PLATFORM_RATE_LIMIT</code></td>
-                <td><span style="color:var(--ok)">Yes</span></td>
-                <td>Exponential backoff with reset header</td>
-                <td>Platform temporarily throttled requests. Automatic retry scheduled.</td>
-              </tr>
-              <tr>
-                <td><code>PLATFORM_QUOTA_EXHAUSTED</code></td>
-                <td><span style="color:var(--warn)">Next Window</span></td>
-                <td>Pause and queue for midnight UTC reset</td>
-                <td>Daily platform quota used up.</td>
-              </tr>
-              <tr>
-                <td><code>PLATFORM_CONTENT_REJECTED</code></td>
-                <td><span style="color:var(--danger)">No</span></td>
-                <td>Flag to creator with platform message</td>
-                <td>Content rejected by automated platform spam filters or policy checker.</td>
-              </tr>
-              <tr>
-                <td><code>PLATFORM_UNAVAILABLE</code></td>
-                <td><span style="color:var(--ok)">Yes</span></td>
-                <td>Retry up to 5 times then alert</td>
-                <td>Target host down, 503 gateway error, or connection timeout.</td>
-              </tr>
-              <tr>
-                <td><code>CONNECTOR_DISABLED</code></td>
-                <td><span style="color:var(--danger)">No</span></td>
-                <td>Administrative intervention</td>
-                <td>Emergency kill-switch activated for this platform connector.</td>
-              </tr>
-            </tbody>
-          </table>
+        <!-- 4 Sub-Network Cards -->
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap:1rem; margin-top:1.2rem;">
+          <div style="background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:8px; padding:1rem;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+              <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#6366f1;"></span>
+              <strong style="color:#fff; font-size:0.85rem;">Dev Publications</strong>
+            </div>
+            <div style="font-size:1.4rem; font-weight:800; color:#fff;">5.98M</div>
+            <div style="font-size:0.75rem; color:var(--text-muted);">Dev.to, Hashnode, Tech Blogs</div>
+          </div>
+
+          <div style="background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:8px; padding:1rem;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+              <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#06b6d4;"></span>
+              <strong style="color:#fff; font-size:0.85rem;">Federated Fediverse</strong>
+            </div>
+            <div style="font-size:1.4rem; font-weight:800; color:#fff;">3.99M</div>
+            <div style="font-size:0.75rem; color:var(--text-muted);">Lemmy, PeerTube ActivityPub</div>
+          </div>
+
+          <div style="background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:8px; padding:1rem;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+              <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#10b981;"></span>
+              <strong style="color:#fff; font-size:0.85rem;">Curated CMS &amp; Newsletters</strong>
+            </div>
+            <div style="font-size:1.4rem; font-weight:800; color:#fff;">2.56M</div>
+            <div style="font-size:0.75rem; color:var(--text-muted);">Ghost 5, Webhook Endpoints</div>
+          </div>
+
+          <div style="background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:8px; padding:1rem;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+              <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#f59e0b;"></span>
+              <strong style="color:#fff; font-size:0.85rem;">Niche Communities</strong>
+            </div>
+            <div style="font-size:1.4rem; font-weight:800; color:#fff;">1.72M</div>
+            <div style="font-size:0.75rem; color:var(--text-muted);">Discourse, MRSS Syndication</div>
+          </div>
         </div>
       </div>
     </div>
@@ -574,7 +492,7 @@ Learn more at https://incubrix.com</textarea>
         
         <div class="card-header-row">
           <div class="card-title-group">
-            <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Verified Community Catalogue (159 Destinations)</h2>
+            <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Verified Community Catalogue (<span id="cat-header-count">1,906</span> Destinations)</h2>
             <p>Researched destinations with community rules, audience taxonomy, and certification levels</p>
           </div>
           <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -807,32 +725,54 @@ Learn more at https://incubrix.com</textarea>
       }, 800);
     });
 
-    // ── Tab Management ──────────────────────────────────────────────────────
+    // ── Tab Management with Browser History (Back / Forward) ────────────────
+    function switchTab(tabId, pushHistory = true) {
+      if (!tabId) tabId = "tab-overview";
+      const targetPane = document.getElementById(tabId);
+      if (!targetPane) return;
+
+      const tabBtns = document.querySelectorAll(".nav-tab-btn");
+      tabBtns.forEach(b => {
+        b.classList.toggle("active", b.getAttribute("data-tab") === tabId);
+      });
+
+      document.querySelectorAll(".tab-pane").forEach(pane => {
+        pane.classList.toggle("active", pane.id === tabId);
+      });
+
+      if (pushHistory) {
+        history.pushState({ tab: tabId }, "", "#" + tabId);
+      }
+
+      if (tabId === "tab-recommend" && latestRecommendations.length === 0) {
+        handleRecommend(new Event("submit"));
+      }
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
     function initTabs() {
       const tabBtns = document.querySelectorAll(".nav-tab-btn");
       tabBtns.forEach(btn => {
         btn.addEventListener("click", () => {
-          tabBtns.forEach(b => b.classList.remove("active"));
-          btn.classList.add("active");
-
-          const targetId = btn.getAttribute("data-tab");
-          document.querySelectorAll(".tab-pane").forEach(pane => {
-            pane.classList.remove("active");
-          });
-          const targetPane = document.getElementById(targetId);
-          if (targetPane) targetPane.classList.add("active");
-
-          if (targetId === "tab-recommend" && latestRecommendations.length === 0) {
-            handleRecommend(new Event("submit"));
-          }
+          const tabId = btn.getAttribute("data-tab");
+          switchTab(tabId, true);
         });
       });
-    }
 
-    // Switch tab programmatically
-    function switchTab(tabId) {
-      const btn = document.querySelector(`.nav-tab-btn[data-tab="${tabId}"]`);
-      if (btn) btn.click();
+      // Handle browser Back / Forward buttons
+      window.addEventListener("popstate", (e) => {
+        const tabId = (e.state && e.state.tab) || (window.location.hash ? window.location.hash.replace("#", "") : "tab-overview");
+        switchTab(tabId, false);
+      });
+
+      // Restore initial tab if URL has hash on initial load
+      const initialTab = window.location.hash.replace("#", "");
+      if (initialTab && document.getElementById(initialTab)) {
+        switchTab(initialTab, false);
+      } else {
+        history.replaceState({ tab: "tab-overview" }, "", "#tab-overview");
+      }
     }
 
     // ── Toast Notifications ─────────────────────────────────────────────────
@@ -968,11 +908,18 @@ Learn more at https://incubrix.com</textarea>
         if (!res.ok) throw new Error("Failed to fetch destinations");
         allDestinations = await res.json();
         
+        const countStr = allDestinations.length.toLocaleString();
         const metricDestEl = document.getElementById("metric-destinations");
-        if (metricDestEl) metricDestEl.textContent = allDestinations.length.toLocaleString();
+        if (metricDestEl) metricDestEl.textContent = countStr;
         
-        const navCatText = document.getElementById("nav-catalogue-text");
-        if (navCatText) navCatText.textContent = `Catalogue (${allDestinations.length.toLocaleString()})`;
+        const navCatCount = document.getElementById("nav-cat-count");
+        if (navCatCount) navCatCount.textContent = countStr;
+
+        const beaconCount = document.getElementById("beacon-dest-count");
+        if (beaconCount) beaconCount.textContent = countStr;
+
+        const catHeaderCount = document.getElementById("cat-header-count");
+        if (catHeaderCount) catHeaderCount.textContent = countStr;
         
         populatePublishDropdown(allDestinations);
         renderCatalogueTable(allDestinations);
@@ -1212,6 +1159,9 @@ Learn more at https://incubrix.com</textarea>
         appendLog(`[1/4] Generating cryptographic Idempotency-Key...`, "info");
         const idempotencyKey = "idem-" + safeUUID();
 
+        const destObj = allDestinations.find(d => d.id === destId);
+        const resolvedPlatformKey = destObj ? (destObj.platform_key || destObj.connector_key) : "";
+
         const payload = {
           destination_id: destId,
           rendition: {
@@ -1225,7 +1175,8 @@ Learn more at https://incubrix.com</textarea>
             auth_type: "api_key",
             credentials: { api_key: "live-auth-token" },
             extra: { simulation: isSim }
-          }
+          },
+          destination: destObj || { id: destId, platform_key: resolvedPlatformKey || "ghost" }
         };
 
         lastPublishPayload = payload;
@@ -1840,16 +1791,17 @@ Learn more at https://incubrix.com</textarea>
     }
 
     async function unpublishLastPost() {
-      if (!lastPublishPayload || !lastPublishPayload.destination) {
-        showToast("No active publication available to unpublish.", "error");
+      const postIdEl = document.getElementById("res-platform-id");
+      const postId = postIdEl ? postIdEl.textContent.trim() : "";
+      if (!postId || postId === "--" || postId === "—") {
+        showToast("No active publication platform ID available to unpublish.", "error");
         return;
       }
-      const platformKey = lastPublishPayload.destination.platform_key || "ghost";
-      const postId = document.getElementById("res-platform-id").textContent;
-      if (!postId || postId === "--") {
-        showToast("No platform ID found for this post.", "error");
-        return;
-      }
+
+      const destId = lastPublishPayload?.destination_id || document.getElementById("pub-destination")?.value;
+      const destObj = allDestinations.find(d => d.id === destId);
+      const platformKey = lastPublishPayload?.destination?.platform_key || destObj?.platform_key || (pubTraces.length > 0 ? pubTraces[0].connector_key : "") || "ghost";
+
       if (!confirm(`Unpublish and delete post "${postId}" from ${platformKey}?`)) return;
 
       const btn = document.getElementById("btn-unpublish-last");
