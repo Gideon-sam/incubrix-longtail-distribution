@@ -24,34 +24,41 @@
 
     <!-- Center Navigation Tabs -->
     <nav class="nav-center-tabs">
-      <button class="nav-tab-btn active" data-tab="tab-overview">
-        <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg><span class="tab-label"> Telemetry</span>
+      <button class="nav-tab-btn active" data-tab="tab-overview" title="Network Overview & Connectors Telemetry">
+        <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+        <span class="tab-label">Overview</span>
       </button>
-      <button class="nav-tab-btn" data-tab="tab-publish">
-        <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09zM12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/></svg><span class="tab-label"> Studio</span>
+      <button class="nav-tab-btn" data-tab="tab-publish" title="Multi-Destination Publishing Studio">
+        <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09zM12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/></svg>
+        <span class="tab-label">Publishing Studio</span>
       </button>
-      <button class="nav-tab-btn" data-tab="tab-recommend">
-        <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg><span class="tab-label"> AI</span>
+      <button class="nav-tab-btn" data-tab="tab-recommend" title="Gemini AI Intelligent Matcher">
+        <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>
+        <span class="tab-label">AI Recommender</span>
       </button>
-      <button class="nav-tab-btn" data-tab="tab-catalogue">
-        <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg><span class="tab-label" id="nav-catalogue-text"> Cat (<span id="nav-cat-count">1,906</span>)</span>
+      <button class="nav-tab-btn" data-tab="tab-catalogue" title="159 Verified Destination Communities">
+        <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        <span class="tab-label" id="nav-catalogue-text">Catalogue (<span id="nav-cat-count">159</span>)</span>
       </button>
-      <button class="nav-tab-btn" data-tab="tab-certify">
-        <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span class="tab-label"> Certify</span>
+      <button class="nav-tab-btn" data-tab="tab-certify" title="Automated Connector Certification Lab">
+        <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span class="tab-label">Certification Lab</span>
       </button>
     </nav>
 
     <!-- Right Utility Meta -->
     <div class="nav-right-meta">
-      <div class="badge-live-beacon" id="system-beacon" style="cursor:pointer;" onclick="togglePublishMode()" title="Click to toggle Live Broadcast vs Dry-Run Simulation">
+      <div class="badge-live-beacon" id="system-beacon" style="cursor:pointer;" onclick="togglePublishMode()" title="Toggle Live Broadcast vs Dry-Run Simulation">
         <span class="pulse-dot"></span>
-        <span class="beacon-text" id="beacon-text">LIVE (<span id="beacon-dest-count">1,906</span>)</span>
+        <span class="beacon-text" id="beacon-text">LIVE &bull; <span id="beacon-dest-count">159</span> DEST</span>
       </div>
       <a href="/docs" target="_blank" class="api-docs-link">
-        <svg class="nav-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> API Docs
+        <svg class="nav-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        <span class="nav-link-label">API Docs</span>
       </a>
       <a href="/health" target="_blank" class="api-docs-link">
-        <span class="status-indicator-dot"></span> Health
+        <span class="status-indicator-dot"></span>
+        <span class="nav-link-label">Health</span>
       </a>
     </div>
   </header>
@@ -66,7 +73,7 @@
       YOUR CONTENT CREW
     </div>
 
-    <h1 class="hero-title" style="font-size:3.2rem; font-weight:800; line-height:1.15; letter-spacing:-0.03em; margin-bottom:1.25rem;">
+    <h1 class="hero-title" style="font-weight:800; line-height:1.15; letter-spacing:-0.03em; margin-bottom:1.25rem;">
       Create With Purpose.<br>
       <span class="gradient-text">Publish Without Limits.</span>
     </h1>
@@ -1039,8 +1046,9 @@ Learn more at https://incubrix.com</textarea>
         if (simBtn) simBtn.className = "btn-secondary";
         if (isSimInput) isSimInput.value = "false";
         if (pubBtnText) pubBtnText.textContent = "Broadcast Live to Destination";
-        if (beacon) beacon.textContent = "LIVE BROADCAST READY (159 DESTINATIONS)";
+        if (beacon) beacon.innerHTML = 'LIVE &bull; 159 DEST';
         if (beaconBox) {
+          beaconBox.title = 'Live Broadcast Mode Active: 9 Connectors · 159 Destinations';
           beaconBox.style.borderColor = "rgba(34, 197, 94, 0.4)";
           beaconBox.style.background = "rgba(34, 197, 94, 0.1)";
           beaconBox.style.color = "var(--ok)";
@@ -1051,8 +1059,9 @@ Learn more at https://incubrix.com</textarea>
         if (simBtn) simBtn.className = "btn-primary";
         if (isSimInput) isSimInput.value = "true";
         if (pubBtnText) pubBtnText.textContent = "Run Safe Simulation";
-        if (beacon) beacon.textContent = "SIMULATION MODE ACTIVE (SANDBOXED)";
+        if (beacon) beacon.innerHTML = 'SIMULATION';
         if (beaconBox) {
+          beaconBox.title = 'Safe Dry-Run Simulation Mode Active (Sandboxed Mocks)';
           beaconBox.style.borderColor = "rgba(245, 158, 11, 0.4)";
           beaconBox.style.background = "rgba(245, 158, 11, 0.1)";
           beaconBox.style.color = "var(--warn)";
@@ -2004,15 +2013,18 @@ Learn more at https://incubrix.com</textarea>
           const beaconBox = document.getElementById("system-beacon");
           if (beacon) {
             if (currentPublishMode === "live") {
-              beacon.textContent = `LIVE BROADCAST READY (${data.connectors_loaded || 9} CONNECTORS · 159 DESTINATIONS)`;
+              const destCount = allDestinations ? allDestinations.length : 159;
+              beacon.innerHTML = `LIVE &bull; ${destCount} DEST`;
               if (beaconBox) {
+                beaconBox.title = `Live Broadcast Ready: ${data.connectors_loaded || 9} Connectors · ${destCount} Destinations`;
                 beaconBox.style.borderColor = "rgba(34, 197, 94, 0.4)";
                 beaconBox.style.background = "rgba(34, 197, 94, 0.1)";
                 beaconBox.style.color = "var(--ok)";
               }
             } else {
-              beacon.textContent = `SIMULATION MODE ACTIVE (SANDBOXED)`;
+              beacon.innerHTML = `SIMULATION`;
               if (beaconBox) {
+                beaconBox.title = `Safe Dry-Run Simulation Mode Active`;
                 beaconBox.style.borderColor = "rgba(245, 158, 11, 0.4)";
                 beaconBox.style.background = "rgba(245, 158, 11, 0.1)";
                 beaconBox.style.color = "var(--warn)";
