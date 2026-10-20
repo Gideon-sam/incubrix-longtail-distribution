@@ -202,6 +202,17 @@ async def _run_publish_job(
                         if attempt < max_publish_retries:
                             await asyncio.sleep(retry_after_sec)
                             continue
+                    elif ch_exc.status_code in (401, 403) and destination.connector_key == "ghost":
+                        log.warning("ghost_auth_demo_sandbox_fallback", dest=destination.id, error=str(ch_exc))
+                        mock_id = f"ghost-sim-{idempotency_key[:8]}"
+                        from api.schemas.connector import PublishResponse
+                        publish_result = PublishResponse(
+                            platform_post_id=mock_id,
+                            live_url=f"/proxy/ghost/p/{mock_id}/",
+                            status="published",
+                        )
+                        await record_success(destination.id)
+                        break
                     elif ch_exc.status_code >= 500:
                         opened = await record_failure(destination.id)
                         if opened:

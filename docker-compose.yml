@@ -271,6 +271,9 @@ services:
     volumes:
       - ./outputs:/app/outputs
       - ./templates:/app/templates
+      - ./connectors:/app/connectors
+      - ./api:/app/api
+      - ./static:/app/static
       - shared_secrets:/run/secrets-shared:ro
       - ghost_data:/var/lib/ghost/content:ro
     deploy:
