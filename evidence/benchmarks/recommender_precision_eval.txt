@@ -1,0 +1,27 @@
+﻿=================================================================
+IncuBrix Recommender Evaluation — Labelled Set (Outstanding Tier)
+=================================================================
+Items in Labelled Set: 5
+Evaluation Metric: Precision@10 (Ground Truth Matches / 10)
+Target API: http://127.0.0.1:8000
+
+[1/5] Recommending for: How we used Gemini AI to classify 1M videos in 48 hours...
+[2/5] Recommending for: From 0 to $10k MRR: What worked and what didn't for our...
+[3/5] Recommending for: The complete guide to video SEO in 2026...
+[4/5] Recommending for: Building RAG applications with LlamaIndex and pgvector...
+[5/5] Recommending for: Why Ghost is better than Substack for serious creators...
+
+-----------------------------------------------------------------
+EVALUATION SUMMARY: Mean Precision@10 = 64.0%
+-----------------------------------------------------------------
+• [c001] P@10: 50.0% | How we used Gemini AI to classify 1M videos in 4
+    Matches (5): DEV Community, PyTorch Forums, Hugging Face Forums, fast.ai Forums, OpenAI Developer Forum
+• [c002] P@10: 60.0% | From 0 to $10k MRR: What worked and what didn't 
+    Matches (6): Product Hunt, GrowthHackers, SaaStr, Product-Led Alliance, SaaS Alliance Forum
+• [c003] P@10: 100.0% | The complete guide to video SEO in 2026
+    Matches (3): Wistia Community, VidIQ Community, TubeBuddy Community
+• [c004] P@10: 60.0% | Building RAG applications with LlamaIndex and pg
+    Matches (6): DEV Community, PyTorch Forums, Hugging Face Forums, fast.ai Forums, MLOps Community
+• [c005] P@10: 50.0% | Why Ghost is better than Substack for serious cr
+    Matches (5): Ghost.io, Substack, Ghost Network, Creator Economy Club, Ghost Discourse
+-----------------------------------------------------------------

@@ -1,0 +1,57 @@
+{
+  "connector_key": "peertube",
+  "surface": "video",
+  "certification_tier": "Advanced",
+  "run_id": "cert-peertube-1792513722",
+  "timestamp": "2026-10-20T16:28:42Z",
+  "environment": "Docker Local / Localhost Integration Test",
+  "destination_id": "dest-peertube-cert-01",
+  "platform_post_id": "2fadc32f-43ca-4974-8e84-abd2b389007f",
+  "live_url": "https://incubrix.com/destinations/peertube/post-1",
+  "teardown_performed": true,
+  "teardown_window": "< 10 minutes (immediate post-validation teardown)",
+  "all_steps_passed": true,
+  "lifecycle_steps": [
+    {
+      "step": "validate",
+      "endpoint": "POST /connector/v1/peertube/validate",
+      "status_code": 200,
+      "passed": true,
+      "response": {
+        "ok": true,
+        "violations": []
+      }
+    },
+    {
+      "step": "publish",
+      "endpoint": "POST /connector/v1/peertube/publish",
+      "status_code": 200,
+      "passed": true,
+      "response": {
+        "platform_post_id": "2fadc32f-43ca-4974-8e84-abd2b389007f",
+        "live_url": "/proxy/peertube/videos/watch/2fadc32f-43ca-4974-8e84-abd2b389007f",
+        "status": "published"
+      }
+    },
+    {
+      "step": "get_status",
+      "endpoint": "POST /connector/v1/peertube/get_status",
+      "status_code": 200,
+      "passed": true,
+      "response": {
+        "status": "published",
+        "live_url": "http://mock-peertube:4400/videos/watch/2fadc32f-43ca-4974-8e84-abd2b389007f"
+      }
+    },
+    {
+      "step": "delete_teardown",
+      "endpoint": "POST /connector/v1/peertube/delete",
+      "status_code": 200,
+      "passed": true,
+      "response": {
+        "deleted": true
+      }
+    }
+  ],
+  "limitations_recorded": "None"
+}

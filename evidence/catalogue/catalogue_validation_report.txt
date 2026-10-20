@@ -1,0 +1,14 @@
+﻿======================================================================
+ INCUBRIX CATALOGUE VALIDATION REPORT
+======================================================================
+File Path: D:\IncuBrix Project\catalogue\real_destinations.csv
+Total Rows: 159
+  [PASS] Column schema matches all 20 required fields
+  [PASS] Zero duplicates detected (normalised URL + platform)
+  [PASS] All destination URLs have valid http(s) format and domain
+  [PASS] Zero forbidden major platform rows (15 big platforms and RSS removed)
+  [PASS] Zero invented or unrelated rules URLs
+  [PASS] Total catalogue destinations: 159 (meets >= 150 threshold)
+----------------------------------------------------------------------
+RESULT: PASS — Catalogue is 100% compliant with IncuBrix Assessment 4
+======================================================================

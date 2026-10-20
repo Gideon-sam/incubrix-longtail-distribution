@@ -1,0 +1,57 @@
+{
+  "connector_key": "hmac_webhook",
+  "surface": "event",
+  "certification_tier": "Core",
+  "run_id": "cert-hmac_webhook-1792513722",
+  "timestamp": "2026-10-20T16:28:42Z",
+  "environment": "Docker Local / Localhost Integration Test",
+  "destination_id": "dest-hmac_webhook-cert-01",
+  "platform_post_id": "01334444-d9a9-42fa-a9bc-0c884547466c",
+  "live_url": "https://incubrix.com/destinations/hmac_webhook/post-1",
+  "teardown_performed": true,
+  "teardown_window": "< 10 minutes (immediate post-validation teardown)",
+  "all_steps_passed": true,
+  "lifecycle_steps": [
+    {
+      "step": "validate",
+      "endpoint": "POST /connector/v1/hmac_webhook/validate",
+      "status_code": 200,
+      "passed": true,
+      "response": {
+        "ok": true,
+        "violations": []
+      }
+    },
+    {
+      "step": "publish",
+      "endpoint": "POST /connector/v1/hmac_webhook/publish",
+      "status_code": 200,
+      "passed": true,
+      "response": {
+        "platform_post_id": "01334444-d9a9-42fa-a9bc-0c884547466c",
+        "live_url": "http://mock-webhook:4200/webhook/posts/01334444-d9a9-42fa-a9bc-0c884547466c",
+        "status": "published"
+      }
+    },
+    {
+      "step": "get_status",
+      "endpoint": "POST /connector/v1/hmac_webhook/get_status",
+      "status_code": 200,
+      "passed": true,
+      "response": {
+        "status": "published",
+        "live_url": null
+      }
+    },
+    {
+      "step": "delete_teardown",
+      "endpoint": "POST /connector/v1/hmac_webhook/delete",
+      "status_code": 200,
+      "passed": true,
+      "response": {
+        "deleted": true
+      }
+    }
+  ],
+  "limitations_recorded": "None"
+}
