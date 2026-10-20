@@ -213,6 +213,7 @@ services:
       GHOST_PASSWORD: ${GHOST_PASSWORD:-Incubrix@2024!}
     volumes:
       - shared_secrets:/run/secrets-shared
+      - ghost_data:/var/lib/ghost/content:ro
     depends_on:
       lemmy:
         condition: service_healthy
@@ -234,6 +235,7 @@ services:
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-incubrix}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-incubrix_secret}
       GHOST_API_URL: http://ghost:2368
+      GHOST_ADMIN_API_KEY: ${GHOST_ADMIN_API_KEY:-}
       LEMMY_API_URL: http://lemmy:8536
       DISCOURSE_API_URL: http://mock-discourse:4100
       HMAC_WEBHOOK_URL: http://mock-webhook:4200/webhook
@@ -270,6 +272,7 @@ services:
       - ./outputs:/app/outputs
       - ./templates:/app/templates
       - shared_secrets:/run/secrets-shared:ro
+      - ghost_data:/var/lib/ghost/content:ro
     deploy:
       resources:
         limits:

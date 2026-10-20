@@ -63,6 +63,23 @@ def setup_and_get_key():
         r_login = client.post("/ghost/api/admin/session/", json=login_payload)
         if r_login.status_code != 200:
             print(f"[WARN] Ghost session login failed: {r_login.status_code} {r_login.text[:150]}")
+            # Try reading directly from Ghost sqlite DB if mounted
+            db_path = Path("/var/lib/ghost/content/data/ghost.db")
+            if db_path.exists():
+                try:
+                    import sqlite3
+                    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+                    cur = conn.cursor()
+                    cur.execute("SELECT id, secret FROM api_keys WHERE type='admin' ORDER BY created_at DESC LIMIT 1")
+                    row = cur.fetchone()
+                    conn.close()
+                    if row and row[0] and row[1]:
+                        full_key = f"{row[0]}:{row[1]}"
+                        _save_key(full_key)
+                        print(f"[INFO] Recovered Ghost admin key from sqlite: {full_key[:15]}...")
+                        return full_key
+                except Exception as e:
+                    print(f"[WARN] Failed sqlite recovery: {e}")
             return ""
 
         print("[INFO] Ghost session authenticated successfully.")

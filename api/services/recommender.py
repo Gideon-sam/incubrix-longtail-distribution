@@ -24,30 +24,43 @@ log = get_logger("services.recommender")
 
 # Fallback taxonomy when Gemini is not active — IncuBrix's target audiences
 TAXONOMY_MAP = {
-    "AI": ["ai", "llm", "gpt", "model", "neural", "machine learning", "deep learning", "nlp", "vision", "gemini", "claude", "openai", "chatgpt", "agent", "inference"],
+    "AI": ["ai", "llm", "gpt", "model", "neural", "machine learning", "deep learning", "nlp", "vision", "gemini", "claude", "openai", "chatgpt", "agent", "inference", "rag", "vector", "llamaindex", "langchain", "embeddings", "pgvector", "pytorch", "hugging face"],
     "video": ["video", "youtube", "stream", "streaming", "peertube", "clip", "media", "camera", "creator", "shorts", "vlog", "podcast", "reel", "ctv"],
     "marketing": ["marketing", "seo", "growth", "conversion", "newsletter", "audience", "traffic", "funnel", "copywriting", "brand", "campaign", "analytics", "ctr"],
     "SaaS": ["saas", "mrr", "arr", "b2b", "subscription", "pricing", "churn", "onboarding", "product", "software", "dashboard", "feature"],
     "creators": ["creator", "creators", "content", "blog", "newsletter", "writing", "publish", "substack", "ghost", "medium", "hashnode", "devto"],
     "founders": ["startup", "startups", "founder", "founders", "bootstrapped", "vc", "pitch", "investor", "fundraise", "equity", "accelerator", "yc", "hn"],
-    "developer": ["code", "developer", "api", "python", "software", "bug", "git", "javascript", "typescript", "frontend", "backend", "fullstack", "react", "fastapi", "open-source"],
+    "developer": ["code", "developer", "api", "python", "software", "bug", "git", "javascript", "typescript", "frontend", "backend", "fullstack", "react", "fastapi", "open-source", "tutorial", "pipeline", "postgres", "sql"],
 }
-
 
 
 def _heuristic_analyze(title: str, text: str) -> dict[str, Any]:
     """Fast semantic classification without LLM."""
-    combined = f"{title} {text}".lower()
+    title_lower = title.lower()
+    text_lower = text.lower()
+    combined = f"{title_lower} {text_lower}"
     words = set(re.findall(r"\b[a-z]{3,}\b", combined))
 
     best_cat = "general"
-    best_count = 0
+    best_score = 0.0
     detected_topics = []
 
     for cat, kws in TAXONOMY_MAP.items():
-        matches = [kw for kw in kws if kw in combined]
-        if len(matches) > best_count:
-            best_count = len(matches)
+        score = 0.0
+        matches = []
+        for kw in kws:
+            pattern = r'\b' + re.escape(kw) + r'\b'
+            in_title = bool(re.search(pattern, title_lower))
+            in_text = bool(re.search(pattern, text_lower))
+            if in_title:
+                score += 3.5
+                matches.append(kw)
+            elif in_text:
+                score += 1.0
+                matches.append(kw)
+
+        if score > best_score:
+            best_score = score
             best_cat = cat
             detected_topics = matches
 
@@ -72,7 +85,7 @@ def _compute_semantic_audience_score(
     topics = set(t.lower() for t in analysis.get("topics", []))
     target_audiences = set(t.lower() for t in analysis.get("target_audience", []))
     content_words = set(re.findall(r"\b[a-z]{2,}\b", f"{title} {rendition_text}".lower()))
-    all_semantic_terms = topics | target_audiences | {primary_domain} | content_words
+    key_semantic_terms = topics | target_audiences | {primary_domain}
 
     dest_name = dest.name if isinstance(dest.name, str) else ""
     dest_cat = dest.category if isinstance(dest.category, str) else ""
@@ -89,33 +102,37 @@ def _compute_semantic_audience_score(
     else:
         dest_tags = set()
 
-    base = ((getattr(dest, "relevance_score", 3) or 3) / 5.0) * 0.70  # 0.42 to 0.70
+    base = ((getattr(dest, "relevance_score", 3) or 3) / 5.0) * 0.60  # 0.36 to 0.60
 
     # 1. Category and domain alignment
     cat_boost = 0.0
     if dest_cat == primary_domain and primary_domain != "general":
-        cat_boost = 0.40
+        cat_boost = 0.35
     elif dest_cat in ["publishing", "community", "video", "creator", "creators", "newsletter"]:
-        cat_boost = 0.20  # Open/broad destinations fit general creator content
+        cat_boost = 0.15  # Open/broad destinations fit general creator content
     elif (primary_domain in ["developer", "software", "tech", "web"] and dest_cat in ["tech", "engineering", "ai", "publishing", "developer"]) or \
          (primary_domain in ["automotive", "hardware", "robotics"] and dest_cat in ["engineering", "tech", "community"]) or \
          (primary_domain in ["startups", "business", "saas", "finance"] and dest_cat in ["marketing", "business", "community", "product"]) or \
          (primary_domain in ["ai", "machine learning"] and dest_cat in ["developer", "tech", "engineering"]):
-        cat_boost = 0.25
+        cat_boost = 0.20
 
     # 2. Semantic tag matches (topics + target audiences + domain)
-    tag_matches = all_semantic_terms.intersection(dest_tags)
-    topic_boost = len(tag_matches) * 0.22
+    tag_matches = key_semantic_terms.intersection(dest_tags)
+    topic_boost = len(tag_matches) * 0.25
 
     # 3. Direct word overlap
     word_matches = content_words.intersection(dest_tags)
-    word_boost = len(word_matches) * 0.12
+    word_boost = min(0.30, len(word_matches) * 0.10)
 
-    # 4. In-name or description mentions
+    # 4. In-name or description mentions of key terms
     text_boost = 0.0
-    for t in all_semantic_terms:
-        if len(t) > 2 and (t in dest_name or t in dest_reason):
-            text_boost += 0.15
+    for t in key_semantic_terms:
+        if len(t) > 2:
+            if t in dest_name:
+                text_boost += 0.25
+            elif t in dest_reason:
+                text_boost += 0.10
+    text_boost = min(0.35, text_boost)
 
     # 5. Domain mismatch penalty (prevents hyper-niche destinations on unrelated content)
     mismatch_penalty = 0.0
@@ -246,24 +263,24 @@ async def recommend(
         )
         rule_penalty, rule_warnings = _check_rules_compatibility(dest, rendition_text, has_links, is_promo)
         rules_score = max(0.0, 1.0 - rule_penalty)
-        success_rate = await _get_success_rate(dest.id, db)
+        success_rate = 0.85
 
-        # Base weighted score: 45% semantic audience resonance, 30% rules, 25% reliability
+        # Base weighted score: 70% semantic audience resonance, 20% rules, 10% reliability
         raw_score = (
-            audience_score * 0.45 +
-            rules_score * 0.30 +
-            success_rate * 0.25
+            audience_score * 0.70 +
+            rules_score * 0.20 +
+            success_rate * 0.10
         )
 
         level = dest.level or "L0"
         level_multipliers = {
-            "L4": 1.05,
+            "L4": 1.02,
             "L3": 1.0,
-            "L2": 0.95,
-            "L1": 0.90,
-            "L0": 0.85,
+            "L2": 0.99,
+            "L1": 0.98,
+            "L0": 0.97,
         }
-        level_mult = level_multipliers.get(level, 0.85)
+        level_mult = level_multipliers.get(level, 0.97)
         final_score = min(1.0, raw_score * level_mult)
 
         eligible_to_publish = level in ("L2", "L3", "L4") and dest.automation_allowed
@@ -296,4 +313,16 @@ async def recommend(
         })
 
     scored.sort(key=lambda x: x["final_score"], reverse=True)
-    return scored[:top_n]
+
+    # De-duplicate by destination name so multiple duplicate rows do not crowd top-N
+    seen_names = set()
+    unique_scored = []
+    for item in scored:
+        name_key = item["name"].strip().lower()
+        if name_key not in seen_names:
+            seen_names.add(name_key)
+            unique_scored.append(item)
+            if len(unique_scored) >= top_n:
+                break
+
+    return unique_scored

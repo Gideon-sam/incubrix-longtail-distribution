@@ -58,7 +58,7 @@ class AssistedConnector(BaseConnector):
         log.info("assisted_pack_built", pack_id=pack_id, files=len(pack.files))
         return PublishResponse(
             platform_post_id=pack_id,
-            live_url=pack.deep_link or f"https://incubrix.app/assist/{pack_id}",
+            live_url=pack.deep_link or f"/proxy/assist/{pack_id}",
             status="assisted",
         )
 
@@ -113,7 +113,7 @@ class AssistedConnector(BaseConnector):
         )
 
         # Deep link to the destination
-        deep_link: str = cfg.get("submit_url", "") or f"https://incubrix.app/assist/{pack_id}"
+        deep_link: str = cfg.get("submit_url", "") or f"/proxy/assist/{pack_id}"
 
         # Metadata JSON
         metadata = {

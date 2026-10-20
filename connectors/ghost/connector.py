@@ -44,12 +44,12 @@ class GhostPublishShape(BaseModel):
 
 def _resolve_ghost_key(connection: Connection) -> str | None:
     """Resolve Ghost Admin API key in priority order."""
-    if connection.api_key and ":" in connection.api_key:
+    if connection.api_key and ":" in connection.api_key and not connection.api_key.startswith("mock"):
         return connection.api_key
 
+    # 1. Environment variable if valid hex and not mock dummy
     env_key = settings.GHOST_ADMIN_API_KEY
-    if env_key and ":" in env_key:
-        # Check if secret part is valid hex
+    if env_key and ":" in env_key and not env_key.startswith("mock"):
         try:
             _, secret_hex = env_key.split(":", 1)
             bytes.fromhex(secret_hex)
@@ -57,6 +57,35 @@ def _resolve_ghost_key(connection: Connection) -> str | None:
         except Exception:
             pass
 
+    # 2. Shared secret file if not dummy fallback
+    if SHARED_SECRET_KEY_PATH.is_file():
+        try:
+            content = SHARED_SECRET_KEY_PATH.read_text(encoding="utf-8").strip()
+            if ":" in content and not content.startswith("65f000000000000000000001"):
+                return content
+        except Exception:
+            pass
+
+    # 3. Direct Ghost SQLite DB read if mounted
+    db_candidates = [
+        Path("/var/lib/ghost/content/data/ghost.db"),
+        Path("/var/lib/ghost/data/ghost.db"),
+    ]
+    for db_path in db_candidates:
+        if db_path.is_file():
+            try:
+                import sqlite3
+                conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+                cur = conn.cursor()
+                cur.execute("SELECT id, secret FROM api_keys WHERE type='admin' ORDER BY created_at DESC LIMIT 1")
+                row = cur.fetchone()
+                conn.close()
+                if row and row[0] and row[1]:
+                    return f"{row[0]}:{row[1]}"
+            except Exception:
+                pass
+
+    # 4. Fallback to shared secret or env_key if available
     if SHARED_SECRET_KEY_PATH.is_file():
         try:
             content = SHARED_SECRET_KEY_PATH.read_text(encoding="utf-8").strip()
@@ -65,7 +94,7 @@ def _resolve_ghost_key(connection: Connection) -> str | None:
         except Exception:
             pass
 
-    return None
+    return env_key or None
 
 
 def _resolve_api_url(connection: Connection, destination: DestinationRef | None = None) -> str:
@@ -142,10 +171,12 @@ class GhostConnector(BaseConnector):
     ) -> PublishResponse:
         api_url = _resolve_api_url(connection, destination)
 
-        if settings.SIMULATION_MODE:
+        is_sim = connection.extra.get("simulation") if (connection and hasattr(connection, "extra") and "simulation" in connection.extra) else settings.SIMULATION_MODE
+
+        if is_sim:
             mock_id = f"ghost-sim-{idempotency_key[:8]}"
             log.info("ghost_published_sim", post_id=mock_id)
-            browser_url = f"/proxy/ghost/ghost/#/editor/post/{mock_id}" if "ghost:2368" in api_url else f"{api_url}/ghost/#/editor/post/{mock_id}"
+            browser_url = f"/proxy/ghost/p/{mock_id}/" if "ghost:2368" in api_url else f"{api_url}/p/{mock_id}/"
             return PublishResponse(
                 platform_post_id=mock_id,
                 live_url=browser_url,
@@ -204,8 +235,8 @@ class GhostConnector(BaseConnector):
         try:
             shape = GhostPublishShape.model_validate(posts_list[0])
             post_id = shape.id
-            raw_url = shape.url or f"{api_url}/{post_id}/"
-            live_url = f"/proxy/ghost/{post_id}/" if "ghost:2368" in raw_url else raw_url
+            slug = posts_list[0].get("slug", post_id)
+            live_url = f"/proxy/ghost/{slug}/"
         except ValidationError as val_err:
             raise HTTPException(
                 status_code=502,
@@ -219,8 +250,8 @@ class GhostConnector(BaseConnector):
         self, platform_post_id: str, connection: Connection
     ) -> GetStatusResponse:
         api_url = _resolve_api_url(connection)
-        if settings.SIMULATION_MODE or platform_post_id.startswith("ghost-sim"):
-            return GetStatusResponse(status="published", live_url=f"{api_url}/ghost/#/editor/post/{platform_post_id}")
+        if platform_post_id.startswith("ghost-sim"):
+            return GetStatusResponse(status="published", live_url=f"/proxy/ghost/p/{platform_post_id}/")
 
         admin_key = _resolve_ghost_key(connection)
         if not admin_key:

@@ -24,7 +24,7 @@
 
 ## Core System Independence
 
-Core distribution and publishing logic does **not** require any live AI model. The system operates fully deterministically in offline environments using the included mock adapter (`LLM_PROVIDER=mock`). All 50 tests pass with zero external network access and zero API keys.
+Core distribution and publishing logic does **not** require any live AI model. The system operates fully deterministically in offline environments using the included mock adapter (`LLM_PROVIDER=mock`). All 57 tests pass with zero external network access and zero API keys.
 
 ## Disclosure & Rights Compliance
 

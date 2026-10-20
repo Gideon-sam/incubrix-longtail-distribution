@@ -86,7 +86,9 @@ class LemmyConnector(BaseConnector):
     ) -> PublishResponse:
         api_url = _resolve_api_url(connection, destination)
 
-        if settings.SIMULATION_MODE:
+        is_sim = connection.extra.get("simulation") if (connection and hasattr(connection, "extra") and "simulation" in connection.extra) else settings.SIMULATION_MODE
+
+        if is_sim:
             mock_id = f"lemmy-sim-{idempotency_key[:8]}"
             log.info("lemmy_published_sim", post_id=mock_id)
             browser_url = f"/proxy/lemmy/post/{mock_id}" if "lemmy:8536" in api_url else f"{api_url}/post/{mock_id}"

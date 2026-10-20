@@ -100,7 +100,13 @@ async def _run_certification(
                 surface=dest.surface,
                 instance_config=dest.instance_config or {},
             )
-            rendition = Rendition(title=CERT_TITLE, body=CERT_BODY, is_ai_generated=False)
+            rendition = Rendition(
+                title=CERT_TITLE,
+                body=CERT_BODY,
+                canonical_url="https://incubrix.com/certification-proof",
+                media_urls=["https://incubrix.com/sample.mp4"],
+                is_ai_generated=False,
+            )
 
             # Step 1: Validate
             await job_manager.update_job(db, job_id, progress=15)
