@@ -6,6 +6,18 @@ IncuBrix Long-Tail Distribution empowers creators and technical engineering team
 
 ---
 
+## Live Production Deployment & Reviewer Access
+
+- Working Live Demo URL: http://20.205.139.234:8000/dashboard
+- Interactive API Documentation: http://20.205.139.234:8000/docs
+- Health Liveness Probe: http://20.205.139.234:8000/health
+- Service Readiness Probe: http://20.205.139.234:8000/ready
+- Production Access Token: `1db2bb674718eaf6b1b7a3d90645f3a3cb0d46411bad011d`
+- Reviewer Access: Granted to `admin@incubrix.com`
+- Host Specifications: Microsoft Azure VM (Ubuntu 22.04 LTS, Standard B2s) with 24/7 systemd watchdog
+
+---
+
 ## Executive Overview
 
 Mainstream social platforms gate audience access through volatile recommendation algorithms. The IncuBrix Long-Tail Distribution Service bypasses platform monopolies by delivering native broadcasts directly to specialized developer blogs, federated Fediverse nodes, curated newsletters, and technical discussion communities.
@@ -19,7 +31,13 @@ Mainstream social platforms gate audience access through volatile recommendation
 
 ---
 
-## Architectural Topology
+## System Architecture
+
+![IncuBrix Production Architecture](docs/architecture_production_layers.jpg)
+
+### Detailed Component & Data Flow Topology
+
+![IncuBrix Detailed Component Flow](docs/architecture_detailed_flow.png)
 
 ```
 +-----------------------------------------------------------------------------------+
@@ -174,12 +192,16 @@ Full details are documented in [DEPLOY.md](DEPLOY.md).
 
 The codebase includes comprehensive unit, integration, and policy regression test suites.
 
+### Test Verification Suite Results (57 Passed / 100%)
+
+![Pytest Verification 57 Passed](test/pytest_57_passed.png)
+
 ### Pytest Execution
 ```bash
 # Run 57 automated test cases
 pytest -v
 ```
-All 57 test cases pass consistently (100% pass rate) covering:
+All 57 test cases pass consistently (100% pass rate in 15.48s) covering:
 - Standard error envelope compliance
 - Idempotency duplicate prevention across Redis and PostgreSQL
 - Anti-spam rules engine (promo blocking, link policies, AI disclosure)

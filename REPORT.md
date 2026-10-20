@@ -10,6 +10,12 @@ All hard cases and edge conditions specified in the assessment have been systema
 
 ## Architectural Implementation
 
+![IncuBrix Production Architecture](docs/architecture_production_layers.jpg)
+
+### Detailed Component & Data Flow Topology
+
+![IncuBrix Detailed Component Flow](docs/architecture_detailed_flow.png)
+
 ```
 Client / Caller
    │
@@ -145,12 +151,14 @@ FastAPI Gateway (Port 8000)
 
 ## Empirical Benchmark Results
 
+![Pytest Test Verification Suite](test/pytest_57_passed.png)
+
 All figures below are measured directly from local test execution runs:
 
 | Benchmark / Metric | Measured Value | Measurement Context |
 |--------------------|----------------|---------------------|
 | Total Test Suite Count | 57 Tests | Unit, integration, error mappings, and Phase 2 hard cases |
-| Total Test Execution Time | 18.64 seconds | Python pytest async test execution |
+| Total Test Execution Time | 15.48 seconds | Python pytest async test execution |
 | Test Pass Rate | 100% (57/57 passed) | Zero failures, zero warnings, zero skipped |
 | Batch Runner (Integration Standard #10) | 100% (13/13 passed) | CLI batch test suite against running service |
 | Recommender Precision@10 | 54.0% Mean P@10 (up to 100%) | Measured on 5 ground-truth labelled content profiles |
