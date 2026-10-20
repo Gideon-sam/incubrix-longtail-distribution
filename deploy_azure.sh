@@ -123,20 +123,77 @@ $DOCKER_CMD compose exec -T api python batch_runner.py \
     --timeout 15 \
     2>&1 | tail -25 || true
 
-# 9. Print access details
+# 9. Configure 24/7 Persistence (systemd unit for automatic reboot recovery)
+echo "[INFO] Configuring systemd persistence service for 24/7 uptime..."
+CURRENT_DIR=$(pwd)
+CURRENT_USER=$(whoami)
+
+sudo tee /etc/systemd/system/incubrix.service > /dev/null <<EOF
+[Unit]
+Description=IncuBrix Long-Tail Distribution Stack
+Requires=docker.service
+After=docker.service network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=${CURRENT_DIR}
+User=${CURRENT_USER}
+ExecStart=/usr/bin/docker compose up -d
+ExecStop=/usr/bin/docker compose down
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable incubrix.service
+echo "[INFO] systemd incubrix.service enabled: stack will auto-restart on VM boot."
+
+# 10. Optional Nginx Reverse Proxy for Port 80
+if command -v nginx &>/dev/null || sudo apt-get install -y nginx 2>/dev/null; then
+    echo "[INFO] Configuring Nginx reverse proxy on port 80..."
+    sudo tee /etc/nginx/sites-available/incubrix > /dev/null <<EOF
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    server_name _;
+
+    client_max_body_size 50M;
+
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+}
+EOF
+    sudo rm -f /etc/nginx/sites-enabled/default
+    sudo ln -sf /etc/nginx/sites-available/incubrix /etc/nginx/sites-enabled/
+    sudo systemctl restart nginx 2>/dev/null || true
+    echo "[INFO] Nginx configured on port 80."
+fi
+
+# 11. Print access details
 VM_IP=$(curl -sf https://ipinfo.io/ip 2>/dev/null || echo "YOUR_VM_IP")
 
 echo ""
 echo "================================================================="
-echo "  IncuBrix Long-Tail Distribution is LIVE!"
+echo "  IncuBrix Long-Tail Distribution is LIVE (24/7 Persistence)"
 echo "================================================================="
-echo "Public URL:             http://${VM_IP}:8000"
-echo "Mission Control UI:     http://${VM_IP}:8000/dashboard"
-echo "API Documentation:      http://${VM_IP}:8000/docs"
-echo "Readiness Endpoint:     http://${VM_IP}:8000/ready"
-echo "Liveness Endpoint:      http://${VM_IP}:8000/health"
-echo "Generated ACCESS_TOKEN: ${TOKEN}"
+echo "Public Web URL (Port 80):   http://${VM_IP}/dashboard"
+echo "Public Direct (Port 8000):  http://${VM_IP}:8000/dashboard"
+echo "API Documentation:          http://${VM_IP}/docs"
+echo "Readiness Endpoint:         http://${VM_IP}/ready"
+echo "Liveness Endpoint:          http://${VM_IP}/health"
+echo "Generated ACCESS_TOKEN:     ${TOKEN}"
 echo ""
 echo "Test command:"
-echo "  curl -H 'X-Access-Token: ${TOKEN}' http://${VM_IP}:8000/api/v1/destinations"
+echo "  curl -H 'X-Access-Token: ${TOKEN}' http://${VM_IP}/api/v1/destinations"
 echo "================================================================="

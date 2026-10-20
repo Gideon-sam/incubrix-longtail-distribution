@@ -20,7 +20,7 @@ from fastapi import FastAPI, Request, HTTPException as FastAPIHTTPException
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.responses import Response
-from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.responses import JSONResponse, HTMLResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from slowapi import Limiter
@@ -293,9 +293,15 @@ if STATIC_DIR.is_dir():
 
 
 @app.get("/favicon.ico", include_in_schema=False)
-async def favicon_no_content():
-    """Return empty 204 response so browsers display no tab icon."""
-    return Response(status_code=204, media_type="image/x-icon")
+async def favicon():
+    """Serve IncuBrix favicon."""
+    fav_ico = STATIC_DIR / "favicon.ico"
+    if fav_ico.is_file():
+        return FileResponse(fav_ico, media_type="image/x-icon")
+    fav_png = STATIC_DIR / "favicon.png"
+    if fav_png.is_file():
+        return FileResponse(fav_png, media_type="image/png")
+    return Response(status_code=204)
 
 
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
