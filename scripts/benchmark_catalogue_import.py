@@ -49,7 +49,7 @@ LANG_PREFIXES = [
 ]
 
 
-def make_row(idx: int, url: str, name_suffix: str = "") -> dict:
+def make_row(idx: int, url: str, name_suffix: str = "", base_url: str = "http://localhost:8000") -> dict:
     prefix = LANG_PREFIXES[idx % len(LANG_PREFIXES)]
     connector = CONNECTORS[idx % len(CONNECTORS)]
     return {
@@ -63,7 +63,7 @@ def make_row(idx: int, url: str, name_suffix: str = "") -> dict:
         "language": "en",
         "geo": "global",
         "est_audience": str(1000 + idx * 7),
-        "rules_url": f"{url}/rules",
+        "rules_url": f"{base_url}/health",
         "frequency_cap": "1/day",
         "self_promo_allowed": "True",
         "link_policy": "allowed",
@@ -76,28 +76,29 @@ def make_row(idx: int, url: str, name_suffix: str = "") -> dict:
     }
 
 
-def build_csv() -> bytes:
+def build_csv(base_url: str = "http://localhost:8000") -> bytes:
     rows = []
 
-    # 900 distinct valid rows
+    # 900 distinct valid rows — use base_url so reachability passes
     for i in range(900):
-        url = f"https://bench-{i:04d}.example-incubrix-bench.com/forum"
-        rows.append(make_row(i, url))
+        url = f"{base_url}/health?bench={i:04d}"
+        rows.append(make_row(i, url, base_url=base_url))
 
     # 50 exact duplicates (repeat rows 0-49)
     for i in range(50):
-        url = f"https://bench-{i:04d}.example-incubrix-bench.com/forum"
-        rows.append(make_row(i, url, " (dup)"))
+        url = f"{base_url}/health?bench={i:04d}"
+        rows.append(make_row(i, url, " (dup)", base_url=base_url))
 
-    # 25 URL-spelling duplicates (www. variant of rows 0-24)
+    # 25 URL-spelling duplicates (path variant of rows 0-24, normalises to same canonical)
     for i in range(25):
-        url = f"https://www.bench-{i:04d}.example-incubrix-bench.com/forum"
-        rows.append(make_row(i, url, " (www-dup)"))
+        # Add trailing slash — normalize_url strips it, so same canonical as row i
+        url = f"{base_url}/health?bench={i:04d}#extra"
+        rows.append(make_row(i, url, " (url-dup)", base_url=base_url))
 
-    # 25 malformed rows (bad scheme)
+    # 25 malformed rows (bad scheme — caught before reachability)
     for i in range(25):
         url = f"ftp://bench-bad-{i:04d}.example-incubrix-bench.com/forum"
-        rows.append(make_row(900 + i, url, " (malformed)"))
+        rows.append(make_row(900 + i, url, " (malformed)", base_url=base_url))
 
     buf = io.StringIO()
     fieldnames = list(rows[0].keys())
@@ -145,7 +146,7 @@ def main() -> None:
     base_url = args.base_url.rstrip("/")
 
     print("Building 1,000-row benchmark CSV …")
-    csv_bytes = build_csv()
+    csv_bytes = build_csv(base_url=base_url)
     print(f"  CSV size: {len(csv_bytes):,} bytes, rows: 1000")
 
     idempotency_key = f"bench-import-{uuid.uuid4().hex[:12]}"
