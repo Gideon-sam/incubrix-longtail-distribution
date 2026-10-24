@@ -36,7 +36,7 @@
         <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>
         <span class="tab-label">AI Recommender</span>
       </button>
-      <button class="nav-tab-btn" data-tab="tab-catalogue" title="159 Verified Destination Communities">
+      <button class="nav-tab-btn" data-tab="tab-catalogue" id="nav-tab-catalogue" title="Catalogued Destination Communities">
         <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
         <span class="tab-label" id="nav-catalogue-text">Catalogue (<span id="nav-cat-count">…</span>)</span>
       </button>
@@ -364,7 +364,7 @@ Learn more at https://incubrix.com</textarea>
       <div class="dashboard-card">
         <div class="card-title-group" style="margin-bottom:1.5rem;">
           <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg> Gemini AI Intelligent Matcher</h2>
-          <p>Analyzes your content snippet and scores all catalogued long-tail destinations based on audience resonance, format fit, and posting rules</p>
+          <p>Analyzes your content and scores all catalogued long-tail destinations based on audience resonance, format fit, and posting rules</p>
         </div>
 
         <form id="recommend-form" onsubmit="handleRecommend(event)">
@@ -386,12 +386,7 @@ Learn more at https://incubrix.com</textarea>
               <div class="form-group">
                 <label class="form-label" for="rec-filter-conn">Connector Filter (Optional)</label>
                 <select id="rec-filter-conn" class="form-select">
-                  <option value="">All Connectors (9 Platforms)</option>
-                  <option value="devto">DEV Community (devto)</option>
-                  <option value="discourse">Discourse Forums (discourse)</option>
-                  <option value="hashnode">Hashnode Blog (hashnode)</option>
-                  <option value="lemmy">Lemmy Federated (lemmy)</option>
-                  <option value="ghost">Ghost Publications (ghost)</option>
+                  <option value="">All Connectors</option>
                 </select>
               </div>
 
@@ -499,18 +494,18 @@ Learn more at https://incubrix.com</textarea>
             <thead>
               <tr>
                 <th>Community</th>
-                <th>Platform</th>
                 <th>Connector</th>
                 <th>Surface</th>
+                <th>Audience</th>
                 <th>Freq. Cap</th>
-                <th>Self Promo?</th>
+                <th>Self-Promo</th>
+                <th>Score</th>
                 <th>Level</th>
                 <th>Action</th>
               </tr>
             </thead>
             <tbody id="catalogue-tbody">
-              <!-- Dynamically populated -->
-              <tr><td colspan="8" style="text-align:center; padding:2rem; color:var(--text-muted);">Loading catalogue from database...</td></tr>
+              <tr><td colspan="9" style="text-align:center; padding:2rem; color:var(--text-muted);">Loading catalogue from database...</td></tr>
             </tbody>
           </table>
         </div>
@@ -834,6 +829,24 @@ Learn more at https://incubrix.com</textarea>
       const metricEl = document.getElementById("metric-connectors");
       if (metricEl) metricEl.textContent = registeredConnectors.length;
       renderConnectorsGrid(registeredConnectors);
+
+      // Dynamically populate connector filter dropdowns
+      const connKeys = registeredConnectors.map(c => c.key);
+      const CONN_LABELS = {
+        devto: "DEV Community", discourse: "Discourse Forums", hashnode: "Hashnode Blog",
+        lemmy: "Lemmy Federated", ghost: "Ghost Publications", hmac_webhook: "HMAC Webhook",
+        assisted: "Assisted Dispatch", mrss: "MRSS Syndication", peertube: "PeerTube Video"
+      };
+      const recSel = document.getElementById("rec-filter-conn");
+      if (recSel) {
+        recSel.innerHTML = `<option value="">All Connectors (${connKeys.length} Platforms)</option>`;
+        connKeys.forEach(k => {
+          const opt = document.createElement("option");
+          opt.value = k;
+          opt.textContent = `${CONN_LABELS[k] || k} (${k})`;
+          recSel.appendChild(opt);
+        });
+      }
     }
 
     function renderConnectorsGrid(connectors) {
@@ -1091,7 +1104,7 @@ Learn more at https://incubrix.com</textarea>
         if (simBtn) simBtn.className = "btn-secondary";
         if (isSimInput) isSimInput.value = "false";
         if (pubBtnText) pubBtnText.textContent = "Broadcast Live to Destination";
-        const destCount = allDestinations ? allDestinations.length : 159;
+        const destCount = allDestinations ? allDestinations.length : 0;
         if (beacon) beacon.innerHTML = `LIVE &bull; ${destCount} DEST`;
         if (beaconBox) {
           beaconBox.title = `Live Broadcast Mode Active: 9 Connectors · ${destCount} Destinations`;
@@ -1498,33 +1511,52 @@ Learn more at https://incubrix.com</textarea>
       if (!tbody) return;
       tbody.innerHTML = "";
 
+      if (!destinations.length) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--text-muted);">No destinations match the current filter.</td></tr>';
+        return;
+      }
+
       destinations.forEach(d => {
+        const aud = parseInt(d.est_audience) || 0;
+        const audStr = aud >= 1e6 ? (aud/1e6).toFixed(1)+"M" : aud >= 1e3 ? (aud/1e3).toFixed(0)+"K" : aud > 0 ? aud.toLocaleString() : "—";
+        const score = parseFloat(d.relevance_score);
+        const scoreStars = isNaN(score) ? "—" : "★".repeat(Math.round(score)) + "☆".repeat(5 - Math.round(score));
+        const scoreColor = score >= 4 ? "var(--ok)" : score >= 3 ? "var(--warn)" : "var(--text-muted)";
+        const levelColor = d.level === "L4" || d.level === "L3" ? "var(--ok)" : d.level === "L2" ? "var(--brand-cyan)" : "var(--text-muted)";
+        const safeName = (d.name || "").replace(/'/g, "\\'");
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>
-            <strong>${d.name}</strong>
+            <strong style="color:#fff;">${d.name}</strong>
             <div>
-              <a href="${d.url}" target="_blank" rel="noopener noreferrer" style="color:var(--brand-cyan); text-decoration:none; font-size:0.75rem; display:inline-flex; align-items:center; gap:4px;">
-                ${d.url || ''}
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
-              </a>
+              <a href="${d.url}" target="_blank" rel="noopener noreferrer" style="color:var(--brand-cyan);text-decoration:none;font-size:0.72rem;">${(d.url||'').replace(/^https?:\/\//,'').substring(0,40)}${(d.url||'').length>47?'…':''} ↗</a>
             </div>
           </td>
-          <td><span class="chip chip-connector">${d.platform_key}</span></td>
-          <td><code>${d.connector_key}</code></td>
+          <td><span class="chip chip-connector">${d.connector_key}</span></td>
           <td><span class="chip chip-tier">${d.surface}</span></td>
-          <td><code>${d.frequency_cap || 'None'}</code></td>
-          <td>${d.self_promo_allowed ? '<span style="color:var(--ok)">Yes</span>' : '<span style="color:var(--danger)">No</span>'}</td>
-          <td><span class="chip chip-level">${d.level || 'L3'}</span></td>
+          <td style="font-family:var(--font-mono);font-size:0.82rem;color:var(--text-secondary);">${audStr}</td>
+          <td><code style="font-size:0.78rem;">${d.frequency_cap || 'None'}</code></td>
+          <td>${d.self_promo_allowed ? '<span style="color:var(--ok);font-weight:600;">✓ Yes</span>' : '<span style="color:var(--danger);font-weight:600;">✗ No</span>'}</td>
+          <td style="color:${scoreColor};font-size:0.8rem;letter-spacing:1px;" title="Relevance: ${score || 'N/A'}/5">${scoreStars}</td>
+          <td><span class="chip" style="background:rgba(255,255,255,0.04);color:${levelColor};border:1px solid ${levelColor};">${d.level || 'L0'}</span></td>
           <td>
-            <div style="display:flex; gap:6px; align-items:center;">
-              <button class="ping-btn" onclick="useInPublishing('${d.id}', '${d.name}')">Select</button>
-              <button type="button" class="btn-secondary" style="padding:4px 8px; font-size:0.75rem; color:var(--danger); border-color:rgba(239,68,68,0.3); border-radius:4px;" onclick="deleteDestination('${d.id}', '${d.name}')" title="Delete destination from catalogue">Delete</button>
+            <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;">
+              <button class="ping-btn" onclick="useInPublishing('${d.id}','${safeName}')" title="Use in Publishing Studio">Publish</button>
+              <button class="ping-btn" style="background:rgba(99,102,241,0.15);color:var(--brand-primary-light);" onclick="certifyDestination('${d.id}','${d.connector_key}')" title="Run certification for this destination">Certify</button>
+              <button type="button" style="background:none;border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:4px;padding:3px 7px;font-size:0.72rem;cursor:pointer;" onclick="deleteDestination('${d.id}','${safeName}')" title="Delete">✕</button>
             </div>
           </td>
         `;
         tbody.appendChild(tr);
       });
+    }
+
+    async function certifyDestination(destId, connectorKey) {
+      // Switch to cert tab and pre-select connector
+      switchTab("tab-certify");
+      const sel = document.getElementById("cert-connector-select");
+      if (sel && connectorKey) sel.value = connectorKey;
+      showToast(`Cert Lab pre-loaded for ${connectorKey}. Click Run to certify.`, "info");
     }
 
     async function deleteDestination(id, name) {
@@ -2059,7 +2091,7 @@ Learn more at https://incubrix.com</textarea>
           const beaconBox = document.getElementById("system-beacon");
           if (beacon) {
             if (currentPublishMode === "live") {
-              const destCount = allDestinations ? allDestinations.length : 159;
+              const destCount = allDestinations ? allDestinations.length : 0;
               beacon.innerHTML = `LIVE &bull; ${destCount} DEST`;
               if (beaconBox) {
                 beaconBox.title = `Live Broadcast Ready: ${data.connectors_loaded || 9} Connectors · ${destCount} Destinations`;
