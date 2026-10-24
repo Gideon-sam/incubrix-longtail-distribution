@@ -14,6 +14,7 @@ import asyncio
 import io
 import time
 from datetime import datetime, timezone
+from urllib.parse import urlsplit, urlunsplit
 
 import pandas as pd
 from pydantic import BaseModel
@@ -37,6 +38,26 @@ log = get_logger("routers.catalogue")
 router = APIRouter(prefix="/api/v1", tags=["Catalogue & Rules"])
 
 REQUIRED_COLS = {"name", "url", "platform_key", "connector_key", "surface"}
+
+_SCHEME_DEFAULT_PORTS = {"http": 80, "https": 443}
+
+
+def normalize_url(url: str) -> str:
+    """Return a canonical form of url for deduplication."""
+    parts = urlsplit(url.strip())
+    scheme = parts.scheme.lower()
+    host = parts.hostname
+    if not host:
+        raise ValueError("URL has no host")
+    host = host.lower()
+    if host.startswith("www."):
+        host = host[4:]
+    port = parts.port  # raises ValueError on non-integer port
+    if port is not None and port == _SCHEME_DEFAULT_PORTS.get(scheme):
+        port = None
+    netloc = host if port is None else f"{host}:{port}"
+    path = parts.path.rstrip("/")
+    return urlunsplit((scheme, netloc, path, parts.query, ""))
 
 
 async def _check_reachability(http_client, url: str, sem: asyncio.Semaphore) -> bool:
@@ -84,6 +105,17 @@ async def _run_catalogue_import(job_id: str, csv_bytes: bytes, db_url: str):
 
             sem = asyncio.Semaphore(50)
 
+            # Build existing key set once for O(1) dedup
+            existing_keys: set = set()
+            existing_rows_q = await db.execute(select(Destination.url, Destination.platform_key))
+            for ex_url, ex_pk in existing_rows_q.all():
+                try:
+                    existing_keys.add((normalize_url(str(ex_url)), str(ex_pk).strip().lower()))
+                except (ValueError, Exception):
+                    pass
+            seen_in_file: dict = {}
+            duplicate_rows: list = []
+
             # Process rows
             async with httpx.AsyncClient(timeout=5.0) as http:
                 # 1. First pass: validation & deduplication
@@ -96,23 +128,30 @@ async def _run_catalogue_import(job_id: str, csv_bytes: bytes, db_url: str):
                             row_errors.append(f"Missing required field: {col}")
 
                     url_raw = str(row.get("url", "")).strip().rstrip("/")
-                    if not url_raw.startswith("http://") and not url_raw.startswith("https://"):
+                    if not url_raw.lower().startswith(("http://", "https://")):
                         row_errors.append(f"Invalid URL scheme: {url_raw}")
 
                     if row_errors:
                         errors.append({"row": row_idx + 2, "url": url_raw, "errors": row_errors})
                         continue
 
-                    # Deduplication check: normalized URL + platform_key
-                    existing = await db.execute(
-                        select(Destination).where(
-                            Destination.url == url_raw,
-                            Destination.platform_key == str(row.get("platform_key", "")).strip(),
-                        )
-                    )
-                    if existing.scalar_one_or_none():
-                        duplicates += 1
+                    try:
+                        norm_url = normalize_url(url_raw)
+                    except ValueError as err:
+                        errors.append({"row": row_idx + 2, "url": url_raw, "errors": [f"Invalid URL: {url_raw} ({err})"],})
                         continue
+
+                    platform_key = str(row.get("platform_key", "")).strip()
+                    key = (norm_url, platform_key.lower())
+                    if key in existing_keys:
+                        duplicates += 1
+                        duplicate_rows.append({"row": row_idx + 2, "url": url_raw, "reason": "Already in catalogue"})
+                        continue
+                    if key in seen_in_file:
+                        duplicates += 1
+                        duplicate_rows.append({"row": row_idx + 2, "url": url_raw, "reason": f"Duplicate of row {seen_in_file[key]} in this file"})
+                        continue
+                    seen_in_file[key] = row_idx + 2
 
                     valid_rows.append((row_idx, row, url_raw))
 
@@ -225,6 +264,7 @@ async def _run_catalogue_import(job_id: str, csv_bytes: bytes, db_url: str):
                 "duplicates": duplicates,
                 "errors_count": len(errors),
                 "errors": errors,
+                "duplicate_rows": duplicate_rows,
                 "duration_seconds": round(time.monotonic() - start, 2),
             }
             upload_json(report_path, error_report)

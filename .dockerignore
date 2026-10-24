@@ -8,3 +8,4 @@ __pycache__
 tests/batch_results
 outputs
 .vscode
+scratch/

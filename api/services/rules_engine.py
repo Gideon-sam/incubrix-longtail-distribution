@@ -86,14 +86,13 @@ class FrequencyCapRule(BaseRule):
         except Exception as lock_err:
             log.warning("advisory_lock_skipped", error=str(lock_err))
 
-        # Count recent real jobs in queued, running, OR succeeded (exclude simulated posts)
+        # simulated posts are counted so the cap behaves the same in simulation and live mode
         result = await db.execute(
             select(func.count(Job.id)).where(
                 Job.job_type == "publish",
                 Job.status.in_(["queued", "running", "succeeded"]),
                 Job.created_at >= since,
                 Job.result_data["destination_id"].as_string() == destination.id,
-                ~Job.result_data["platform_post_id"].as_string().like("%-sim-%"),
             )
         )
         count = result.scalar() or 0

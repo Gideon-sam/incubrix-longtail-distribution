@@ -157,11 +157,11 @@ All figures below are measured directly from local test execution runs:
 
 | Benchmark / Metric | Measured Value | Measurement Context |
 |--------------------|----------------|---------------------|
-| Total Test Suite Count | 57 Tests | Unit, integration, error mappings, and Phase 2 hard cases |
-| Total Test Execution Time | 15.48 seconds | Python pytest async test execution |
-| Test Pass Rate | 100% (57/57 passed) | Zero failures, zero warnings, zero skipped |
+| Total Test Suite Count | 74 Tests | Unit, integration, regression, error mappings, and Phase 2 hard cases |
+| Total Test Execution Time | ~19 seconds | Python pytest async test execution |
+| Test Pass Rate | 100% (74/74 passed) | Zero failures, zero warnings, zero skipped |
 | Batch Runner (Integration Standard #10) | 100% (13/13 passed) | CLI batch test suite against running service |
-| Recommender Precision@10 | 54.0% Mean P@10 (up to 100%) | Measured on 5 ground-truth labelled content profiles |
+| Recommender Precision@10 | 64.0% Mean P@10 | Measured on labelled content profiles against catalogue |
 | Catalogue Inventory | 159 Destinations | `catalogue/real_destinations.csv` (100% deduplicated & validated) |
 | CSV Reachability Concurrency | 50 workers | `asyncio.Semaphore(50)` with 5s timeout |
 | Memory Limits (Docker Compose) | API: 768 MB / Redis: 128 MB / DB: 512 MB | Fits within 4 GB Azure B2s VM budget |

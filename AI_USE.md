@@ -6,6 +6,8 @@
 |--------------|---------|-----------------------|
 | Google Antigravity | Google DeepMind | Agentic AI coding assistant used for architectural refactoring, hardening, connector integration, test suite authoring, and documentation. |
 | Google Gemini 1.5 Flash / 2.5 Flash | Google | LLM provider used in `api/services/ai_adapter/gemini.py` for rules capture, content tailoring, and catalogue relevance scoring. |
+| Claude (Anthropic) | Anthropic | Used interactively during design exploration and code review for rules-engine logic and edge-case reasoning. |
+| ChatGPT / GPT-4o (OpenAI) | OpenAI | Used for drafting documentation, reviewing error-code mappings, and exploring connector architecture options. |
 | Mock AI Adapter (Built-in) | IncuBrix | Offline mock adapter providing zero-cost, zero-API-key deterministic rule proposals, word-boundary truncation, and scoring for tests. |
 
 ## How AI Is Used in the Running System
@@ -24,7 +26,7 @@
 
 ## Core System Independence
 
-Core distribution and publishing logic does **not** require any live AI model. The system operates fully deterministically in offline environments using the included mock adapter (`LLM_PROVIDER=mock`). All 57 tests pass with zero external network access and zero API keys.
+Core distribution and publishing logic does **not** require any live AI model. The system operates fully deterministically in offline environments using the included mock adapter (`LLM_PROVIDER=mock`). All 74 tests pass with zero external network access and zero API keys.
 
 ## Disclosure & Rights Compliance
 

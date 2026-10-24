@@ -88,15 +88,12 @@ Mainstream social platforms gate audience access through volatile recommendation
 
 ---
 
-## Potential Audience Reach & Network Footprint
+## Audience Estimates
 
-Real-time aggregated audience reach accessible across indexed long-tail communities:
-
-- Total Cumulative Audience Reach: 14,250,000+ Verified Readers
-- Developer Publications: 5.98M Readers (42%) - Dev.to, Hashnode, specialized engineering blogs
-- Federated Fediverse: 3.99M Readers (28%) - Lemmy communities, PeerTube ActivityPub nodes
-- Curated CMS & Newsletters: 2.56M Readers (18%) - Ghost publication networks, partner digests
-- Specialized Discussion Forums: 1.71M Readers (12%) - High-intent technical Discourse communities
+Self-reported, community-stated audience figures summed across catalogued destinations.
+These numbers are **overlapping and not independently measured** — treat them as rough order-of-magnitude
+estimates, not verified reach. The dashboard computes totals dynamically from `est_audience` fields
+in the catalogue; per-connector-family breakdowns are shown in the Overview tab.
 
 ---
 
@@ -247,6 +244,35 @@ All error responses strictly adhere to the standard IncuBrix error envelope:
 | `CONNECTOR_DISABLED` | No | Circuit breaker open due to consecutive failures |
 | `NOT_FOUND` | No | Destination, job, or route not found |
 | `VALIDATION_ERROR` | No | Request schema validation failure |
+
+---
+
+## Simulation Mode vs Real Mode
+
+| Aspect | Simulation (default) | Real Mode |
+|--------|---------------------|-----------|
+| Default | `SIMULATION_MODE=true` — no real posts sent | `SIMULATION_MODE=false` |
+| Scope | All connectors return a synthetic `platform_post_id` prefixed `*-sim-*` | Requires real credentials in `.env` |
+| Local instances | Lemmy and Ghost run locally via `docker compose up`; set `SIMULATION_MODE=false` for those two only | Per-connection override below |
+| Per-request override | Set `connection.extra.simulation=false` in the publish payload to force a real post for a single request | Overrides the service-level flag |
+| Allowed hosts | `ALLOWED_AUTOMATED_HOSTS` env var (comma-separated) controls which hostnames accept automated posts in real mode; requests to other hosts are rejected | Prevents accidental posts to real communities |
+| Frequency cap | The frequency cap is enforced in **both** simulation and real mode. Simulated posts count toward the cap identically to live posts. | Prevents testing from exhausting production caps |
+
+**Setting real mode for Lemmy + Ghost only (recommended local setup):**
+
+```env
+# .env — keep SIMULATION_MODE=true globally
+SIMULATION_MODE=true
+ALLOWED_AUTOMATED_HOSTS=localhost,127.0.0.1
+```
+
+Then override per-request:
+```json
+{
+  "destination_id": "dest-lemmy-01",
+  "connection": { "extra": { "simulation": false } }
+}
+```
 
 ---
 
