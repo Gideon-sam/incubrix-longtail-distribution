@@ -1396,7 +1396,7 @@ Learn more at https://incubrix.com</textarea>
       btn.innerHTML = `Analyzing with Gemini AI...`;
 
       const container = document.getElementById("recommendations-container");
-      container.innerHTML = `<div style="grid-column:1/-1; padding:2rem; text-align:center; color:var(--brand-cyan);">Gemini 2.5 AI matching content against 159 verified communities...</div>`;
+      container.innerHTML = `<div style="grid-column:1/-1; padding:2rem; text-align:center; color:var(--brand-cyan);">Gemini AI matching content against ${allDestinations.length || 'all'} catalogued communities...</div>`;
 
       try {
         let url = `/api/v1/recommend?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}&has_links=${hasLinks}&is_promo=${isPromo}&top_n=6`;
