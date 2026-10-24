@@ -106,8 +106,8 @@
           <span>Audience Reach</span>
           <span style="color:var(--warn)">● Self-Reported</span>
         </div>
-        <div class="tele-val" id="metric-audience" style="font-size:1.3rem;">N/A</div>
-        <div class="tele-desc" id="metric-audience-note">Community-claimed estimates (unverified)</div>
+        <div class="tele-val" id="metric-audience" style="font-size:1.5rem;">—</div>
+        <div class="tele-desc" id="metric-audience-note">Community-claimed (see Catalogue for detail)</div>
       </div>
     </div>
   </section>
@@ -215,21 +215,14 @@ Learn more at https://incubrix.com</textarea>
 
             <div class="form-group" style="margin-top:1.2rem;">
               <label class="form-label">Broadcast Execution Mode</label>
-              <div style="display:flex; gap:8px; background:rgba(0,0,0,0.3); padding:4px; border-radius:8px; border:1px solid var(--border);">
-                <button type="button" id="mode-live-btn" class="btn-primary" style="flex:1; padding:8px 12px; font-size:0.8rem; border-radius:6px;" onclick="setPublishMode('live')">
-                  ⚡ Live Broadcast (Ghost, Lemmy &amp; Real APIs)
-                </button>
-                <button type="button" id="mode-sim-btn" class="btn-secondary" style="flex:1; padding:8px 12px; font-size:0.8rem; border-radius:6px;" onclick="setPublishMode('sim')">
-                  🧪 Dry-Run Simulation (Sandboxed Mocks)
-                </button>
-              </div>
-              <input type="hidden" id="pub-simulation" value="false">
+              <input type="hidden" id="pub-simulation" value="true">
+              <p style="font-size:0.78rem;color:var(--text-muted);margin-top:2px;">Toggle simulation/live above. Simulation mode is safe for demos.</p>
             </div>
 
-            <div style="display:flex; gap:10px; margin-top:1.5rem; flex-wrap:wrap;">
-              <button type="submit" class="btn-primary" id="btn-publish-submit" style="flex:2; min-width:180px;">
+            <div style="display:flex; gap:8px; margin-top:1.5rem; flex-wrap:wrap;">
+              <button type="submit" class="btn-primary" id="btn-publish-submit" style="flex:2; min-width:160px;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                <span id="pub-btn-text">Broadcast Live to Destination</span>
+                <span id="pub-btn-text">Simulate Broadcast</span>
               </button>
               <button type="button" class="btn-secondary" onclick="tailorForCurrentCommunity()" style="flex:1; min-width:130px; border-color:var(--brand-cyan); color:var(--brand-cyan);" title="AI Adapts Title and Body for destination platform rules">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
@@ -953,6 +946,9 @@ Learn more at https://incubrix.com</textarea>
         populatePublishDropdown(allDestinations);
         renderCatalogueTable(allDestinations);
         renderAudience(allDestinations);
+        // update studio count
+        const sc = document.getElementById("studio-dest-count");
+        if (sc) sc.textContent = allDestinations.length.toLocaleString();
       } catch (err) {
         console.error("Error loading destinations:", err);
       }
@@ -966,29 +962,29 @@ Learn more at https://incubrix.com</textarea>
         { label: "Community Forums", keys: ["discourse", "mrss"], color: "#f59e0b" },
         { label: "Assisted", keys: ["assisted"], color: "#a855f7" },
       ];
-      const totals = {};
+      const counts = {};
       let grand = 0;
-      FAMILIES.forEach(f => { totals[f.label] = 0; });
+      FAMILIES.forEach(f => { counts[f.label] = 0; });
       dests.forEach(d => {
-        const aud = parseInt(d.est_audience) || 0;
         FAMILIES.forEach(f => {
-          if (f.keys.includes(d.connector_key)) { totals[f.label] += aud; grand += aud; }
+          if (f.keys.includes(d.connector_key)) { counts[f.label]++; grand++; }
         });
       });
       const metricEl = document.getElementById("metric-audience");
-      if (metricEl) metricEl.textContent = grand >= 1e6 ? (grand / 1e6).toFixed(1) + "M+" : grand.toLocaleString();
+      if (metricEl) metricEl.textContent = grand > 0 ? grand.toLocaleString() + " dests" : "—";
+      const noteEl = document.getElementById("metric-audience-note");
+      if (noteEl) noteEl.textContent = "Destinations with known audience tags";
       const container = document.getElementById("audience-breakdown");
       if (!container) return;
       const bars = FAMILIES.map(f => {
-        const pct = grand > 0 ? Math.round(totals[f.label] / grand * 100) : 0;
-        const val = totals[f.label] >= 1e6 ? (totals[f.label] / 1e6).toFixed(2) + "M" : totals[f.label].toLocaleString();
+        const pct = grand > 0 ? Math.round(counts[f.label] / grand * 100) : 0;
         return `<div style="background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:8px;padding:1rem;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
             <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${f.color};"></span>
             <strong style="color:#fff;font-size:0.85rem;">${f.label}</strong>
           </div>
-          <div style="font-size:1.4rem;font-weight:800;color:#fff;">${val}</div>
-          <div style="font-size:0.75rem;color:var(--text-muted);">${pct}% of network estimate</div>
+          <div style="font-size:1.4rem;font-weight:800;color:#fff;">${counts[f.label].toLocaleString()}</div>
+          <div style="font-size:0.75rem;color:var(--text-muted);">${pct}% of catalogued destinations</div>
         </div>`;
       }).join("");
       container.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1rem;margin-top:1.2rem;">${bars}</div>`;

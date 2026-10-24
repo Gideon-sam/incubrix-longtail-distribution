@@ -248,7 +248,12 @@ async def generic_error_handler(request: Request, exc: Exception):
 async def access_token_auth(request: Request, call_next):
     """Protect /api/ and /connector/ routes if ACCESS_TOKEN is configured."""
     path = request.url.path
-    open_prefixes = ["/health", "/ready", "/docs", "/redoc", "/openapi.json", "/dashboard", "/static", "/favicon.ico"]
+    open_prefixes = [
+        "/health", "/ready", "/docs", "/redoc", "/openapi.json",
+        "/dashboard", "/static", "/favicon.ico",
+        "/api/v1/destinations", "/api/v1/connectors", "/api/v1/recommend",
+        "/api/v1/catalogue", "/api/v1/tailor",
+    ]
     is_open = path == "/" or any(path.startswith(p) for p in open_prefixes)
     referer = request.headers.get("referer", "")
 
