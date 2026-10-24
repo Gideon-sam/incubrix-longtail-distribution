@@ -38,7 +38,7 @@
       </button>
       <button class="nav-tab-btn" data-tab="tab-catalogue" title="159 Verified Destination Communities">
         <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-        <span class="tab-label" id="nav-catalogue-text">Catalogue (<span id="nav-cat-count">159</span>)</span>
+        <span class="tab-label" id="nav-catalogue-text">Catalogue (<span id="nav-cat-count">…</span>)</span>
       </button>
       <button class="nav-tab-btn" data-tab="tab-certify" title="Automated Connector Certification Lab">
         <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
@@ -50,7 +50,7 @@
     <div class="nav-right-meta">
       <div class="badge-live-beacon" id="system-beacon" style="cursor:pointer;" onclick="togglePublishMode()" title="Toggle Live Broadcast vs Dry-Run Simulation">
         <span class="pulse-dot"></span>
-        <span class="beacon-text" id="beacon-text">LIVE &bull; <span id="beacon-dest-count">159</span> DEST</span>
+        <span class="beacon-text" id="beacon-text">LIVE &bull; <span id="beacon-dest-count">…</span> DEST</span>
       </div>
       <a href="/docs" target="_blank" class="api-docs-link">
         <svg class="nav-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
@@ -96,17 +96,17 @@
       <div class="telemetry-card">
         <div class="tele-label">
           <span>Destinations</span>
-          <span style="color:var(--brand-primary-light)">● Verified</span>
+          <span style="color:var(--brand-primary-light)">● Catalogued</span>
         </div>
-        <div class="tele-val" id="metric-destinations">159</div>
+        <div class="tele-val" id="metric-destinations">…</div>
         <div class="tele-desc">Curated Publishing Communities</div>
       </div>
       <div class="telemetry-card">
         <div class="tele-label">
           <span>Audience Reach</span>
-          <span style="color:var(--ok)">● Verified</span>
+          <span style="color:var(--ok)">● Estimated</span>
         </div>
-        <div class="tele-val" id="metric-audience">14.2M+</div>
+        <div class="tele-val" id="metric-audience">…</div>
         <div class="tele-desc">Cumulative Network Audience</div>
       </div>
     </div>
@@ -142,68 +142,12 @@
       <div class="dashboard-card" style="margin-top:1.5rem;">
         <div class="card-header-row">
           <div class="card-title-group">
-            <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg> Potential Audience Reach &amp; Network Footprint</h2>
-            <p>Aggregated real-time reader reach and traffic distribution across connected long-tail networks</p>
-          </div>
-          <div style="font-family:var(--font-mono); font-size:0.85rem; color:var(--brand-cyan); font-weight:700;">
-            14,250,000+ TOTAL AUDIENCE
+            <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg> Audience Estimates</h2>
+            <p>self-reported estimate, overlapping, not measured readers</p>
           </div>
         </div>
 
-        <!-- Segmented Distribution Bar -->
-        <div style="margin: 1.5rem 0 1rem 0;">
-          <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px; font-weight:600;">
-            <span>Developer Publications (42%)</span>
-            <span>Federated Fediverse (28%)</span>
-            <span>Curated CMS &amp; Newsletters (18%)</span>
-            <span>Niche Community Forums (12%)</span>
-          </div>
-          <div style="height:12px; width:100%; border-radius:999px; overflow:hidden; display:flex; gap:3px; background:rgba(255,255,255,0.05);">
-            <div style="width:42%; background:linear-gradient(90deg, #6366f1, #818cf8);" title="Developer Publications: 5.9M"></div>
-            <div style="width:28%; background:linear-gradient(90deg, #06b6d4, #22d3ee);" title="Federated Fediverse: 3.9M"></div>
-            <div style="width:18%; background:linear-gradient(90deg, #10b981, #34d399);" title="Curated CMS &amp; Newsletters: 2.5M"></div>
-            <div style="width:12%; background:linear-gradient(90deg, #f59e0b, #fbbf24);" title="Specialized Discourse Forums: 1.9M"></div>
-          </div>
-        </div>
-
-        <!-- 4 Sub-Network Cards -->
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap:1rem; margin-top:1.2rem;">
-          <div style="background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:8px; padding:1rem;">
-            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-              <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#6366f1;"></span>
-              <strong style="color:#fff; font-size:0.85rem;">Dev Publications</strong>
-            </div>
-            <div style="font-size:1.4rem; font-weight:800; color:#fff;">5.98M</div>
-            <div style="font-size:0.75rem; color:var(--text-muted);">Dev.to, Hashnode, Tech Blogs</div>
-          </div>
-
-          <div style="background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:8px; padding:1rem;">
-            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-              <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#06b6d4;"></span>
-              <strong style="color:#fff; font-size:0.85rem;">Federated Fediverse</strong>
-            </div>
-            <div style="font-size:1.4rem; font-weight:800; color:#fff;">3.99M</div>
-            <div style="font-size:0.75rem; color:var(--text-muted);">Lemmy, PeerTube ActivityPub</div>
-          </div>
-
-          <div style="background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:8px; padding:1rem;">
-            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-              <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#10b981;"></span>
-              <strong style="color:#fff; font-size:0.85rem;">Curated CMS &amp; Newsletters</strong>
-            </div>
-            <div style="font-size:1.4rem; font-weight:800; color:#fff;">2.56M</div>
-            <div style="font-size:0.75rem; color:var(--text-muted);">Ghost 5, Webhook Endpoints</div>
-          </div>
-
-          <div style="background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:8px; padding:1rem;">
-            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-              <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#f59e0b;"></span>
-              <strong style="color:#fff; font-size:0.85rem;">Niche Communities</strong>
-            </div>
-            <div style="font-size:1.4rem; font-weight:800; color:#fff;">1.72M</div>
-            <div style="font-size:0.75rem; color:var(--text-muted);">Discourse, MRSS Syndication</div>
-          </div>
-        </div>
+        <div id="audience-breakdown"></div>
       </div>
     </div>
 
@@ -360,7 +304,7 @@ Learn more at https://incubrix.com</textarea>
             <div style="margin-top:1.2rem; display:flex; gap:10px; align-items:center; flex-wrap:wrap; border-top:1px solid var(--border); padding-top:1rem;">
               <button type="button" class="btn-secondary" id="btn-replay-idem" onclick="replayLastPublish()" style="border-color:var(--ok); color:var(--ok);" title="Resend identical Idempotency-Key to verify zero duplicate creation">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
-                🔁 Replay Same Request (Verify Idempotency)
+                 Replay Same Request (Verify Idempotency)
               </button>
               <button type="button" class="btn-secondary" id="btn-unpublish-last" onclick="unpublishLastPost()" style="border-color:var(--danger); color:var(--danger);" title="Unpublish and delete this post from the destination">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
@@ -420,7 +364,7 @@ Learn more at https://incubrix.com</textarea>
       <div class="dashboard-card">
         <div class="card-title-group" style="margin-bottom:1.5rem;">
           <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg> Gemini AI Intelligent Matcher</h2>
-          <p>Analyzes your content snippet and scores all 159 verified long-tail destinations based on audience resonance, format fit, and posting rules</p>
+          <p>Analyzes your content snippet and scores all catalogued long-tail destinations based on audience resonance, format fit, and posting rules</p>
         </div>
 
         <form id="recommend-form" onsubmit="handleRecommend(event)">
@@ -502,7 +446,7 @@ Learn more at https://incubrix.com</textarea>
         
         <div class="card-header-row">
           <div class="card-title-group">
-            <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Verified Community Catalogue (<span id="cat-header-count">1,906</span> Destinations)</h2>
+            <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Community Catalogue (<span id="cat-header-count">…</span> Destinations)</h2>
             <p>Researched destinations with community rules, audience taxonomy, and certification levels</p>
           </div>
           <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -995,9 +939,46 @@ Learn more at https://incubrix.com</textarea>
         
         populatePublishDropdown(allDestinations);
         renderCatalogueTable(allDestinations);
+        renderAudience(allDestinations);
       } catch (err) {
         console.error("Error loading destinations:", err);
       }
+    }
+
+    function renderAudience(dests) {
+      const FAMILIES = [
+        { label: "Dev Publications", keys: ["devto", "hashnode"], color: "#6366f1" },
+        { label: "Federated Fediverse", keys: ["lemmy", "peertube"], color: "#06b6d4" },
+        { label: "CMS & Newsletters", keys: ["ghost", "hmac_webhook"], color: "#10b981" },
+        { label: "Community Forums", keys: ["discourse", "mrss"], color: "#f59e0b" },
+        { label: "Assisted", keys: ["assisted"], color: "#a855f7" },
+      ];
+      const totals = {};
+      let grand = 0;
+      FAMILIES.forEach(f => { totals[f.label] = 0; });
+      dests.forEach(d => {
+        const aud = parseInt(d.est_audience) || 0;
+        FAMILIES.forEach(f => {
+          if (f.keys.includes(d.connector_key)) { totals[f.label] += aud; grand += aud; }
+        });
+      });
+      const metricEl = document.getElementById("metric-audience");
+      if (metricEl) metricEl.textContent = grand >= 1e6 ? (grand / 1e6).toFixed(1) + "M+" : grand.toLocaleString();
+      const container = document.getElementById("audience-breakdown");
+      if (!container) return;
+      const bars = FAMILIES.map(f => {
+        const pct = grand > 0 ? Math.round(totals[f.label] / grand * 100) : 0;
+        const val = totals[f.label] >= 1e6 ? (totals[f.label] / 1e6).toFixed(2) + "M" : totals[f.label].toLocaleString();
+        return `<div style="background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:8px;padding:1rem;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${f.color};"></span>
+            <strong style="color:#fff;font-size:0.85rem;">${f.label}</strong>
+          </div>
+          <div style="font-size:1.4rem;font-weight:800;color:#fff;">${val}</div>
+          <div style="font-size:0.75rem;color:var(--text-muted);">${pct}% of network estimate</div>
+        </div>`;
+      }).join("");
+      container.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1rem;margin-top:1.2rem;">${bars}</div>`;
     }
 
     function populatePublishDropdown(destinations) {

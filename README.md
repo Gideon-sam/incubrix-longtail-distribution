@@ -88,15 +88,12 @@ Mainstream social platforms gate audience access through volatile recommendation
 
 ---
 
-## Potential Audience Reach & Network Footprint
+## Audience Estimates
 
-Real-time aggregated audience reach accessible across indexed long-tail communities:
-
-- Total Cumulative Audience Reach: 14,250,000+ Verified Readers
-- Developer Publications: 5.98M Readers (42%) - Dev.to, Hashnode, specialized engineering blogs
-- Federated Fediverse: 3.99M Readers (28%) - Lemmy communities, PeerTube ActivityPub nodes
-- Curated CMS & Newsletters: 2.56M Readers (18%) - Ghost publication networks, partner digests
-- Specialized Discussion Forums: 1.71M Readers (12%) - High-intent technical Discourse communities
+Self-reported, community-stated audience figures summed across catalogued destinations.
+These numbers are **overlapping and not independently measured** — treat them as rough order-of-magnitude
+estimates, not verified reach. The dashboard computes totals dynamically from `est_audience` fields
+in the catalogue; per-connector-family breakdowns are shown in the Overview tab.
 
 ---
 
