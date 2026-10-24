@@ -38,7 +38,7 @@ from connectors.registry import discover_connectors
 
 from api.routers import (
     health, jobs, connector_runtime, publish, destinations, certify, catalogue,
-    recommend as recommend_router, tailor, alerts, metrics
+    recommend as recommend_router, tailor, alerts, metrics, audience
 )
 from api.services.recovery import recover_stuck_jobs, run_cleanup_janitor
 
@@ -252,7 +252,7 @@ async def access_token_auth(request: Request, call_next):
         "/health", "/ready", "/docs", "/redoc", "/openapi.json",
         "/dashboard", "/static", "/favicon.ico",
         "/api/v1/destinations", "/api/v1/connectors", "/api/v1/recommend",
-        "/api/v1/catalogue", "/api/v1/tailor",
+        "/api/v1/catalogue", "/api/v1/tailor", "/api/v1/audience",
     ]
     is_open = path == "/" or any(path.startswith(p) for p in open_prefixes)
     referer = request.headers.get("referer", "")
@@ -290,6 +290,7 @@ app.include_router(recommend_router.router)
 app.include_router(tailor.router)
 app.include_router(alerts.router)
 app.include_router(metrics.router)
+app.include_router(audience.router)
 
 # ── Static files & UI ────────────────────────────────────────
 

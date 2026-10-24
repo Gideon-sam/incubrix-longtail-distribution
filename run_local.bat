@@ -25,7 +25,7 @@ echo [2/3] Launching local FastAPI service via Python venv...
 set DATABASE_URL=sqlite+aiosqlite:///./incubrix_local.db
 set REDIS_URL=redis://localhost:6379/0
 set SIMULATION_MODE=true
-set LLM_PROVIDER=mock
+set LLM_PROVIDER=gemini
 
 if exist ".\.venv\Scripts\python.exe" (
     echo [3/3] Starting server on http://localhost:8000 ...

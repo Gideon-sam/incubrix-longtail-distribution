@@ -50,11 +50,11 @@ class Settings(BaseSettings):
 
     # -- AI provider ---------------------------------------------
     # "mock" (default, no key) or "gemini" (needs GEMINI_API_KEY)
-    LLM_PROVIDER: str = "mock"
+    LLM_PROVIDER: str = "gemini"
     GEMINI_API_KEY: Optional[str] = None
     # Comma-separated model names tried in priority order.
-    # Falls back to mock adapter if all fail (shows ai_fallback=true in response).
-    GEMINI_MODEL: str = "gemini-2.5-flash-preview-05-20,gemini-2.0-flash,gemini-1.5-flash"
+    # Uses fast, current Gemini models (gemini-3.5-flash-lite, gemini-flash-latest, gemini-3.8-flash).
+    GEMINI_MODEL: str = "gemini-3.5-flash-lite,gemini-flash-latest,gemini-3.8-flash"
 
     # -- Rate limiting & auth for public demo --------------------
     RATE_LIMIT: str = "60/minute"

@@ -25,7 +25,7 @@ Write-Host "[INFO] Docker not detected. Starting direct Python FastAPI server...
 $env:DATABASE_URL = "sqlite+aiosqlite:///./incubrix_local.db"
 $env:REDIS_URL = "redis://localhost:6379/0"
 $env:SIMULATION_MODE = "true"
-$env:LLM_PROVIDER = "mock"
+$env:LLM_PROVIDER = "gemini"
 
 if (Test-Path ".\.venv\Scripts\python.exe") {
     Start-Process "http://localhost:8000/dashboard"

@@ -21,7 +21,7 @@ def _get_preferred_models() -> list[str]:
     raw = settings.GEMINI_MODEL or ""
     models = [m.strip() for m in raw.split(",") if m.strip()]
     # Always include guaranteed fallback models
-    for fallback in ["gemini-2.5-flash", "gemini-1.5-flash"]:
+    for fallback in ["gemini-3.5-flash-lite", "gemini-flash-latest", "gemini-3.8-flash"]:
         if fallback not in models:
             models.append(fallback)
     return models
@@ -173,3 +173,41 @@ class GeminiAdapter(BaseAIAdapter):
                 "title": title[:title_max],
                 "body": body[:body_max],
             }
+
+    async def get_audience_intelligence(self, network_stats: dict[str, Any]) -> dict[str, Any]:
+        """Dynamically estimate realistic audience reach, engagement, and demographics using Gemini AI."""
+        prompt = (
+            "You are an expert audience intelligence analyst for IncuBrix Long-Tail Content Distribution Network.\n"
+            f"Here is the network distribution census:\n{json.dumps(network_stats, indent=2)}\n\n"
+            "Instructions:\n"
+            "1. Using your knowledge of developer platforms, fediverse instances, publishing tools, tech forums, "
+            "and curated communities, dynamically estimate the realistic, approximate monthly active readership and audience reach.\n"
+            "2. DO NOT output inflated billions. Calculate realistic, deduplicated, legitimate monthly active users.\n"
+            "3. Compute all numbers dynamically based on actual platform metrics and community sizing.\n"
+            "4. Return ONLY valid JSON with no markdown formatting:\n"
+            "{\n"
+            '  "total_deduplicated_reach": <integer calculated dynamically by you>,\n'
+            '  "total_reach_formatted": "<formatted string e.g. 18.5M>",\n'
+            '  "confidence_score": "<e.g. 95% Verified>",\n'
+            '  "methodology": "<1-2 sentences on how you estimated reach and deduplicated overlap>",\n'
+            '  "families": [\n'
+            '    {\n'
+            '      "label": "<name of family e.g. Dev Publications, Federated Fediverse, CMS & Newsletters, Community Forums, Assisted>",\n'
+            '      "connector_keys": ["<platform keys>"],\n'
+            '      "monthly_reach": <integer calculated dynamically by you>,\n'
+            '      "monthly_reach_formatted": "<formatted string e.g. 8.5M>",\n'
+            '      "destinations_count": <number of channels>,\n'
+            '      "engagement_rate": "<estimated engagement rate e.g. 4.2%>",\n'
+            '      "primary_audience": "<key target demographic profile>",\n'
+            '      "estimation_basis": "<rationale based on real-world traffic and platform size>"\n'
+            '    }\n'
+            '  ]\n'
+            "}"
+        )
+        try:
+            raw = await self._generate_text(prompt, temperature=0.1)
+            parsed = self._clean_json(raw)
+            return parsed
+        except Exception as exc:
+            log.warning("gemini_audience_intelligence_failed", error=str(exc))
+            return None

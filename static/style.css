@@ -1351,3 +1351,185 @@ footer.app-footer a {
     transform: none;
   }
 }
+
+/* =============================================================================
+   FUTURISTIC UI ENHANCEMENTS — Publishing Studio & Global
+   ============================================================================= */
+
+/* Animated cyber-grid background layer */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(99,102,241,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99,102,241,0.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+  z-index: 0;
+  animation: gridDrift 40s linear infinite;
+}
+@keyframes gridDrift {
+  from { background-position: 0 0; }
+  to   { background-position: 48px 48px; }
+}
+
+/* Glowing border on focused inputs */
+.form-input:focus, .form-textarea:focus, .form-select:focus {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.18), 0 0 20px rgba(99,102,241,0.12);
+}
+
+/* Scanline overlay on console terminal */
+.console-terminal {
+  position: relative;
+}
+.console-terminal::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 2px,
+    rgba(0,0,0,0.06) 2px,
+    rgba(0,0,0,0.06) 4px
+  );
+  pointer-events: none;
+  border-radius: inherit;
+  z-index: 1;
+  animation: scanMove 8s linear infinite;
+}
+@keyframes scanMove {
+  from { background-position: 0 0; }
+  to   { background-position: 0 40px; }
+}
+
+/* Active cursor blink in console */
+#console-logs::after {
+  content: '█';
+  animation: blink 1.1s step-end infinite;
+  color: var(--brand-cyan);
+  font-size: 0.8rem;
+  display: inline;
+}
+@keyframes blink {
+  0%,100% { opacity: 1; }
+  50%      { opacity: 0; }
+}
+
+/* Studio mode buttons active state */
+#mode-sim-btn.active-mode {
+  background: linear-gradient(135deg, rgba(245,158,11,0.3), rgba(245,158,11,0.1)) !important;
+  border-color: rgba(245,158,11,0.6) !important;
+  color: #f59e0b !important;
+  box-shadow: 0 0 18px rgba(245,158,11,0.2);
+}
+#mode-live-btn.active-mode {
+  background: linear-gradient(135deg, rgba(99,102,241,0.35), rgba(0,242,254,0.15)) !important;
+  border-color: rgba(99,102,241,0.6) !important;
+  color: #fff !important;
+  box-shadow: 0 0 18px rgba(99,102,241,0.25);
+}
+
+/* Destination meta info strip */
+#dest-meta-strip {
+  animation: fadeIn 0.25s ease;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+#dest-meta-strip span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.76rem;
+  padding: 3px 9px;
+  border-radius: 5px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+}
+#dest-meta-strip span strong {
+  color: var(--brand-cyan);
+}
+
+/* Telemetry card shimmer on load */
+@keyframes shimmerLoad {
+  0%   { opacity: 0.4; transform: translateY(4px); }
+  100% { opacity: 1;   transform: translateY(0); }
+}
+.telemetry-card {
+  animation: shimmerLoad 0.5s ease both;
+}
+.telemetry-card:nth-child(2) { animation-delay: 0.08s; }
+.telemetry-card:nth-child(3) { animation-delay: 0.16s; }
+
+/* Connector cards stagger */
+.connector-card {
+  animation: shimmerLoad 0.4s ease both;
+}
+
+/* Glow on log success lines */
+.log-entry.log-success {
+  text-shadow: 0 0 8px rgba(16,185,129,0.4);
+}
+.log-entry.log-warn {
+  text-shadow: 0 0 8px rgba(245,158,11,0.3);
+}
+.log-entry.log-error {
+  text-shadow: 0 0 8px rgba(239,68,68,0.35);
+}
+
+/* Recommendation cards — score ring */
+.rec-score-ring {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: conic-gradient(var(--brand-primary) var(--pct, 0%), rgba(255,255,255,0.05) 0%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.8rem;
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 0 12px rgba(99,102,241,0.3);
+  position: relative;
+}
+.rec-score-ring::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  background: var(--surface);
+}
+.rec-score-ring span {
+  position: relative;
+  z-index: 1;
+}
+
+/* Publish result SUCCESS glow */
+#publish-result-box {
+  border-color: rgba(16,185,129,0.35) !important;
+  box-shadow: 0 0 30px rgba(16,185,129,0.1);
+}
+
+/* Tab active glow */
+.nav-tab-btn.active {
+  box-shadow: 0 2px 14px rgba(99,102,241,0.25), inset 0 0 0 1px rgba(99,102,241,0.4);
+}
+
+/* Hover row highlight in tables */
+table.data-table tr:hover td {
+  background: rgba(99,102,241,0.04);
+}
+
+/* Scrollbar futuristic */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--brand-primary), var(--brand-cyan));
+  border-radius: 99px;
+}
+
