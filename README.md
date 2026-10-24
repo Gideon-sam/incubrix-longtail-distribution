@@ -247,6 +247,35 @@ All error responses strictly adhere to the standard IncuBrix error envelope:
 
 ---
 
+## Simulation Mode vs Real Mode
+
+| Aspect | Simulation (default) | Real Mode |
+|--------|---------------------|-----------|
+| Default | `SIMULATION_MODE=true` — no real posts sent | `SIMULATION_MODE=false` |
+| Scope | All connectors return a synthetic `platform_post_id` prefixed `*-sim-*` | Requires real credentials in `.env` |
+| Local instances | Lemmy and Ghost run locally via `docker compose up`; set `SIMULATION_MODE=false` for those two only | Per-connection override below |
+| Per-request override | Set `connection.extra.simulation=false` in the publish payload to force a real post for a single request | Overrides the service-level flag |
+| Allowed hosts | `ALLOWED_AUTOMATED_HOSTS` env var (comma-separated) controls which hostnames accept automated posts in real mode; requests to other hosts are rejected | Prevents accidental posts to real communities |
+| Frequency cap | The frequency cap is enforced in **both** simulation and real mode. Simulated posts count toward the cap identically to live posts. | Prevents testing from exhausting production caps |
+
+**Setting real mode for Lemmy + Ghost only (recommended local setup):**
+
+```env
+# .env — keep SIMULATION_MODE=true globally
+SIMULATION_MODE=true
+ALLOWED_AUTOMATED_HOSTS=localhost,127.0.0.1
+```
+
+Then override per-request:
+```json
+{
+  "destination_id": "dest-lemmy-01",
+  "connection": { "extra": { "simulation": false } }
+}
+```
+
+---
+
 ## Technical Governance
 
 - Codebase Language: Python 3.12, FastAPI, AsyncPG, Redis, SQLAlchemy
