@@ -1533,3 +1533,59 @@ table.data-table tr:hover td {
   border-radius: 99px;
 }
 
+/* ── Interactive Visual Analytics & Charts ─────────────────────────────── */
+.analytics-visual-grid {
+  display: grid;
+  grid-template-columns: minmax(320px, 420px) 1fr;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+  align-items: stretch;
+}
+
+@media (max-width: 960px) {
+  .analytics-visual-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.btn-chart-tab {
+  padding: 6px 14px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: var(--font-sans);
+}
+
+.btn-chart-tab:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.btn-chart-tab.active {
+  background: var(--surface-active);
+  color: var(--brand-cyan);
+  box-shadow: 0 2px 8px rgba(0, 242, 254, 0.2);
+}
+
+.audience-family-card {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.audience-family-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(99, 102, 241, 0.45) !important;
+  box-shadow: 0 12px 25px -8px rgba(0, 0, 0, 0.6), 0 0 15px rgba(0, 242, 254, 0.15);
+}
+
+.audience-family-card.active-segment {
+  border-color: var(--brand-cyan) !important;
+  background: rgba(0, 242, 254, 0.05) !important;
+  box-shadow: 0 0 20px rgba(0, 242, 254, 0.25);
+}
+
