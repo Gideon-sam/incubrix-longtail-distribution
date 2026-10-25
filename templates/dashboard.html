@@ -153,7 +153,7 @@
             </p>
           </div>
           <button class="btn-primary" id="btn-refresh-audience" onclick="refreshAudienceWithGemini(true)" style="font-size:0.8rem;padding:7px 16px;white-space:nowrap;" title="Trigger a live call to Google Gemini API to audit current network reach">
-            ✨ Audit Live with Gemini AI
+            AI Audit Network
           </button>
         </div>
 
@@ -179,7 +179,7 @@
               Distribution Engine &middot; IncuBrix v1.0
             </div>
             <h2 style="font-size:1.5rem;font-weight:800;color:#fff;letter-spacing:-0.025em;margin:0 0 6px;">
-              &#x1F680; Multi-Destination Publishing Studio
+              Multi-Destination Publishing Studio
             </h2>
             <p style="font-size:0.85rem;color:var(--text-secondary);margin:0;">
               Write once &rarr; broadcast to <strong style="color:var(--brand-cyan);" id="studio-dest-count">all</strong> catalogued communities &middot; Rules &middot; Idempotency &middot; AI Tailoring
@@ -187,10 +187,10 @@
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
             <button class="btn-secondary" onclick="triggerPolicyViolationDemo()" style="border-color:var(--warn);color:var(--warn);font-size:0.8rem;" title="Demo rule enforcement">
-              &#x1F6E1;&#xFE0F; Policy Demo
+              Policy Violation Demo
             </button>
             <button class="btn-secondary" onclick="loadSampleContent()" style="font-size:0.8rem;">
-              &#x1F4DD; Sample Article
+              Load Sample Article
             </button>
           </div>
         </div>
@@ -205,12 +205,12 @@
             <button type="button" id="mode-sim-btn"
               style="flex:1;padding:10px;font-size:0.82rem;font-weight:700;border-radius:7px;cursor:pointer;border:1px solid rgba(245,158,11,0.5);background:linear-gradient(135deg,rgba(245,158,11,0.2),rgba(245,158,11,0.07));color:#f59e0b;font-family:var(--font-sans);transition:all 0.2s;"
               onclick="setPublishMode('sim')">
-              &#x1F9EA; Simulation <span style="font-size:0.72rem;opacity:0.75;">(Safe dry-run)</span>
+              Simulation Mode <span style="font-size:0.72rem;opacity:0.75;">(Safe dry-run)</span>
             </button>
             <button type="button" id="mode-live-btn"
               style="flex:1;padding:10px;font-size:0.82rem;font-weight:700;border-radius:7px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-family:var(--font-sans);transition:all 0.2s;"
               onclick="setPublishMode('live')">
-              &#x26A1; Live Broadcast <span style="font-size:0.72rem;opacity:0.75;">(Real APIs)</span>
+              Live Broadcast <span style="font-size:0.72rem;opacity:0.75;">(Real APIs)</span>
             </button>
           </div>
 
@@ -348,7 +348,7 @@ Learn more at https://incubrix.com</textarea>
               <div style="display:flex; justify-content:space-between; padding-top:4px;">
                 <span style="color:var(--text-secondary)">Evidence Manifest:</span>
                 <a id="res-manifest-download" href="#" target="_blank" style="color:var(--ok); font-weight:600; text-decoration:none;">
-                  📥 Download MinIO Manifest (.json) ↗
+                  Download MinIO Manifest (.json) &#x2197;
                 </a>
               </div>
             </div>
@@ -360,7 +360,7 @@ Learn more at https://incubrix.com</textarea>
               </button>
               <button type="button" class="btn-secondary" id="btn-unpublish-last" onclick="unpublishLastPost()" style="border-color:var(--danger); color:var(--danger);" title="Unpublish and delete this post from the destination">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                🗑 Unpublish / Delete from Destination
+                Unpublish / Delete from Destination
               </button>
               <span id="replay-badge" style="display:none;" class="badge-ok">VERIFIED IDEMPOTENT (NO DUPLICATE)</span>
             </div>
@@ -1093,7 +1093,7 @@ Learn more at https://incubrix.com</textarea>
         }
 
         if (forceLive) {
-          showToast(`✨ Live Gemini AI Audit complete! Network reach: ${data.total_reach_formatted}`, "success");
+          showToast(`Gemini AI Audit complete. Network reach: ${data.total_reach_formatted}`, "success");
         }
       } catch (err) {
         console.error("Audience intelligence error:", err);
@@ -1103,7 +1103,7 @@ Learn more at https://incubrix.com</textarea>
       } finally {
         if (btn) {
           btn.disabled = false;
-          btn.innerHTML = `✨ Audit Live with Gemini AI`;
+          btn.innerHTML = `AI Audit Network`;
         }
       }
     }
@@ -1230,7 +1230,7 @@ Learn more at https://incubrix.com</textarea>
           beaconBox.style.background = "rgba(34, 197, 94, 0.1)";
           beaconBox.style.color = "var(--ok)";
         }
-        showToast("⚡ Switched to Live Broadcast Mode (Ghost, Lemmy & Real APIs)", "success");
+        showToast("Switched to Live Broadcast Mode (Real APIs active)", "success");
       } else {
         if (liveBtn) liveBtn.className = "btn-secondary";
         if (simBtn) simBtn.className = "btn-primary";
@@ -1243,7 +1243,7 @@ Learn more at https://incubrix.com</textarea>
           beaconBox.style.background = "rgba(245, 158, 11, 0.1)";
           beaconBox.style.color = "var(--warn)";
         }
-        showToast("🧪 Switched to Safe Dry-Run Simulation Mode", "info");
+        showToast("Switched to Safe Dry-Run Simulation Mode", "info");
       }
     }
 
@@ -1300,7 +1300,7 @@ Learn more at https://incubrix.com</textarea>
       if (destSelect) {
         destSelect.value = noPromoDest.id;
       }
-      document.getElementById("pub-title").value = "🔥 LIMITED DEAL: Buy Lifetime Pro Access Now!";
+      document.getElementById("pub-title").value = "[PROMO] LIMITED DEAL: Buy Lifetime Pro Access Now!";
       document.getElementById("pub-body").value = "Check out our commercial SaaS deal! Get 50% off with promo code SAVE50 at https://commercial-promo.example.com/discount! Don't miss this exclusive sponsored discount offer.";
       initTitleCounter();
 
@@ -1475,7 +1475,7 @@ Learn more at https://incubrix.com</textarea>
             const errMsg = job.error?.message || job.error_message || "Execution failed";
             appendLog(`[ERROR] Execution failed: ${errCode} — ${errMsg}`, "error");
             if (errCode === "DEST_RULE_SELF_PROMO") {
-              appendLog(`[RULES ENGINE] ⛔ Self-promotional links rejected by community anti-spam filter.`, "warn");
+              appendLog(`[RULES ENGINE] BLOCKED: Self-promotional links rejected by community anti-spam filter.`, "warn");
               appendLog(`[RECOVERY ADVICE] Revise content body to remove direct sales pitch/discount links before resubmitting.`, "info");
             }
             showToast(`Failed: ${errMsg}`, "error");
@@ -1586,7 +1586,7 @@ Learn more at https://incubrix.com</textarea>
             <span style="font-size:0.75rem; color:var(--ok);">● Rules Compatible</span>
             <button class="btn-primary" style="padding:6px 14px; font-size:0.76rem;" 
                     onclick="useInPublishing('${r.destination_id}', '${destSafeName}')">
-              🚀 Select &amp; Transfer to Studio
+              Select &amp; Transfer to Studio
             </button>
           </div>
         `;
@@ -1638,7 +1638,8 @@ Learn more at https://incubrix.com</textarea>
         const aud = parseInt(d.est_audience) || 0;
         const audStr = aud >= 1e6 ? (aud/1e6).toFixed(1)+"M" : aud >= 1e3 ? (aud/1e3).toFixed(0)+"K" : aud > 0 ? aud.toLocaleString() : "—";
         const score = parseFloat(d.relevance_score);
-        const scoreStars = isNaN(score) ? "—" : "★".repeat(Math.round(score)) + "☆".repeat(5 - Math.round(score));
+        const scoreRaw = isNaN(score) ? 0 : Math.round(score);
+        const scoreStars = isNaN(score) ? "—" : (scoreRaw + "/5");
         const scoreColor = score >= 4 ? "var(--ok)" : score >= 3 ? "var(--warn)" : "var(--text-muted)";
         const levelColor = d.level === "L4" || d.level === "L3" ? "var(--ok)" : d.level === "L2" ? "var(--brand-cyan)" : "var(--text-muted)";
         const safeName = (d.name || "").replace(/'/g, "\\'");
@@ -1654,14 +1655,14 @@ Learn more at https://incubrix.com</textarea>
           <td><span class="chip chip-tier">${d.surface}</span></td>
           <td style="font-family:var(--font-mono);font-size:0.82rem;color:var(--text-secondary);">${audStr}</td>
           <td><code style="font-size:0.78rem;">${d.frequency_cap || 'None'}</code></td>
-          <td>${d.self_promo_allowed ? '<span style="color:var(--ok);font-weight:600;">✓ Yes</span>' : '<span style="color:var(--danger);font-weight:600;">✗ No</span>'}</td>
+          <td>${d.self_promo_allowed ? '<span style="color:var(--ok);font-weight:600;">Yes</span>' : '<span style="color:var(--danger);font-weight:600;">No</span>'}</td>
           <td style="color:${scoreColor};font-size:0.8rem;letter-spacing:1px;" title="Relevance: ${score || 'N/A'}/5">${scoreStars}</td>
           <td><span class="chip" style="background:rgba(255,255,255,0.04);color:${levelColor};border:1px solid ${levelColor};">${d.level || 'L0'}</span></td>
           <td>
             <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;">
               <button class="ping-btn" onclick="useInPublishing('${d.id}','${safeName}')" title="Use in Publishing Studio">Publish</button>
               <button class="ping-btn" style="background:rgba(99,102,241,0.15);color:var(--brand-primary-light);" onclick="certifyDestination('${d.id}','${d.connector_key}')" title="Run certification for this destination">Certify</button>
-              <button type="button" style="background:none;border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:4px;padding:3px 7px;font-size:0.72rem;cursor:pointer;" onclick="deleteDestination('${d.id}','${safeName}')" title="Delete">✕</button>
+              <button type="button" style="background:none;border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:4px;padding:3px 7px;font-size:0.72rem;cursor:pointer;" onclick="deleteDestination('${d.id}','${safeName}')" title="Delete">Del</button>
             </div>
           </td>
         `;
@@ -2029,7 +2030,7 @@ Learn more at https://incubrix.com</textarea>
         if (data.deleted) {
           showToast(`Successfully unpublished post from ${platformKey}!`, "success");
           if (btn) {
-            btn.innerHTML = `✓ Post Deleted`;
+            btn.innerHTML = `Post Deleted`;
             btn.style.color = "var(--ok)";
             btn.style.borderColor = "var(--ok)";
           }
@@ -2048,7 +2049,7 @@ Learn more at https://incubrix.com</textarea>
         showToast(`Failed to unpublish: ${err.message}`, "error");
         if (btn) {
           btn.disabled = false;
-          btn.innerHTML = `🗑 Unpublish / Delete from Destination`;
+          btn.innerHTML = `Unpublish / Delete from Destination`;
         }
       }
     }
