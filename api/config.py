@@ -36,11 +36,11 @@ class Settings(BaseSettings):
     )
     DATABASE_ECHO: bool = False
 
-    # -- Redis (job queue + idempotency cache) -------------------
-    REDIS_URL: str = "redis://redis:6379/0"
+    # -- Redis (job queue + idempotency cache; optional locally) ------
+    REDIS_URL: Optional[str] = None  # empty/None = in-memory fallback
 
     # -- MinIO (S3-compatible storage for outputs/evidence) ------
-    MINIO_ENDPOINT: str = "minio:9000"
+    MINIO_ENDPOINT: Optional[str] = None  # empty/None = skip MinIO
     MINIO_ROOT_USER: str = "incubrix"
     MINIO_ROOT_PASSWORD: str = "incubrix_secret"
     MINIO_ACCESS_KEY: str = "incubrix"
@@ -93,7 +93,12 @@ class Settings(BaseSettings):
 
     MRSS_OUTPUT_DIR: str = "/app/outputs/mrss"
 
-    model_config = {"env_file": ".env", "case_sensitive": True, "extra": "ignore"}
+    model_config = {
+        "env_file": [".env.local", ".env"],  # .env.local wins over .env
+        "env_file_encoding": "utf-8",
+        "case_sensitive": True,
+        "extra": "ignore",
+    }
 
 
 # Singleton — import this everywhere

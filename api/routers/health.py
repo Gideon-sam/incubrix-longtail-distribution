@@ -44,15 +44,19 @@ async def ready(db: AsyncSession = Depends(get_db)):
     except Exception as e:
         checks["postgres"] = f"error: {e}"
 
-    # 2. Check Redis
-    try:
-        import redis.asyncio as aioredis
-        r = aioredis.from_url(settings.REDIS_URL, socket_connect_timeout=2)
-        await r.ping()
-        await r.aclose()
-        checks["redis"] = "ok"
-    except Exception as e:
-        checks["redis"] = f"error: {e}"
+    # 2. Check Redis (only if configured)
+    redis_url = settings.REDIS_URL
+    if redis_url and redis_url.strip():
+        try:
+            import redis.asyncio as aioredis
+            r = aioredis.from_url(redis_url, socket_connect_timeout=2)
+            await r.ping()
+            await r.aclose()
+            checks["redis"] = "ok"
+        except Exception as e:
+            checks["redis"] = f"error: {e}"
+    else:
+        checks["redis"] = "not_configured (in-memory fallback)"
 
     # 3. Check MinIO (Phase 3 #8 requirement)
     try:

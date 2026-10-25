@@ -165,8 +165,13 @@ async def run_scheduler(db_url: str):
         return
     _scheduler_running = True
 
-    engine = create_async_engine(db_url)
-    session_factory = async_sessionmaker(engine, expire_on_commit=False)
+    try:
+        engine = create_async_engine(db_url)
+        session_factory = async_sessionmaker(engine, expire_on_commit=False)
+    except Exception as e:
+        log.error("recert_scheduler_engine_error", error=str(e))
+        _scheduler_running = False
+        return
 
     log.info("recert_scheduler_started", interval_hours=6)
 
@@ -180,3 +185,4 @@ async def run_scheduler(db_url: str):
             log.error("recert_scheduler_error", error=str(e))
 
         await asyncio.sleep(6 * 3600)
+
