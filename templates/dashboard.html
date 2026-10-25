@@ -6,7 +6,7 @@
   <title>IncuBrix | Create With Purpose. Publish Without Limits.</title>
   <link rel="icon" type="image/png" href="/static/favicon.png">
   <link rel="shortcut icon" href="/favicon.ico">
-  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/style.css?v=2.2">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -154,10 +154,10 @@
             </p>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-            <div style="display:inline-flex;background:rgba(0,0,0,0.3);padding:3px;border-radius:8px;border:1px solid var(--border-subtle);">
-              <button type="button" id="btn-chart-audience" class="btn-chart-tab active" onclick="switchVisualReport('audience')">Audience Share (Pie)</button>
-              <button type="button" id="btn-chart-surface" class="btn-chart-tab" onclick="switchVisualReport('surface')">Channel Surfaces</button>
-              <button type="button" id="btn-chart-engagement" class="btn-chart-tab" onclick="switchVisualReport('engagement')">Engagement Matrix</button>
+            <div style="display:inline-flex;background:rgba(0,0,0,0.3);padding:3px;border-radius:8px;border:1px solid var(--border-subtle);gap:2px;">
+              <button type="button" id="btn-chart-audience" class="btn-chart-tab active" onclick="switchVisualReport('audience')" style="border:none;outline:none;cursor:pointer;padding:6px 14px;border-radius:6px;font-size:0.75rem;font-weight:700;font-family:var(--font-sans);">Audience Share (Pie)</button>
+              <button type="button" id="btn-chart-surface" class="btn-chart-tab" onclick="switchVisualReport('surface')" style="border:none;outline:none;cursor:pointer;padding:6px 14px;border-radius:6px;font-size:0.75rem;font-weight:700;font-family:var(--font-sans);">Channel Surfaces</button>
+              <button type="button" id="btn-chart-engagement" class="btn-chart-tab" onclick="switchVisualReport('engagement')" style="border:none;outline:none;cursor:pointer;padding:6px 14px;border-radius:6px;font-size:0.75rem;font-weight:700;font-family:var(--font-sans);">Engagement Matrix</button>
             </div>
             <button class="btn-secondary" onclick="exportIntelligenceReport()" style="font-size:0.75rem;padding:6px 12px;display:inline-flex;align-items:center;gap:6px;" title="Export structured intelligence report as JSON">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export Report
