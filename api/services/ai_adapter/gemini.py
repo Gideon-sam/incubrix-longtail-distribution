@@ -20,8 +20,13 @@ def _get_preferred_models() -> list[str]:
     """Load model list from GEMINI_MODEL env var, fall back to known-good models."""
     raw = settings.GEMINI_MODEL or ""
     models = [m.strip() for m in raw.split(",") if m.strip()]
-    # Always include guaranteed fallback models
-    for fallback in ["gemini-3.5-flash-lite", "gemini-flash-latest", "gemini-3.8-flash"]:
+    # Verified available, low-latency models for generative content
+    for fallback in [
+        "gemini-3.1-flash-lite-preview",
+        "gemini-3-flash-preview",
+        "gemini-flash-lite-latest",
+        "gemini-flash-latest",
+    ]:
         if fallback not in models:
             models.append(fallback)
     return models
