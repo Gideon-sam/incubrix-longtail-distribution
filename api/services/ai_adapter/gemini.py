@@ -179,7 +179,7 @@ class GeminiAdapter(BaseAIAdapter):
                 "body": body[:body_max],
             }
 
-    async def get_audience_intelligence(self, network_stats: dict[str, Any]) -> dict[str, Any]:
+    async def get_audience_intelligence(self, network_stats: dict[str, Any]) -> Optional[dict[str, Any]]:
         """Dynamically estimate realistic audience reach, engagement, and demographics using Gemini AI."""
         prompt = (
             "You are an expert audience intelligence analyst for IncuBrix Long-Tail Content Distribution Network.\n"
